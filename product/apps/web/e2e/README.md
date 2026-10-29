@@ -25,5 +25,23 @@ polling during the stalled upload, camera release while stopping, and visible
 late/upload-failure/missing states. A second test delays a native decode result
 and checks ordering and close-during-decode.
 
+Startup navigation regressions use a test-only Node HTTP receiver on an ephemeral
+port, proxying Vite through the same origin. They do not intercept cleanup with
+Playwright routing. Create is held across SPA route unmount and released only
+after a replacement is recording and rendering marker audio. Both response-token
+and original-request-token ownership are checked: only the abandoned ID is
+cleaned up, with no extra camera request, recorder start or AudioContext, and the
+replacement keeps uploading/polling and can stop normally.
+
+Separate native document-navigation and tab-close cases leave camera permission
+pending after Create identifies the session. Trusted browser `pagehide` events
+and authenticated, empty-body Stop requests must reach the HTTP receiver even
+while Stop replies are held beyond document destruction. A passive fetch observer
+also checks the keepalive flag. These are controlled lifecycle regressions, not
+real permission-prompt timing, process-crash recovery, or proof that cleanup can
+identify a session when the browser disappears before Create returns. Existing
+tests that manually dispatch `pagehide` are synthetic cancellation checks and
+must not be described as native lifecycle evidence.
+
 This is a browser/network regression test, **not** evidence of real inference
 quality, real-device latency, or the GPU/camera acceptance gate.

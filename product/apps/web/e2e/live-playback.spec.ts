@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { createServer } from 'node:http';
 import { installAudioProbe, markerWav, probe } from './audioProbe';
+import { startupServer } from './startupServer';
 
 /** Keep the real capture tracks so removing srcObject alone cannot pass cleanup checks. */
 async function trackCapture(page: import('@playwright/test').Page) {
@@ -13,6 +14,169 @@ async function trackCapture(page: import('@playwright/test').Page) {
       tracks.push(...stream.getTracks());
       return stream;
     };
+  });
+}
+
+/** Observe native resources; optionally leave the permission promise unresolved.
+ * No synthetic pagehide dispatch or intercepted Stop fetch is used by these tests. */
+async function observeStartup(page: import('@playwright/test').Page, pendingPermission = false) {
+  await trackCapture(page);
+  await installAudioProbe(page);
+  await page.addInitScript((pending) => {
+    const counts = { captureRequests: 0, recorderStarts: 0, audioContexts: 0 };
+    Object.assign(window, { startupCounts: counts });
+    const getUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    navigator.mediaDevices.getUserMedia = async (constraints) => {
+      counts.captureRequests++;
+      if (pending) await new Promise<void>(() => {}); // Deterministic permission-pending startup.
+      return getUserMedia(constraints);
+    };
+    window.AudioContext = new Proxy(AudioContext, {
+      construct(target, args) {
+        counts.audioContexts++;
+        return Reflect.construct(target, args);
+      },
+    });
+    const start = MediaRecorder.prototype.start;
+    MediaRecorder.prototype.start = function (timeslice) {
+      counts.recorderStarts++;
+      start.call(this, timeslice);
+    };
+    window.addEventListener('pagehide', (event) => {
+      navigator.sendBeacon('/__lifecycle', JSON.stringify({ event: 'pagehide', trusted: event.isTrusted }));
+    });
+    const nativeFetch = window.fetch;
+    window.fetch = (input, init) => {
+      if (String(input).endsWith('/stop')) {
+        navigator.sendBeacon('/__lifecycle', JSON.stringify({ event: 'stop', keepalive: init?.keepalive === true }));
+      }
+      return nativeFetch(input, init);
+    };
+  }, pendingPermission);
+}
+
+async function startupCounts(page: import('@playwright/test').Page) {
+  return page.evaluate(() => (window as unknown as {
+    startupCounts: { captureRequests: number; recorderStarts: number; audioContexts: number };
+  }).startupCounts);
+}
+
+async function setOwner(page: import('@playwright/test').Page, token: string) {
+  await page.evaluate((token) => {
+    localStorage.setItem('focus.session.v1', JSON.stringify({ token, videoId: null, jobId: null }));
+  }, token);
+}
+
+for (const returnedOwner of [false, true]) {
+  test(`late Create after route navigation cleans only the old startup (${returnedOwner ? 'returned' : 'original'} owner)`, async ({ page }) => {
+    const api = await startupServer();
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await observeStartup(page);
+    const stops = () => api.requests.filter((request) => request.path.endsWith('/stop'));
+    try {
+      await page.goto(`${api.origin}/live`);
+      await setOwner(page, 'old-request-owner');
+      await page.getByRole('button', { name: 'ابدأ التسجيل', exact: true }).click();
+      await expect.poll(() => api.creates.length).toBe(1);
+      expect(api.requests[0].authorization).toBe('Bearer old-request-owner');
+      await expect(page.getByText('بنبدأ…', { exact: true })).toBeVisible();
+      await page.getByRole('link', { name: 'ارفع فيديو', exact: true }).click();
+      await expect(page).toHaveURL(`${api.origin}/upload`);
+      expect(await startupCounts(page)).toEqual({ captureRequests: 0, recorderStarts: 0, audioContexts: 0 });
+      expect((await probe(page)).starts).toEqual([]);
+      expect(stops()).toEqual([]);
+
+      // Start the replacement before the abandoned Create resolves.
+      await setOwner(page, 'replacement-owner');
+      await page.goBack();
+      await page.getByRole('button', { name: 'ابدأ التسجيل', exact: true }).click();
+      await expect.poll(() => api.creates.length).toBe(2);
+      api.releaseCreate(1, 'replacement', 'replacement-owner');
+      await expect(page.getByRole('button', { name: 'إيقاف التسجيل', exact: true })).toBeVisible();
+      await expect.poll(async () => (await probe(page)).runs.some((run) => run.marker === 2)).toBe(true);
+      const before = await startupCounts(page);
+      expect(before).toEqual({ captureRequests: 1, recorderStarts: 1, audioContexts: 1 });
+
+      api.releaseCreate(0, 'abandoned', returnedOwner ? 'old-returned-owner' : undefined);
+      await expect.poll(() => stops().length).toBe(1);
+      expect(stops()[0]).toMatchObject({
+        method: 'POST', path: '/api/live/sessions/abandoned/stop', bytes: 0,
+        authorization: `Bearer ${returnedOwner ? 'old-returned-owner' : 'old-request-owner'}`,
+      });
+      expect(api.evidence.filter((event) => event.event === 'stop')).toEqual([{ event: 'stop', keepalive: true }]);
+      expect(api.evidence.some((event) => event.event === 'pagehide')).toBe(false); // SPA unmount, not document exit.
+      expect(await startupCounts(page)).toEqual(before);
+      expect(await page.evaluate(() => JSON.parse(localStorage.getItem('focus.session.v1')!).token))
+        .toBe('replacement-owner');
+
+      // A new poll/upload after old cleanup proves the replacement was not cancelled.
+      const replacementRequests = () => api.requests.filter((request) =>
+        request.path.startsWith('/api/live/sessions/replacement'));
+      const afterCleanup = replacementRequests().length;
+      await expect.poll(() => replacementRequests().length).toBeGreaterThan(afterCleanup);
+      await page.getByRole('button', { name: 'إيقاف التسجيل', exact: true }).click();
+      await expect(page.getByText('بنخلص', { exact: true })).toBeVisible();
+      await expect.poll(() => page.evaluate(() => {
+        const tracks = (window as unknown as { captureTracks: MediaStreamTrack[] }).captureTracks;
+        return tracks.length === 2 && tracks.every((track) => track.readyState === 'ended');
+      })).toBe(true);
+      expect(stops().map((request) => request.path)).toEqual([
+        '/api/live/sessions/abandoned/stop', '/api/live/sessions/replacement/stop',
+      ]);
+      expect(replacementRequests().every((request) => request.authorization === 'Bearer replacement-owner')).toBe(true);
+      expect(api.requests.filter((request) => request.path.includes('/abandoned/'))).toEqual([stops()[0]]);
+      expect(replacementRequests().some((request) => request.method === 'PUT' && request.bytes > 0)).toBe(true);
+      expect((await probe(page)).starts.map((start) => start.marker)).toEqual([2]);
+      expect(await startupCounts(page)).toEqual(before);
+      expect(errors).toEqual([]);
+    } finally {
+      await page.close();
+      await api.close();
+    }
+  });
+}
+
+for (const exit of ['navigation', 'close'] as const) {
+  test(`native ${exit} delivers authenticated keepalive Stop for a known startup ID`, async ({ page }) => {
+    const api = await startupServer();
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await observeStartup(page, true);
+    try {
+      await page.goto(`${api.origin}/live`);
+      await setOwner(page, 'known-startup-owner');
+      await page.getByRole('button', { name: 'ابدأ التسجيل', exact: true }).click();
+      await expect.poll(() => api.creates.length).toBe(1);
+      api.releaseCreate(0, 'known-startup');
+      await expect.poll(() => startupCounts(page)).toEqual({
+        captureRequests: 1, recorderStarts: 0, audioContexts: 1,
+      });
+      expect((await probe(page)).starts).toEqual([]);
+      // The cleanup must retain its original identity even if browser storage changes.
+      await setOwner(page, 'unrelated-new-owner');
+      api.holdStops(); // Do not let a fast reply hide cancellation during document teardown.
+      if (exit === 'navigation') {
+        await page.goto(`${api.origin}/upload`); // Native document navigation, not router unmount.
+        await expect(page).toHaveURL(`${api.origin}/upload`);
+      } else {
+        await page.close({ runBeforeUnload: true });
+        await expect.poll(() => page.isClosed()).toBe(true);
+      }
+      await expect.poll(() => api.evidence.filter((event) => event.event === 'pagehide'))
+        .toEqual([{ event: 'pagehide', trusted: true }]);
+      await expect.poll(() => api.requests.filter((request) => request.path.endsWith('/stop')).length).toBe(1);
+      expect(api.requests.filter((request) => request.path.includes('/known-startup/'))).toEqual([{
+        path: '/api/live/sessions/known-startup/stop', method: 'POST',
+        authorization: 'Bearer known-startup-owner', bytes: 0,
+      }]);
+      expect(api.evidence.filter((event) => event.event === 'stop')).toEqual([{ event: 'stop', keepalive: true }]);
+      api.releaseStops();
+      expect(errors).toEqual([]);
+    } finally {
+      if (!page.isClosed()) await page.close();
+      await api.close();
+    }
   });
 }
 
