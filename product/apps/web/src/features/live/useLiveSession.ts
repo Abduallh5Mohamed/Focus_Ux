@@ -4,7 +4,7 @@ import { startCapture, type Capture, type CapturedChunk } from '../../lib/live/c
 import type { LiveApi } from '../../lib/live/liveApi';
 import { LivePlayer } from '../../lib/live/LivePlayer';
 import type { LiveMetrics, LiveSessionView } from '../../lib/live/types';
-import { describeError } from '../../lib/api/errors';
+import { ApiError, describeError } from '../../lib/api/errors';
 import { saveSession } from '../../lib/session';
 
 export type LivePhase = 'idle' | 'starting' | 'recording' | 'stopping' | 'finishing' | 'done' | 'error';
@@ -22,7 +22,44 @@ export interface LiveSessionState {
 
 const POLL_MS = 500;
 const UPLOAD_TRIES = 3;
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const UPLOAD_TIMEOUT_MS = 10_000;
+const sleep = (ms: number, signal: AbortSignal) => new Promise<void>((resolve) => {
+  const done = () => {
+    clearTimeout(timer);
+    signal.removeEventListener('abort', done);
+    resolve();
+  };
+  const timer = setTimeout(done, ms);
+  signal.addEventListener('abort', done, { once: true });
+  if (signal.aborted) done();
+});
+
+/** Bound the entire upload, including reading its response body. */
+async function putChunk(api: LiveApi, id: string, chunk: CapturedChunk, signal: AbortSignal) {
+  const request = new AbortController();
+  const cancel = () => request.abort();
+  signal.addEventListener('abort', cancel, { once: true });
+  if (signal.aborted) cancel();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    request.abort();
+  }, UPLOAD_TIMEOUT_MS);
+  try {
+    await api.putChunk(id, chunk, request.signal);
+  } catch (caught) {
+    // The transport reports ABORTED as non-retryable; our own deadline is retryable.
+    if (timedOut && !signal.aborted) {
+      throw new ApiError({
+        code: 'TIMEOUT', message: 'انتهت مهلة رفع المقطع.', retryable: true,
+      });
+    }
+    throw caught;
+  } finally {
+    clearTimeout(timer);
+    signal.removeEventListener('abort', cancel);
+  }
+}
 
 /**
  * Orchestrates camera capture, ordered chunk upload, status polling and continuous
@@ -41,12 +78,15 @@ export function useLiveSession(api: LiveApi) {
     poll: number | null;
     closed: boolean;
     stopping: boolean;
-  }>({ id: null, capture: null, player: null, uploads: Promise.resolve(), fetched: new Set(), poll: null, closed: false, stopping: false });
+    cancellation: AbortController;
+  }>({ id: null, capture: null, player: null, uploads: Promise.resolve(), fetched: new Set(), poll: null, closed: false, stopping: false, cancellation: new AbortController() });
 
   const patch = useCallback((next: Partial<LiveSessionState>) => setState((prev) => ({ ...prev, ...next })), []);
 
   const release = useCallback(async () => {
     const current = live.current;
+    current.closed = true;
+    current.cancellation.abort();
     if (current.poll !== null) window.clearTimeout(current.poll);
     current.poll = null;
     await current.capture?.stop();
@@ -66,20 +106,27 @@ export function useLiveSession(api: LiveApi) {
     (chunk: CapturedChunk) => {
       const current = live.current;
       current.uploads = current.uploads.then(async () => {
-        if (!current.id) return;
+        const signal = current.cancellation.signal;
+        if (!current.id || signal.aborted) return;
+        let timedOut = false;
         for (let attempt = 0; attempt < UPLOAD_TRIES; attempt += 1) {
           try {
-            await api.putChunk(current.id, {
-              seq: chunk.seq, captureStartMs: chunk.captureStartMs, durationMs: chunk.durationMs, blob: chunk.blob,
-            });
+            await putChunk(api, current.id, chunk, signal);
             return;
           } catch (caught) {
+            if (signal.aborted) return;
+            timedOut = (caught as { code?: string }).code === 'TIMEOUT';
             const retryable = (caught as { retryable?: boolean }).retryable !== false;
             if (!retryable || attempt === UPLOAD_TRIES - 1) break;
-            await sleep(300 * 2 ** attempt);
+            await sleep(300 * 2 ** attempt, signal);
+            if (signal.aborted) return;
           }
         }
-        setState((prev) => ({ ...prev, uploadFailures: [...prev.uploadFailures, chunk.seq] }));
+        setState((prev) => ({
+          ...prev,
+          uploadFailures: [...prev.uploadFailures, chunk.seq],
+          ...(timedOut ? { error: `فشل رفع المقطع ${chunk.seq} بعد ٣ محاولات: الخادم ما ردّش في الوقت المحدد. المقطع هيظهر ناقص.` } : {}),
+        }));
       });
     },
     [api],
@@ -89,7 +136,8 @@ export function useLiveSession(api: LiveApi) {
     const current = live.current;
     if (current.closed || !current.id) return;
     try {
-      const view = await api.get(current.id);
+      const view = await api.get(current.id, current.cancellation.signal);
+      if (current.closed) return;
       patch({ view, rebuffers: current.player?.rebuffers ?? 0 });
       if (view.phase === 'failed' && !view.final.status) {
         await fail(view.error?.message ?? 'الجلسة فشلت.');
@@ -101,7 +149,7 @@ export function useLiveSession(api: LiveApi) {
           if (chunk.state === 'ready' && !current.fetched.has(chunk.seq)) {
             current.fetched.add(chunk.seq);
             void api
-              .chunkAudio(current.id, chunk.seq)
+              .chunkAudio(current.id, chunk.seq, current.cancellation.signal)
               .then((wav) => current.player?.enqueue(chunk.seq, chunk.capture_start_ms, chunk.duration_ms, wav))
               .catch(() => {
                 current.fetched.delete(chunk.seq);
@@ -112,6 +160,7 @@ export function useLiveSession(api: LiveApi) {
       if (view.final.status === 'ready' || view.final.status === 'failed') {
         if (current.player) await api.postPlayback(current.id, current.player.report()).catch(() => undefined);
         const metrics = await api.metrics(current.id).catch(() => null);
+        if (current.closed) return;
         if (view.final.status === 'ready' && view.final.job_id && view.final.video_id) {
           saveSession({ videoId: view.final.video_id, jobId: view.final.job_id });
         }
@@ -119,17 +168,19 @@ export function useLiveSession(api: LiveApi) {
         return;
       }
     } catch (caught) {
+      if (current.closed) return;
       patch({ error: describeError(caught).title });
     }
-    current.poll = window.setTimeout(() => void pump(), POLL_MS);
+    if (!current.closed) current.poll = window.setTimeout(() => void pump(), POLL_MS);
   }, [api, fail, patch]);
 
   const start = useCallback(async () => {
-    const current = live.current;
-    current.closed = false;
-    current.stopping = false;
-    current.fetched = new Set();
-    current.uploads = Promise.resolve();
+    const current: typeof live.current = {
+      ...live.current, id: null, capture: null, player: null, poll: null,
+      closed: false, stopping: false, fetched: new Set<number>(),
+      uploads: Promise.resolve(), cancellation: new AbortController(),
+    };
+    live.current = current;
     patch({ phase: 'starting', error: null, view: null, metrics: null, uploadFailures: [], rebuffers: 0 });
     try {
       const created = await api.create();
@@ -169,13 +220,15 @@ export function useLiveSession(api: LiveApi) {
     current.capture = null;
     patch({ stream: null });
     await current.uploads;
+    if (current.closed) return;
     try {
       await api.stop(current.id);
+      if (current.closed) return;
       patch({ phase: 'finishing' });
     } catch (caught) {
-      patch({ error: describeError(caught).title });
+      if (!current.closed) await fail(describeError(caught).title);
     }
-  }, [api, patch]);
+  }, [api, fail, patch]);
 
   const selectTarget = useCallback(
     async (faceId: string) => {
@@ -189,15 +242,18 @@ export function useLiveSession(api: LiveApi) {
 
   // Leaving the screen must never leave the camera or audio running.
   useEffect(() => {
-    const current = live.current;
-    const onHide = () => void current.capture?.stop();
-    window.addEventListener('pagehide', onHide);
-    return () => {
-      window.removeEventListener('pagehide', onHide);
+    const onHide = () => {
+      const current = live.current;
       current.closed = true;
+      current.cancellation.abort();
       if (current.poll !== null) window.clearTimeout(current.poll);
       void current.capture?.stop();
       current.player?.close();
+    };
+    window.addEventListener('pagehide', onHide);
+    return () => {
+      window.removeEventListener('pagehide', onHide);
+      onHide();
     };
   }, []);
 

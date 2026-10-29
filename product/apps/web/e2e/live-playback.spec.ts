@@ -1,6 +1,129 @@
 import { expect, test } from '@playwright/test';
 import { installAudioProbe, markerWav, probe } from './audioProbe';
 
+/** Keep the real capture tracks so removing srcObject alone cannot pass cleanup checks. */
+async function trackCapture(page: import('@playwright/test').Page) {
+  await page.addInitScript(() => {
+    const getUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+    const tracks: MediaStreamTrack[] = [];
+    Object.assign(window, { captureTracks: tracks });
+    navigator.mediaDevices.getUserMedia = async (constraints) => {
+      const stream = await getUserMedia(constraints);
+      tracks.push(...stream.getTracks());
+      return stream;
+    };
+  });
+}
+
+test('a never-responding upload times out in order and stop finishes with an explicit gap', async ({ page }) => {
+  await trackCapture(page);
+  await page.clock.install();
+  const uploads: number[] = [];
+  const aborted: number[] = [];
+  const received: number[] = [];
+  let stopped = false;
+  page.on('requestfailed', (request) => {
+    const match = new URL(request.url()).pathname.match(/chunks\/(\d+)$/);
+    if (match) aborted.push(Number(match[1]));
+  });
+  await page.route('**/api/live/sessions**', async (route) => {
+    const request = route.request();
+    const path = new URL(request.url()).pathname;
+    const upload = path.match(/chunks\/(\d+)$/);
+    if (upload) {
+      const seq = Number(upload[1]);
+      uploads.push(seq);
+      if (seq === 0) return; // Never resolve, reject or release this request, including retries.
+      received.push(seq);
+      await route.fulfill({ json: { state: 'received', duplicate: false } });
+    } else if (request.method() === 'POST' && path.endsWith('/sessions')) {
+      await route.fulfill({ json: { live_session_id: 'timeout', chunk_ms: 300, max_chunks: 100 } });
+    } else {
+      if (path.endsWith('/stop')) {
+        expect(uploads.filter((seq) => seq === 0)).toHaveLength(3);
+        stopped = true;
+      }
+      await route.fulfill({ json: {
+        live_session_id: 'timeout', phase: stopped ? 'finalizing' : 'live',
+        mode: 'live', target_face_id: null, chunks: [], final: { status: null }, error: null,
+      } });
+    }
+  });
+  const errors: string[] = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/live');
+  await page.getByRole('button', { name: 'ابدأ التسجيل', exact: true }).click();
+  await expect.poll(() => uploads).toEqual([0]);
+  // Accumulate later chunks behind the stalled first upload, then stop capture.
+  await page.waitForTimeout(650);
+  await page.getByRole('button', { name: 'إيقاف التسجيل', exact: true }).click();
+  await expect(page.getByText('بنوقف…', { exact: true })).toBeVisible();
+  await expect.poll(() => page.evaluate(() => {
+    const tracks = (window as unknown as { captureTracks: MediaStreamTrack[] }).captureTracks;
+    return tracks.length >= 2 && tracks.every((track) => track.readyState === 'ended');
+  })).toBe(true);
+  expect(stopped).toBe(false);
+  expect(uploads).toEqual([0]);
+  for (const [attempt, backoff] of [[1, 300], [2, 600], [3, 0]]) {
+    await page.clock.fastForward(10_000);
+    await expect.poll(() => aborted.length).toBe(attempt);
+    if (backoff) {
+      await page.clock.fastForward(backoff);
+      await expect.poll(() => uploads.length).toBe(attempt + 1);
+      expect(uploads).toEqual(Array(attempt + 1).fill(0));
+    }
+  }
+  await expect(page.getByText('مقاطع ما اترفعتش', { exact: true })).toBeVisible();
+  await expect(page.getByText(/فشل رفع المقطع 0 بعد ٣ محاولات: الخادم ما ردّش/)).toBeVisible();
+  await expect.poll(() => stopped).toBe(true);
+  await expect(page.getByText('بنخلص', { exact: true })).toBeVisible();
+  expect(received.length).toBeGreaterThan(0);
+  expect(uploads).toEqual([0, 0, 0, ...received]);
+  expect(received).toEqual(Array.from({ length: received.length }, (_, i) => i + 1));
+  expect(errors).toEqual([]);
+});
+
+for (const teardown of ['unmount', 'pagehide'] as const) {
+  test(`${teardown} cancels a pending upload without retrying or keeping camera tracks`, async ({ page }) => {
+    await trackCapture(page);
+    await page.clock.install();
+    let uploads = 0;
+    let aborted = 0;
+    let stops = 0;
+    page.on('requestfailed', (request) => {
+      if (/\/chunks\/\d+\?/.test(request.url())) aborted++;
+    });
+    await page.route('**/api/live/sessions**', async (route) => {
+      const path = new URL(route.request().url()).pathname;
+      if (/\/chunks\/\d+$/.test(path)) {
+        uploads++;
+        return;
+      }
+      if (path.endsWith('/stop')) stops++;
+      if (route.request().method() === 'POST' && path.endsWith('/sessions')) {
+        await route.fulfill({ json: { live_session_id: 'teardown', chunk_ms: 300, max_chunks: 100 } });
+      } else {
+        await route.fulfill({ json: {
+          phase: 'live', target_face_id: null, chunks: [], final: { status: null }, error: null,
+        } });
+      }
+    });
+    await page.goto('/live');
+    await page.getByRole('button', { name: 'ابدأ التسجيل', exact: true }).click();
+    await expect.poll(() => uploads).toBe(1);
+    if (teardown === 'unmount') await page.getByRole('link', { name: 'ارفع فيديو', exact: true }).click();
+    else await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pagehide')));
+    await expect.poll(() => aborted).toBe(1);
+    await expect.poll(() => page.evaluate(() => {
+      const tracks = (window as unknown as { captureTracks: MediaStreamTrack[] }).captureTracks;
+      return tracks.length >= 2 && tracks.every((track) => track.readyState === 'ended');
+    })).toBe(true);
+    await page.clock.fastForward(60_000);
+    expect(uploads).toBe(1);
+    expect(stops).toBe(0);
+  });
+}
+
 test('reordered audio stays ordered and continuous after rebuffer; stalled upload leaves an explicit gap', async ({ page }) => {
   await installAudioProbe(page);
   const uploads: number[] = [];
