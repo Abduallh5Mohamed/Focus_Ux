@@ -323,7 +323,7 @@ interface FaceOptionProps {
   onSelect: (faceId: string) => void;
 }
 
-function FaceOption({ face, ordinal, total, selected, disabled, onSelect }: FaceOptionProps) {
+export function FaceOption({ face, ordinal, total, selected, disabled, onSelect }: FaceOptionProps) {
   return (
     <label className="face-card" data-selected={selected} data-disabled={disabled}>
       <input

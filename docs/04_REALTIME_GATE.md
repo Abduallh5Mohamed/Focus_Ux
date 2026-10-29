@@ -23,3 +23,7 @@ chunk metadata: session_id, sequence_id, capture_start_ms, duration_ms, selected
 
 ## قرارات ثابتة
 لا يوقف مسار realtime إصلاحات Upload. لا تستخدم y1 guard أو sparse landmarks غير موثوقين افتراضيًا. لا يستمر تسجيل الكاميرا بعد stop. استخدم سماعات أثناء الاختبار لتجنب feedback. نسخة Upload تبقى قابلة للرجوع في أي وقت.
+
+## تنفيذ المرحلة 3
+الوضع شبه المباشر متنفّذ كتجريبي (`/live` في الواجهة، `/live/*` في الخادم). القرار الحالي والمعايير
+وإجراء القياس: `06_REALTIME_GATE_REPORT.md`.

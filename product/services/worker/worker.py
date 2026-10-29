@@ -48,6 +48,11 @@ from .models import (
 )
 
 
+# Live-session chunk jobs carry this client_request_id prefix. Their transcript is
+# produced once, after recording ends, on the whole recording (docs/04).
+LIVE_CHUNK_PREFIX = "live:"
+
+
 class _Cancelled(Exception):
     """Internal control flow between stages; final state is cancelled, not an error payload."""
 
@@ -93,7 +98,10 @@ class SingleWorker:
             wav_ready = True
             self._persist(job)
             try:
-                self._transcribe(job)
+                if (job.client_request_id or "").startswith(LIVE_CHUNK_PREFIX):
+                    pass  # no per-chunk transcription; transcript_status stays pending
+                else:
+                    self._transcribe(job)
             except _Cancelled:
                 raise
             except WorkerError as werr:
@@ -116,6 +124,24 @@ class SingleWorker:
             self._finish_failed(job, ProcessingError("processing failed", retryable=False))
             return job.copied()
         job.status = JobStatus.COMPLETED
+        job.stage = JobStage.READY
+        self._persist(job)
+        self._emit(job)
+        return job.copied()
+
+    def transcribe_completed(self, job_id: str) -> Job:
+        """Transcribe a job whose audio is already READY (final live transcript)."""
+        job = self.repo.get(job_id)
+        if job.audio_status is not AudioStatus.READY or not job.wav_path:
+            raise ProcessingError("audio is not ready for transcription", retryable=False)
+        try:
+            self._transcribe(job)
+        except WorkerError as werr:
+            self._fail_transcript(job, werr.payload(), getattr(werr, "reason", None))
+        except Exception:
+            self._fail_transcript(
+                job, ProcessingError("transcription failed", retryable=False).payload()
+            )
         job.stage = JobStage.READY
         self._persist(job)
         self._emit(job)

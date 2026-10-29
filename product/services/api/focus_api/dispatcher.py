@@ -43,6 +43,7 @@ logger = logging.getLogger("focus_api.dispatcher")
 _FACES = "faces"
 _JOB = "job"
 _CLEANUP = "cleanup"
+_LIVE = "live"
 
 
 class Dispatcher:
@@ -72,6 +73,9 @@ class Dispatcher:
         self._thread: threading.Thread | None = None
         self._busy = threading.Event()
         self.lock_acquired = False
+        # Set by the live-session manager; runs on the dispatcher thread so live
+        # chunks share the single-worker serialization with every other task.
+        self.live_handler = None
         self.recovered: list[str] = []
 
     # -- lifecycle -----------------------------------------------------------
@@ -134,6 +138,9 @@ class Dispatcher:
     def enqueue_cleanup(self, video_id: str) -> None:
         self._put(_CLEANUP, video_id)
 
+    def enqueue_live(self, ident: str) -> None:
+        self._put(_LIVE, ident)
+
     def _put(self, kind: str, ident: str) -> None:
         key = (kind, ident)
         with self._seen_lock:
@@ -167,6 +174,8 @@ class Dispatcher:
             self._process_job(ident)
         elif kind == _CLEANUP:
             self._process_cleanup(ident)
+        elif kind == _LIVE and self.live_handler is not None:
+            self.live_handler(ident)
 
     def _process_job(self, job_id: str) -> None:
         try:

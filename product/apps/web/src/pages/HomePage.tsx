@@ -6,6 +6,7 @@ import { Card } from '../components/Card';
 import { Icon } from '../components/Icon';
 import { PageHeader } from '../components/PageHeader';
 import { Pill } from '../components/Pill';
+import { LIVE_ENABLED } from '../lib/env';
 import { readSession, clearJob, type StoredSession } from '../lib/session';
 
 const FLOW = [
@@ -112,6 +113,7 @@ export function HomePage() {
         </div>
         <p className="card__hint">
           عايز تفاصيل أكتر؟ اقرأ <Link to="/upload">إرشادات الرفع</Link>.
+          {LIVE_ENABLED ? <> <Link to="/live">(تجريبي) سجّل من الكاميرا</Link>.</> : null}
         </p>
       </Card>
     </>

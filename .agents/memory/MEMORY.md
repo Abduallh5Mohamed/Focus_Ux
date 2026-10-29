@@ -3,3 +3,4 @@
 - [Upload ownership locks](upload-ownership.md) — preserve cross-platform sidecar leases and a stable cleanup gate; age alone cannot establish abandonment.
 - [Original inference availability](original-inference.md) — user confirmed the old version isolated audio on their own computer.
 - [Private-preview worker access](private-preview-access.md) — external Windows access can redirect despite successful server checks; verify token-control availability.
+- [Near-live mode gate and opt-in](live-mode-gate.md) — stays opt-in/internal until measured on real GPU + camera; lock-scoped cleanup; camera must always release.

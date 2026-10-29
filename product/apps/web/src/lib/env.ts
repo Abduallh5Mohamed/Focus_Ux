@@ -20,3 +20,6 @@ export const UPLOAD_LIMITS = {
   maxDurationMs: 15_000,
   accept: 'video/mp4,video/quicktime,video/webm,video/x-matroska',
 } as const;
+
+/** Experimental near-live mode is hidden unless explicitly enabled at build time. */
+export const LIVE_ENABLED = readFlag(import.meta.env.VITE_LIVE_ENABLED);

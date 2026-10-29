@@ -68,6 +68,14 @@ class Settings:
     cleanup_temp_max_age_s: float = 3600.0
     inference_mode: str = "unavailable"
     worker_token: str | None = field(default=None, repr=False)
+    # Experimental live mode (docs/04_REALTIME_GATE.md). Stays labelled
+    # experimental until the gate report says otherwise.
+    live_enabled: bool = False  # experimental: explicit opt-in
+    live_chunk_ms: int = 2000
+    live_max_chunks: int = 150
+    live_max_chunk_bytes: int = 8 * 1024 * 1024
+    live_max_queue_depth: int = 3
+    live_idle_timeout_s: float = 45.0
 
     def __post_init__(self) -> None:
         self.storage_root = Path(self.storage_root).expanduser().resolve()
@@ -132,4 +140,6 @@ class Settings:
             cleanup_temp_max_age_s=_env_float("FOCUS_API_TEMP_MAX_AGE_S", 3600.0),
             inference_mode=os.environ.get("FOCUS_INFERENCE_MODE", "unavailable"),
             worker_token=os.environ.get("FOCUS_WORKER_TOKEN") or None,
+            live_enabled=os.environ.get("FOCUS_LIVE_ENABLED", "0") in ("1", "true"),
+            live_max_queue_depth=_env_int("FOCUS_LIVE_MAX_QUEUE_DEPTH", 3),
         )

@@ -152,6 +152,10 @@ def create_app(
     service = ApiService(
         settings=settings, storage=storage, repo=repo, dispatcher=dispatcher
     )
+    from .live import LiveManager
+    live = LiveManager(
+        settings=settings, storage=storage, repo=repo, dispatcher=dispatcher, worker=worker
+    )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
@@ -159,6 +163,9 @@ def create_app(
         app.state.dispatcher_started = (
             dispatcher.start() if start_dispatcher else False
         )
+        # Only the process that owns the dispatcher lock may delete live leftovers.
+        if app.state.dispatcher_started:
+            live.recover()
         try:
             yield
         finally:
@@ -181,6 +188,7 @@ def create_app(
     app.state.worker = worker
     app.state.dispatcher = dispatcher
     app.state.service = service
+    app.state.live = live
     app.state.candidate_provider = provider
     app.state.extraction_runner = runner
     app.state.inference_bridge = bridge
@@ -191,7 +199,7 @@ def create_app(
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(settings.ui_origins),
-        allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type", "Accept", "Range"],
         expose_headers=["Content-Range", "Accept-Ranges", "Content-Length"],
         allow_credentials=False,
@@ -261,6 +269,9 @@ def create_app(
             "status": "ok", "dispatcher": bool(dispatcher.lock_acquired),
             "inference": bridge.status() if bridge else {"mode": settings.inference_mode},
         }
+
+    from .live_routes import add_live_routes
+    add_live_routes(app, live, service, _optional_bearer)
 
     @app.post("/videos", status_code=201)
     def post_video(request: Request, file: UploadFile = File(...)):

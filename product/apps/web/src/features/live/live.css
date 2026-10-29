@@ -1,0 +1,6 @@
+.live-preview { width: 100%; max-height: 320px; background: #000; border-radius: var(--radius-md, 8px); }
+.live-strip { display: flex; flex-wrap: wrap; gap: var(--sp-2, 8px); list-style: none; padding: 0; margin: 0; }
+.live-chunk { display: flex; flex-direction: column; align-items: center; min-width: 72px; padding: 6px 8px; border: 1px solid currentColor; border-radius: 6px; font-size: 12px; opacity: .8; }
+.live-chunk[data-state='ready'] { opacity: 1; }
+.live-chunk[data-state='missing'], .live-chunk[data-state='failed'], .live-chunk[data-state='undecodable'],
+.live-chunk[data-state='target_lost'], .live-chunk[data-state='uncertain'] { border-style: dashed; }
