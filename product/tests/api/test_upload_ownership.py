@@ -1,13 +1,19 @@
 """Real processes must not mistake a paused upload for abandoned data."""
+import multiprocessing
 import os
+import queue
 import subprocess
 import sys
 import time
+import traceback
+from contextlib import contextmanager
 from pathlib import Path
+from threading import BrokenBarrierError
 
 import pytest
 
 from services.api.focus_api.storage import Storage
+from services.api.focus_api.upload_ownership import file_lock
 
 from .harness import make_settings
 
@@ -147,3 +153,268 @@ def test_lease_protects_against_another_storage_in_same_process(tmp_path):
     # A failed upload whose file could not be deleted is no longer protected.
     assert Storage(settings).cleanup_stale_temp() == [str(path)]
     assert not list(settings.tmp_dir.iterdir())
+
+
+def _paused_cleaner(root, connection):
+    """Expose real gate opens/locks and pause immediately before sidecar unlink."""
+    import builtins
+
+    from services.api.focus_api import storage as storage_module
+    from services.api.focus_api import upload_ownership
+
+    storage = Storage(make_settings(root, cleanup_temp_max_age_s=0.02))
+    gate = storage._temp_gate
+    original_lock = storage_module.file_lock
+    original_unlink = Path.unlink
+
+    def traced_open(path, *args, **kwargs):
+        handle = builtins.open(path, *args, **kwargs)
+        if path == gate:
+            stat = os.fstat(handle.fileno())
+            connection.send(("opened", (stat.st_dev, stat.st_ino)))
+        return handle
+
+    @contextmanager
+    def traced_lock(path, **kwargs):
+        with original_lock(path, **kwargs):
+            if path == gate:
+                connection.send(("held", None))
+                assert connection.poll(15), "gate holder was not resumed"
+                assert connection.recv() == "continue"
+            yield
+
+    def traced_unlink(path, *args, **kwargs):
+        if path.suffix == ".lock" and path != gate:
+            connection.send(("unlink", str(path)))
+            assert connection.poll(15), "sidecar removal was not resumed"
+            assert connection.recv() == "continue"
+        return original_unlink(path, *args, **kwargs)
+
+    upload_ownership.open = traced_open
+    storage_module.file_lock = traced_lock
+    Path.unlink = traced_unlink
+    try:
+        connection.send(("done", storage.cleanup_stale_temp()))
+    except BaseException:
+        connection.send(("error", traceback.format_exc()))
+        raise
+    finally:
+        connection.close()
+
+
+def _ownership_contender(root, role, rounds, barrier, results):
+    """All processes cross the same five boundaries; no scheduling sleeps."""
+    storage = Storage(make_settings(root, cleanup_temp_max_age_s=0.02))
+    try:
+        for cycle in range(rounds):
+            if role == "cleaner":
+                for _ in range(5):
+                    barrier.wait(timeout=15)
+                    # Exercise startup and repeated cleanup from each process.
+                    storage.ensure()
+                    storage.cleanup_stale_temp()
+                    barrier.wait(timeout=15)
+                continue
+
+            barrier.wait(timeout=15)
+            with storage.own_temp_upload() as path:
+                # Pause with a sidecar but no data, while cleaners are starting.
+                barrier.wait(timeout=15)
+                barrier.wait(timeout=15)
+                payload = f"{role}:{cycle}".encode()
+                path.write_bytes(payload)
+                os.utime(path, (1, 1))
+                barrier.wait(timeout=15)
+                assert path.read_bytes() == payload
+                assert path.with_suffix(".upload.lock").is_file()
+
+                # A complete cleanup wave must inspect the backdated active file.
+                barrier.wait(timeout=15)
+                barrier.wait(timeout=15)
+                assert path.read_bytes() == payload
+                assert path.with_suffix(".upload.lock").is_file()
+
+                barrier.wait(timeout=15)
+                if role == "promote":
+                    target = storage.settings.media_dir / f"{cycle}.mp4"
+                    os.replace(path, target)
+                # The other owner leaves a failed upload for the recovery wave.
+            barrier.wait(timeout=15)
+            barrier.wait(timeout=15)
+            barrier.wait(timeout=15)
+            assert not path.exists()
+            assert not path.with_suffix(".upload.lock").exists()
+        results.put((role, None))
+    except BaseException:
+        results.put((role, traceback.format_exc()))
+        barrier.abort()
+        raise
+
+
+@pytest.fixture
+def upload_processes():
+    """Use spawn even on Unix: each contender has independent lock state."""
+    context = multiprocessing.get_context("spawn")
+    processes = []
+    connections = []
+
+    def start(target, *args):
+        process = context.Process(target=target, args=args)
+        processes.append(process)
+        process.start()
+        return process
+
+    def cleaner(root):
+        parent, child = context.Pipe()
+        connections.append(parent)
+        process = start(_paused_cleaner, root, child)
+        child.close()
+        return process, parent
+
+    yield context, start, cleaner
+
+    # A failed assertion must not leave blocked cleaners running in later tests.
+    for process in processes:
+        if process.is_alive():
+            process.terminate()
+    for process in processes:
+        process.join(timeout=10)
+        if process.is_alive():
+            process.kill()
+            process.join(timeout=10)
+        process.close()
+    for connection in connections:
+        connection.close()
+
+
+def _receive(connection, expected):
+    assert connection.poll(15), f"cleaner did not report {expected}"
+    event, value = connection.recv()
+    assert event == expected, f"expected {expected}, received {event}: {value}"
+    return value
+
+
+def test_simultaneous_cleaners_keep_one_gate_identity(tmp_path, upload_processes):
+    settings = make_settings(tmp_path, cleanup_temp_max_age_s=0.02)
+    storage = Storage(settings)
+    storage.ensure()
+    abandoned = settings.tmp_dir / "abandoned.upload"
+    abandoned.write_bytes(b"abandoned")
+    os.utime(abandoned, (1, 1))
+    lease = abandoned.with_suffix(".upload.lock")
+    lease.touch()
+    _, _, start_cleaner = upload_processes
+
+    # Keep a handle to the original gate, so unlink/recreation cannot silently
+    # pass by reusing its inode. This is the identity every contender must lock.
+    with storage._temp_gate.open("a+b") as gate_handle:
+        stat = os.fstat(gate_handle.fileno())
+        identity = (stat.st_dev, stat.st_ino)
+        first, first_pipe = start_cleaner(tmp_path)
+        assert _receive(first_pipe, "opened") == identity
+        _receive(first_pipe, "held")
+        first_pipe.send("continue")
+        assert _receive(first_pipe, "unlink") == str(lease)
+        assert not abandoned.exists()
+        assert lease.exists()
+
+        # The second cleaner has snapshotted the still-existing sidecar and
+        # opened the gate while the first is between lease unlock and unlink.
+        second, second_pipe = start_cleaner(tmp_path)
+        assert _receive(second_pipe, "opened") == identity
+        with pytest.raises(BlockingIOError):
+            with file_lock(storage._temp_gate, blocking=False):
+                pytest.fail("first cleaner released the gate before sidecar removal")
+        assert not second_pipe.poll(0.1), "second cleaner bypassed the held gate"
+
+        first_pipe.send("continue")
+        assert _receive(first_pipe, "done") == [str(abandoned)]
+        first.join(timeout=15)
+        assert first.exitcode == 0
+        _receive(second_pipe, "held")
+        stat = storage._temp_gate.stat()
+        assert (stat.st_dev, stat.st_ino) == identity
+        with pytest.raises(BlockingIOError):
+            with file_lock(storage._temp_gate, blocking=False):
+                pytest.fail("second cleaner locked a different gate identity")
+
+        second_pipe.send("continue")
+        # Its stale snapshot may recreate the removed lease, but must remove it
+        # again, without reporting the abandoned upload twice.
+        assert _receive(second_pipe, "unlink") == str(lease)
+        second_pipe.send("continue")
+        assert _receive(second_pipe, "done") == []
+        second.join(timeout=15)
+        assert second.exitcode == 0
+        assert not list(settings.tmp_dir.iterdir())
+        stat = storage._temp_gate.stat()
+        assert (stat.st_dev, stat.st_ino) == identity
+
+
+def test_cleanup_contenders_race_upload_creation_and_release(
+    tmp_path, upload_processes
+):
+    settings = make_settings(tmp_path, cleanup_temp_max_age_s=0.02)
+    storage = Storage(settings)
+    storage.ensure()
+    # Cover both old data with a leftover lease and a lease without data.
+    abandoned = settings.tmp_dir / "abandoned.upload"
+    abandoned.write_bytes(b"abandoned")
+    os.utime(abandoned, (1, 1))
+    abandoned.with_suffix(".upload.lock").touch()
+    (settings.tmp_dir / "orphan.upload.lock").touch()
+
+    context, start, _ = upload_processes
+    roles = ["cleaner"] * 3 + ["failed", "promote"]
+    barrier = context.Barrier(len(roles) + 1)
+    results = context.Queue()
+    rounds = 8
+    processes = [
+        start(_ownership_contender, tmp_path, role, rounds, barrier, results)
+        for role in roles
+    ]
+    try:
+        # Holding the original gate open also detects unlink/recreation here.
+        with storage._temp_gate.open("a+b") as gate_handle:
+            stat = os.fstat(gate_handle.fileno())
+            identity = (stat.st_dev, stat.st_ino)
+            for cycle in range(rounds):
+                for phase in range(5):
+                    barrier.wait(timeout=15)
+                    barrier.wait(timeout=15)
+                    stat = storage._temp_gate.stat()
+                    assert (stat.st_dev, stat.st_ino) == identity
+                    if phase in (0, 1, 2):
+                        assert len(list(settings.tmp_dir.glob("*.upload.lock"))) == 2
+                        files = list(settings.tmp_dir.glob("*.upload"))
+                        assert len(files) == (0 if phase == 0 else 2)
+                        if files:
+                            assert {path.read_bytes() for path in files} == {
+                                f"failed:{cycle}".encode(), f"promote:{cycle}".encode()
+                            }
+                    if phase == 4:
+                        assert not list(settings.tmp_dir.iterdir())
+            for cycle in range(rounds):
+                assert (settings.media_dir / f"{cycle}.mp4").read_bytes() == (
+                    f"promote:{cycle}".encode()
+                )
+            assert len(list(settings.media_dir.iterdir())) == rounds
+            assert storage.cleanup_stale_temp() == []
+            assert not list(settings.tmp_dir.iterdir())
+        reports = [results.get(timeout=15) for _ in processes]
+        assert all(error is None for _, error in reports), reports
+        for process in processes:
+            process.join(timeout=15)
+            assert process.exitcode == 0
+    except BrokenBarrierError:
+        reports = []
+        while True:
+            try:
+                reports.append(results.get(timeout=0.2))
+            except queue.Empty:
+                break
+        pytest.fail(f"upload/cleanup coordination failed: {reports}")
+    finally:
+        barrier.abort()
+        results.close()
+        results.join_thread()
