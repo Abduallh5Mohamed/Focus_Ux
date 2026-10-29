@@ -43,12 +43,24 @@ From the repository root, run Python suites separately:
 ```bash
 PYTHONPATH=product python -m pytest product/tests/worker -q
 PYTHONPATH=product python -m pytest product/tests/ml -q
+PYTHONPATH=product python -m pytest product/tests/api -q
 ```
 
 The two suites pass 24 and 47 tests respectively. The web suite passes 53 tests.
-The API test directory contains helpers but no collected tests.
-Separate Python runs avoid a collision between the API and worker test helpers
-which both import a top-level module named `fakes`.
+The API suite covers uploads, sessions, protected media, queued deletion, and
+unavailable providers using test-only inference doubles. API helpers use relative
+package imports to avoid the worker's top-level `fakes` module.
+
+With the application workflow running, exercise the real `/api` proxy too:
+
+```bash
+FOCUS_TEST_PROXY_URL="https://$REPLIT_DEV_DOMAIN" PYTHONPATH=product \
+  python -m pytest product/tests/api -q
+```
+
+Without `FOCUS_TEST_PROXY_URL`, only the live proxy smoke test is skipped. That
+test creates and deletes its own metadata-only upload; it does not verify real
+inference or require model weights.
 
 Health check through the frontend: `GET /api/healthz`.
 The health response only confirms the API and dispatcher, not ML readiness.

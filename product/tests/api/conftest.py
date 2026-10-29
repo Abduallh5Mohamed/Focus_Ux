@@ -1,12 +1,6 @@
-"""Path bootstrap + shared app factory for the API test suite.
-
-Runs with the product-local venv:
-  A:/Focus_Ux/product/services/api/.venv/Scripts/python.exe -m pytest \
-      A:/Focus_Ux/product/tests/api -q
-"""
+"""Path bootstrap and shared app factory: python -m pytest product/tests/api."""
 from __future__ import annotations
 
-import os
 import sys
 from contextlib import ExitStack
 from pathlib import Path
@@ -15,13 +9,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 PRODUCT_ROOT = Path(__file__).resolve().parents[2]
-TESTS_API_DIR = Path(__file__).resolve().parent
-for candidate in (str(PRODUCT_ROOT), str(TESTS_API_DIR)):
+for candidate in (str(PRODUCT_ROOT),):
     if candidate not in sys.path:
         sys.path.insert(0, candidate)
 
-from harness import Harness, make_settings  # noqa: E402
-from fakes import FakeCandidateProvider, FakeExtractionRunner  # noqa: E402
+from .harness import Harness, make_settings  # noqa: E402
+from .fakes import FakeCandidateProvider, FakeExtractionRunner  # noqa: E402
 
 from services.api.focus_api.routes import create_app  # noqa: E402
 

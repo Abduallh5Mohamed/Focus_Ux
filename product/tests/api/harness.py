@@ -10,7 +10,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from fixtures_media import make_mp4_bytes
+from .fixtures_media import make_mp4_bytes
 from services.api.focus_api.config import Settings
 
 
