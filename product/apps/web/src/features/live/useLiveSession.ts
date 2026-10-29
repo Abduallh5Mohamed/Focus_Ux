@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { startCapture, type Capture, type CapturedChunk } from '../../lib/live/capture';
 import type { LiveApi } from '../../lib/live/liveApi';
 import { LivePlayer } from '../../lib/live/LivePlayer';
-import type { LiveMetrics, LiveSessionView } from '../../lib/live/types';
+import type { LiveMetrics, LiveSessionView, PlaybackReport } from '../../lib/live/types';
 import { ApiError, describeError } from '../../lib/api/errors';
 import { saveSession } from '../../lib/session';
 
@@ -22,6 +22,8 @@ export interface LiveSessionState {
 
 const POLL_MS = 500;
 const UPLOAD_TRIES = 3;
+const AUDIO_TIMEOUT_MS = 10_000;
+const REPORT_TIMEOUT_MS = 10_000;
 const UPLOAD_TIMEOUT_MS = 10_000;
 const STOP_TIMEOUT_MS = 10_000;
 const STOP_TIMEOUT_MESSAGE = 'الخادم ما ردّش على طلب إنهاء التسجيل في الوقت المحدد. ممكن يكون لسه بيخلص؛ مش هنبعت طلب الإنهاء تاني تلقائيًا.';
@@ -63,6 +65,31 @@ async function putChunk(api: LiveApi, id: string, chunk: CapturedChunk, signal: 
   }
 }
 
+/** Telemetry must not keep a completed recording in the finishing screen. */
+async function savePlayback(api: LiveApi, id: string, report: PlaybackReport, signal: AbortSignal) {
+  const controller = new AbortController();
+  let cancel!: () => void;
+  let timer!: ReturnType<typeof setTimeout>;
+  const expired = new Promise<never>((_, reject) => {
+    cancel = () => {
+      controller.abort();
+      reject(new Error('Playback report cancelled'));
+    };
+    signal.addEventListener('abort', cancel, { once: true });
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error('Playback report timed out'));
+    }, REPORT_TIMEOUT_MS);
+    if (signal.aborted) cancel();
+  });
+  try {
+    await Promise.race([api.postPlayback(id, report, controller.signal), expired]);
+  } finally {
+    clearTimeout(timer);
+    signal.removeEventListener('abort', cancel);
+  }
+}
+
 /**
  * Orchestrates camera capture, ordered chunk upload, status polling and continuous
  * playback. The camera is released on stop, on error and when the screen unmounts.
@@ -76,6 +103,7 @@ export function useLiveSession(api: LiveApi) {
     capture: Capture | null;
     player: LivePlayer | null;
     uploads: Promise<void>;
+    downloads: Set<Promise<void>>;
     fetched: Set<number>;
     poll: number | null;
     closed: boolean;
@@ -84,7 +112,7 @@ export function useLiveSession(api: LiveApi) {
     starting: boolean;
     sessionToken?: string;
     cleanupRequested: boolean;
-  }>({ id: null, capture: null, player: null, uploads: Promise.resolve(), fetched: new Set(), poll: null, closed: false, stopping: false, cancellation: new AbortController(), starting: false, cleanupRequested: false });
+  }>({ id: null, capture: null, player: null, uploads: Promise.resolve(), downloads: new Set(), fetched: new Set(), poll: null, closed: false, stopping: false, cancellation: new AbortController(), starting: false, cleanupRequested: false });
 
   const patch = useCallback((next: Partial<LiveSessionState>) => setState((prev) => ({ ...prev, ...next })), []);
 
@@ -158,28 +186,68 @@ export function useLiveSession(api: LiveApi) {
         await fail(view.error?.message ?? 'الجلسة فشلت.');
         return;
       }
-      if (view.target_face_id && current.player) {
-        current.player.updateChunks(view.chunks);
+      const player = current.player;
+      player?.updateChunks(view.chunks);
+      if (view.target_face_id && player) {
         for (const chunk of view.chunks) {
           if (chunk.state === 'ready' && !current.fetched.has(chunk.seq)) {
             current.fetched.add(chunk.seq);
-            void api
-              .chunkAudio(current.id, chunk.seq, current.cancellation.signal)
-              .then((wav) => current.player?.enqueue(chunk.seq, chunk.capture_start_ms, chunk.duration_ms, wav))
+            const controller = new AbortController();
+            const signal = current.cancellation.signal;
+            let cancel!: () => void;
+            let timeout!: number;
+            // Bound the entire fetch/body/decode operation, not just response headers.
+            const expired = new Promise<never>((_, reject) => {
+              cancel = () => {
+                controller.abort();
+                reject(new Error('Live audio cancelled'));
+              };
+              signal.addEventListener('abort', cancel, { once: true });
+              timeout = window.setTimeout(() => {
+                controller.abort();
+                reject(new Error('Live audio timed out'));
+              }, AUDIO_TIMEOUT_MS);
+              if (signal.aborted) cancel();
+            });
+            const download = Promise.race([
+              api.chunkAudio(current.id, chunk.seq, controller.signal)
+                .then((wav) => player.enqueue(chunk.seq, chunk.capture_start_ms, chunk.duration_ms, wav, controller.signal)),
+              expired,
+            ])
               .catch(() => {
                 current.fetched.delete(chunk.seq);
+              })
+              .finally(() => {
+                window.clearTimeout(timeout);
+                signal.removeEventListener('abort', cancel);
+                current.downloads.delete(download);
               });
+            current.downloads.add(download);
           }
         }
       }
       if (view.final.status === 'ready' || view.final.status === 'failed') {
-        if (current.player) await api.postPlayback(current.id, current.player.report()).catch(() => undefined);
-        const metrics = await api.metrics(current.id).catch(() => null);
+        // Terminal server state does not imply that browser audio is ready.
+        await Promise.all(current.downloads);
+        if (current.closed) return;
+        let metrics: LiveMetrics | null = null;
+        let reportError: string | null = null;
+        try {
+          if (player) {
+            player.finish();
+            await savePlayback(api, current.id, player.report(), current.cancellation.signal);
+          }
+          if (current.closed) return;
+          metrics = await api.metrics(current.id).catch(() => null);
+        } catch {
+          // Still expose the final result, but never fetch stale/partial playback metrics.
+          reportError = 'تعذّر حفظ قياسات تشغيل الصوت. انتهت الجلسة، لكن قياسات التشغيل لم تُحفظ.';
+        }
         if (current.closed) return;
         if (view.final.status === 'ready' && view.final.job_id && view.final.video_id) {
           saveSession({ videoId: view.final.video_id, jobId: view.final.job_id });
         }
-        patch({ phase: 'done', metrics });
+        patch({ phase: 'done', metrics, ...(reportError ? { error: reportError } : {}) });
         return;
       }
     } catch (caught) {
@@ -198,6 +266,7 @@ export function useLiveSession(api: LiveApi) {
       starting: true, sessionToken: undefined, cleanupRequested: false,
     };
     live.current = current;
+    current.downloads = new Set();
     patch({ phase: 'starting', error: null, view: null, metrics: null, uploadFailures: [], rebuffers: 0 });
     try {
       const created = await api.create();
@@ -208,7 +277,9 @@ export function useLiveSession(api: LiveApi) {
         return;
       }
       if (created.session_token) saveSession({ token: created.session_token });
-      const player = new LivePlayer(() => current.capture?.startedWallMs ?? Date.now());
+      // Capture's object is cleared on stop; late audio still needs its original clock.
+      let captureWallOrigin = Date.now();
+      const player = new LivePlayer(() => captureWallOrigin);
       current.player = player;
       await player.unlock();
       if (current.closed) {
@@ -219,6 +290,7 @@ export function useLiveSession(api: LiveApi) {
         chunkMs: created.chunk_ms, onChunk: (chunk) => uploadChunk(chunk, current),
         onError: (m) => void fail(m, current), signal: current.cancellation.signal,
       });
+      captureWallOrigin = capture.startedWallMs;
       if (current.closed) {
         // Left the screen while the camera permission was pending: release it at once.
         await capture.stop();

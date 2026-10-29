@@ -25,3 +25,9 @@ Interrupted startup cleanup is best-effort in the browser, not a guarantee after
 **Why:** aborting a Create request cannot establish that the server did not create a session, and a closed page may never receive the response needed to identify its session. A keepalive cleanup request helps only once that identity is known.
 
 **How to apply:** preserve the original owner for delayed cleanup, never let an abandoned startup alter its replacement, and treat server-side idle recovery as a separate protection rather than claiming browser teardown covers hard exits.
+
+Failure to save playback measurements must not block access to a finished recording.
+
+**Why:** measurement completeness and final-result availability are separate requirements; retrying failed telemetry forever strands an otherwise usable result.
+
+**How to apply:** bound telemetry saving, show a clear warning if it fails, and omit unavailable metrics rather than fetching stale measurements or inventing successful playback.

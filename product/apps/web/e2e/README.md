@@ -43,5 +43,15 @@ identify a session when the browser disappears before Create returns. Existing
 tests that manually dispatch `pagehide` are synthetic cancellation checks and
 must not be described as native lifecycle evidence.
 
+Finalization regressions hold an audio response until after final readiness
+(or final failure), then hold native WAV decoding too. The report must wait for
+both before metrics are fetched. HTTP failures, invalid WAVs, and the 10-second
+fetch/body/decode deadline produce explicit null-audible rows, including declared
+missing chunks; later decoded chunks are still scheduled exactly once. A response
+arriving after the deadline must not start playback or change the final report.
+If saving the complete report fails or exceeds its own 10-second deadline,
+the final recording still opens with a visible metrics-not-saved warning;
+metrics are not fetched and terminal polling does not retry forever.
+
 This is a browser/network regression test, **not** evidence of real inference
 quality, real-device latency, or the GPU/camera acceptance gate.

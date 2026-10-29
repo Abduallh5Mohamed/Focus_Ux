@@ -15,7 +15,7 @@ export interface LiveApi {
   get(liveId: string, signal?: AbortSignal): Promise<LiveSessionView>;
   setTarget(liveId: string, faceId: string): Promise<LiveSessionView>;
   chunkAudio(liveId: string, seq: number, signal?: AbortSignal): Promise<ArrayBuffer>;
-  postPlayback(liveId: string, report: PlaybackReport): Promise<void>;
+  postPlayback(liveId: string, report: PlaybackReport, signal?: AbortSignal): Promise<void>;
   stop(liveId: string, options?: { signal?: AbortSignal; sessionToken?: string; keepalive?: boolean }): Promise<LiveSessionView>;
   metrics(liveId: string): Promise<LiveMetrics>;
 }
@@ -79,8 +79,8 @@ export function createLiveApi(options: {
       json<LiveSessionView>(`/live/sessions/${id(liveId)}/target`, post('', { face_id: faceId })),
     chunkAudio: async (liveId, seq, signal) =>
       (await call(`/live/sessions/${id(liveId)}/chunks/${seq}/audio`, { signal })).arrayBuffer(),
-    postPlayback: async (liveId, report) => {
-      await call(`/live/sessions/${id(liveId)}/playback`, post('', report));
+    postPlayback: async (liveId, report, signal) => {
+      await call(`/live/sessions/${id(liveId)}/playback`, { ...post('', report), signal });
     },
     stop: (liveId, cleanup) => json<LiveSessionView>(`/live/sessions/${id(liveId)}/stop`, {
       ...post(''), signal: cleanup?.signal, keepalive: cleanup?.keepalive,

@@ -37,13 +37,13 @@ export class LivePlayer {
     this.drain();
   }
 
-  async enqueue(seq: number, captureStartMs: number, durationMs: number, wav: ArrayBuffer): Promise<void> {
-    if (this.closed || seq < this.nextSeq || this.decoding.has(seq) || this.decoded.has(seq)) return;
+  async enqueue(seq: number, captureStartMs: number, durationMs: number, wav: ArrayBuffer, signal?: AbortSignal): Promise<void> {
+    if (this.closed || signal?.aborted || seq < this.nextSeq || this.decoding.has(seq) || this.decoded.has(seq)) return;
     const ctx = this.context();
     this.decoding.add(seq);
     try {
       const buffer = await ctx.decodeAudioData(wav.slice(0));
-      if (this.closed || seq < this.nextSeq) return;
+      if (this.closed || signal?.aborted || seq < this.nextSeq) return;
       this.chunks.set(seq, { seq, capture_start_ms: captureStartMs, duration_ms: durationMs,
         state: 'ready', error: null, warnings: [] });
       this.decoded.set(seq, buffer);
@@ -60,6 +60,10 @@ export class LivePlayer {
       if (!chunk) return;
       if (['missing', 'target_lost', 'uncertain', 'failed', 'undecodable'].includes(chunk.state)) {
         this.noteUnderrun();
+        this.rows.set(chunk.seq, {
+          capture_wall_ms: this.captureWallOrigin() + chunk.capture_start_ms,
+          audible_wall_ms: null,
+        });
         this.decoded.delete(this.nextSeq);
         this.chunks.delete(this.nextSeq++);
         continue;
@@ -70,6 +74,16 @@ export class LivePlayer {
       this.decoded.delete(this.nextSeq);
       this.chunks.delete(this.nextSeq++);
     }
+  }
+
+  /** Call after pending downloads/decodes settle. Unplayable chunks are explicit
+   * null-audible rows, and cannot block later decoded audio from being measured. */
+  finish(): void {
+    if (this.closed) return;
+    for (const [seq, chunk] of this.chunks) {
+      if (!this.decoded.has(seq)) this.chunks.set(seq, { ...chunk, state: 'failed' });
+    }
+    this.drain();
   }
 
   private schedule(chunk: LiveChunkView, buffer: AudioBuffer): void {

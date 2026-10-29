@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { createServer } from 'node:http';
 import { installAudioProbe, markerWav, probe } from './audioProbe';
+import type { LiveMetrics, LiveSessionView, PlaybackReport } from '../src/lib/live/types';
 import { startupServer } from './startupServer';
 
 /** Keep the real capture tracks so removing srcObject alone cannot pass cleanup checks. */
@@ -516,6 +517,157 @@ for (const teardown of ['unmount', 'pagehide'] as const) {
     await page.clock.fastForward(60_000);
     expect(uploads).toBe(1);
     expect(stops).toBe(0);
+  });
+}
+
+for (const scenario of [
+  { final: 'ready', audio: 'delayed', report: 'ok' },
+  { final: 'failed', audio: 'delayed', report: 'ok' },
+  { final: 'ready', audio: 'http-error', report: 'ok' },
+  { final: 'failed', audio: 'bad-wav', report: 'ok' },
+  { final: 'ready', audio: 'timeout', report: 'ok' },
+  { final: 'ready', audio: 'delayed', report: 'http-error' },
+  { final: 'ready', audio: 'delayed', report: 'timeout' },
+] as const) {
+  test(`final ${scenario.final} waits for ${scenario.audio} audio; playback report ${scenario.report}`, async ({ page }) => {
+    await installAudioProbe(page);
+    // Keep a native decode pending after the HTTP response has completed, too.
+    await page.addInitScript(() => {
+      const decode = AudioContext.prototype.decodeAudioData;
+      AudioContext.prototype.decodeAudioData = async function (wav) {
+        const buffer = await decode.call(this, wav);
+        if (Math.round(buffer.getChannelData(0)[0] * 10) === 3) {
+          await new Promise<void>((resolve) => Object.assign(window, { releaseFinalDecode: resolve }));
+        }
+        return buffer;
+      };
+    });
+    const reports: PlaybackReport[] = [];
+    const events: string[] = [];
+    let stopped = false;
+    let terminalPolls = 0;
+    let audioRequested = false;
+    let reportAborted = false;
+    page.on('requestfailed', (request) => {
+      if (new URL(request.url()).pathname.endsWith('/playback')) reportAborted = true;
+    });
+    let releaseAudio!: () => void;
+    const heldAudio = new Promise<void>((resolve) => { releaseAudio = resolve; });
+    const view = (): LiveSessionView => ({
+      live_session_id: 'late-final', experimental: true, phase: stopped ? 'done' : 'live',
+      mode: 'live', chunk_ms: 300, target_face_id: 'face', first_video_id: null,
+      faces_status: 'ready', queue_depth: 0, expected_seq: 4, overload_at_seq: null,
+      error: null, counts: { duplicates: 0, out_of_order: 0, late_rejected: 0 },
+      chunks: [0, 1, 2, 3].map((seq) => ({
+        seq, state: seq === 1 ? 'missing' : 'ready', capture_start_ms: seq * 300,
+        duration_ms: 300, error: null, warnings: [],
+      })),
+      final: { status: stopped ? scenario.final : null, video_id: null, job_id: null, error: null },
+    });
+    await page.route('**/api/live/sessions**', async (route) => {
+      const request = route.request();
+      const path = new URL(request.url()).pathname;
+      const audio = path.match(/chunks\/(\d+)\/audio$/);
+      if (audio) {
+        const seq = Number(audio[1]);
+        if (seq === 2) {
+          audioRequested = true;
+          await heldAudio;
+          if (scenario.audio === 'http-error') {
+            await route.fulfill({ status: 503, json: { code: 'UNAVAILABLE', message: 'test download failure' } });
+            return;
+          }
+        }
+        await route.fulfill({ contentType: 'audio/wav',
+          body: seq === 2 && scenario.audio === 'bad-wav' ? Buffer.from('invalid WAV') : markerWav(seq + 1) });
+      } else if (/chunks\/\d+$/.test(path)) {
+        await route.fulfill({ json: { state: 'received', duplicate: false } });
+      } else if (path.endsWith('/playback')) {
+        events.push('report');
+        reports.push(request.postDataJSON() as PlaybackReport);
+        if (scenario.report === 'timeout') return; // The server never answers, including errors.
+        if (scenario.report === 'http-error') {
+          await route.fulfill({ status: 503, json: { code: 'UNAVAILABLE', message: 'test report failure' } });
+          return;
+        }
+        await route.fulfill({ json: {} });
+      } else if (path.endsWith('/metrics')) {
+        events.push('metrics');
+        const report = reports.at(-1)!;
+        const metrics: LiveMetrics = {
+          summary: {
+            session_s: 1.2, chunks_total: 4, chunks_ready: 3, chunks_missing: 1, chunks_unusable: 0,
+            chunks_duplicated: 0, rtf: null, max_queue_depth: 0, overload_at_seq: null,
+            capture_to_play_s: { n: report.chunks.filter((c) => c.audible_wall_ms !== null).length,
+              median: null, p95: null, max: null },
+            playback: { underruns: report.underruns, rebuffers: report.rebuffers, duplicate_plays: 0 },
+          },
+          gate: { decision: 'internal_only', reasons: ['Synthetic regression, not GPU acceptance evidence'] },
+        };
+        await route.fulfill({ json: metrics });
+      } else if (request.method() === 'POST' && path.endsWith('/sessions')) {
+        await route.fulfill({ json: { live_session_id: 'late-final', chunk_ms: 300, max_chunks: 100 } });
+      } else {
+        if (path.endsWith('/stop')) stopped = true;
+        else if (stopped) terminalPolls++;
+        await route.fulfill({ json: view() });
+      }
+    });
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.goto('/live');
+    await page.getByRole('button', { name: 'ابدأ التسجيل', exact: true }).click();
+    try {
+      await expect.poll(() => audioRequested).toBe(true);
+      await expect.poll(async () => (await probe(page)).starts.map((s) => s.marker)).toEqual([1]);
+      await page.getByRole('button', { name: 'إيقاف التسجيل', exact: true }).click();
+      await expect.poll(() => terminalPolls).toBe(1);
+      // Give the old, fire-and-forget report path time to run and expose the race.
+      await page.waitForTimeout(650);
+      expect(events).toEqual([]);
+      expect(reports).toEqual([]);
+      if (scenario.audio !== 'timeout') releaseAudio();
+      if (scenario.audio === 'delayed') {
+        await expect.poll(() => page.evaluate(() => 'releaseFinalDecode' in window)).toBe(true);
+        expect(events).toEqual([]); // a completed HTTP response is not a completed decode
+        await page.evaluate(() => (window as unknown as { releaseFinalDecode: () => void }).releaseFinalDecode());
+      }
+      const expectedEvents = scenario.report === 'ok' ? ['report', 'metrics'] : ['report'];
+      await expect.poll(() => events, { timeout: 15_000 }).toEqual(expectedEvents);
+      await expect(page.getByText('خلص', { exact: true })).toBeVisible({ timeout: 15_000 });
+      if (scenario.report !== 'ok') {
+        await expect(page.getByText(/تعذّر حفظ قياسات تشغيل الصوت/)).toBeVisible();
+        if (scenario.report === 'timeout') await expect.poll(() => reportAborted).toBe(true);
+        // No terminal polling/retry loop, and no stale metrics fetched after report failure.
+        await page.waitForTimeout(650);
+      }
+      expect(reports).toHaveLength(1);
+      const report = reports[0];
+      expect(report.chunks.map((c) => c.seq)).toEqual([0, 1, 2, 3]);
+      for (const chunk of report.chunks) {
+        expect(Number.isFinite(chunk.capture_wall_ms)).toBe(true);
+        expect(chunk.capture_wall_ms - report.chunks[0].capture_wall_ms).toBe(chunk.seq * 300);
+        if (chunk.seq === 1 || (chunk.seq === 2 && scenario.audio !== 'delayed')) {
+          expect(chunk.audible_wall_ms).toBeNull();
+        } else {
+          expect(chunk.audible_wall_ms).toEqual(expect.any(Number));
+        }
+      }
+      expect(report.underruns).toBe(scenario.audio === 'delayed' ? 1 : 2);
+      const expectedMarkers = scenario.audio === 'delayed' ? [1, 3, 4] : [1, 4];
+      expect((await probe(page)).starts.map((s) => s.marker)).toEqual(expectedMarkers);
+      if (scenario.audio === 'timeout') {
+        // Even if a timed-out request eventually returns, it must not change the report or play.
+        releaseAudio();
+        await page.waitForTimeout(650);
+        expect((await probe(page)).starts.map((s) => s.marker)).toEqual(expectedMarkers);
+      }
+      expect(terminalPolls).toBe(1);
+      expect(events).toEqual(expectedEvents);
+      expect(errors).toEqual([]);
+    } finally {
+      releaseAudio();
+    }
   });
 }
 
