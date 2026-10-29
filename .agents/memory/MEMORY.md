@@ -1,3 +1,5 @@
 - [Dispatcher shutdown policy](dispatcher-shutdown.md) — prefer explicit shutdown failure over releasing ownership while inference may still be running.
 - [Degraded deletion startup](degraded-deletion-startup.md) — filesystem deletion failures must not block unrelated work or release dispatcher ownership.
 - [Upload ownership locks](upload-ownership.md) — preserve cross-platform sidecar leases and a stable cleanup gate; age alone cannot establish abandonment.
+- [Original inference availability](original-inference.md) — user confirmed the old version isolated audio on their own computer.
+- [Private-preview worker access](private-preview-access.md) — external Windows access can redirect despite successful server checks; verify token-control availability.

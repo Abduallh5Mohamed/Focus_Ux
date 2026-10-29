@@ -46,7 +46,8 @@ PYTHONPATH=product python -m pytest product/tests/ml -q
 PYTHONPATH=product python -m pytest product/tests/api -q
 ```
 
-The two suites pass 24 and 47 tests respectively. The web suite passes 53 tests.
+After syncing the parallel changes, the worker suite passed 24 tests, ML passed
+65 tests, and API passed 160 tests with one skip. The prior web run passed 53 tests.
 The API suite covers uploads, sessions, protected media, queued deletion, and
 unavailable providers using test-only inference doubles. API helpers use relative
 package imports to avoid the worker's top-level `fakes` module.
@@ -63,18 +64,39 @@ test creates and deletes its own metadata-only upload; it does not verify real
 inference or require model weights.
 
 Health check through the frontend: `GET /api/healthz`.
-The health response only confirms the API and dispatcher, not ML readiness.
+The inference field reports configured mode and, in remote mode, recent worker
+contact. A connection alone is not proof of isolation quality.
 
 ## Important limitation
 
-**Real face detection and speaker isolation are not operational.** The imported
-API factory uses `UnavailableCandidateProvider` and `UnavailableExtractionRunner`.
-Its real ML adapter, model weights, and GPU inference are not wired into this
-server. Uploads can be accepted, but detection reports an explicit failure.
-The original Windows GPU/assets paths are not available in this workspace.
-Do not substitute fake audio or claim the ML tests verify real inference.
-No public deployment was performed.
+**Real inference is wired but has not been verified on the user's Windows GPU.**
+The default `FOCUS_INFERENCE_MODE=unavailable` still fails explicitly. Set mode
+to `remote` only after adding a private `FOCUS_WORKER_TOKEN` in Replit Secrets
+and starting the Windows worker. Mode `local` uses the same real adapter on a
+CUDA host with the original source/cache and ML dependencies.
 
+After merging this task, use the main URL from Networking, not the task preview
+URL. Download the allowlisted worker source kit at `/api/worker-kit.zip`. It uses the
+original `A:\focus\.venv`, `A:\focus\Dolphin`, `A:\focus\cache\hf` and
+`A:\focus\cache\torch`, without installing packages or downloading weights.
+See `docs/WINDOWS_INFERENCE.md` for setup, revocation and remaining blockers.
+
+Normalization uses real ffmpeg on the server before detection: 25 fps,
+orientation-corrected, timeline-equivalent MP4. Both inference stages and browser
+playback use these same canonical bytes and the persisted selected face ID.
+Remote tasks use HTTPS outbound polling only; no Windows listening port is used.
+Stopping the worker, missing assets or a timeout never produces simulated audio.
+There is no ASR provider: usable isolated audio does not imply a transcript.
+
+Protocol tests (including real ffmpeg normalization with synthetic worker
+responses) run separately from ML and worker suites:
+
+```bash
+PYTHONPATH=product:product/packages/ml python -m pytest product/tests/inference -q
+```
+
+These tests are **not real GPU inference evidence**. No public deployment was
+performed. No model weights were downloaded or copied into the project.
 ## Error-metric tool
 
 `product/packages/eval/focus_eval` scores existing isolation outputs (wrong-person rate, CER/WER on normalised Arabic, SI-SDRi) and compares two runs for regressions. It needs only `numpy`, runs no engine/GPU/ASR, and the test set template lives in `product/datasets/egyptian_eval/` (see its README). Run its tests with `PYTHONPATH=product python -m pytest product/tests/eval -q`. Real measurements must be produced on the GPU machine.

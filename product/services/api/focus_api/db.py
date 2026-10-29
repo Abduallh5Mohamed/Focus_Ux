@@ -236,6 +236,17 @@ class SqliteRepository:
             ).fetchone()
         return _row_to_video(row) if row else None
 
+    def set_canonical(self, video_id, path, duration_ms, width, height) -> bool:
+        """Publish one timeline-equivalent normalized file, unless deleted."""
+        with self._lock:
+            result = self._conn.execute(
+                """UPDATE videos SET canonical_path=?, mime_type='video/mp4',
+                   duration_ms=?, width=?, height=?, fps=25
+                   WHERE video_id=? AND deleted_at IS NULL""",
+                (path, duration_ms, width, height, video_id),
+            )
+            return result.rowcount == 1
+
     def set_faces_status(
         self,
         video_id: str,

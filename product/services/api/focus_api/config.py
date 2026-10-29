@@ -66,6 +66,8 @@ class Settings:
     # a relative path and the browser resolves it against the API base URL.
     public_base_url: str | None = None
     cleanup_temp_max_age_s: float = 3600.0
+    inference_mode: str = "unavailable"
+    worker_token: str | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         self.storage_root = Path(self.storage_root).expanduser().resolve()
@@ -128,4 +130,6 @@ class Settings:
             api_port=_env_int("FOCUS_API_PORT", 8000),
             public_base_url=os.environ.get("FOCUS_API_PUBLIC_BASE_URL") or None,
             cleanup_temp_max_age_s=_env_float("FOCUS_API_TEMP_MAX_AGE_S", 3600.0),
+            inference_mode=os.environ.get("FOCUS_INFERENCE_MODE", "unavailable"),
+            worker_token=os.environ.get("FOCUS_WORKER_TOKEN") or None,
         )

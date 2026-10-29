@@ -123,8 +123,13 @@ def create_app(
     settings = settings or Settings.from_env()
     storage = Storage(settings)
     repo = SqliteRepository(settings.db_file)
-    provider = candidate_provider or UnavailableCandidateProvider()
-    runner = extraction_runner or UnavailableExtractionRunner()
+    from .inference import build_inference
+    real_provider, bridge = (
+        build_inference(settings, repo)
+        if candidate_provider is None or extraction_runner is None else (None, None)
+    )
+    provider = candidate_provider or real_provider or UnavailableCandidateProvider()
+    runner = extraction_runner or real_provider or UnavailableExtractionRunner()
     worker = SingleWorker(
         repo=repo,
         targeting=runner,
@@ -154,6 +159,8 @@ def create_app(
         try:
             yield
         finally:
+            if bridge:
+                bridge.close()
             # A timed-out stop raises: do not close a live worker's repository.
             dispatcher.stop()
             repo.close()
@@ -173,6 +180,10 @@ def create_app(
     app.state.service = service
     app.state.candidate_provider = provider
     app.state.extraction_runner = runner
+    app.state.inference_bridge = bridge
+    if bridge:
+        from .remote_inference import add_remote_routes
+        add_remote_routes(app, bridge)
 
     app.add_middleware(
         CORSMiddleware,
@@ -236,9 +247,17 @@ def create_app(
         )
 
     # -- routes ------------------------------------------------------------
+    @app.get("/worker-kit.zip")
+    def download_worker_kit():
+        from .worker_kit import worker_kit
+        return worker_kit()
+
     @app.get("/healthz")
     def healthz():
-        return {"status": "ok", "dispatcher": bool(dispatcher.lock_acquired)}
+        return {
+            "status": "ok", "dispatcher": bool(dispatcher.lock_acquired),
+            "inference": bridge.status() if bridge else {"mode": settings.inference_mode},
+        }
 
     @app.post("/videos", status_code=201)
     def post_video(request: Request, file: UploadFile = File(...)):

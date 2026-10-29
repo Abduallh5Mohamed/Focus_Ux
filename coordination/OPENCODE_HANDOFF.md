@@ -57,3 +57,43 @@ focus-review (DeepSeek) produced B1, M1–M9, m1–m17. Required findings were a
 ## Not done / out of scope
 
 No git operations, no scripts run inside `product/services/api` or `tests/api` (external DeepSeek owns these), no edits outside my owned paths except `coordination/OPENCODE_HANDOFF.md`. No deployment, push, GPU benchmarks, or model training.
+
+## Replit inference integration handoff
+
+This later section describes the imported Replit integration; the historical
+milestone above is preserved, not a statement of current API availability.
+
+- Added offline-only `focus_ml.runtime.LocalEngine`, canonical media/provider
+  integration in `services/api/focus_api/inference.py`, and outbound single-task
+  worker bridge in `remote_inference.py`. Factory selects unavailable/local/remote
+  mode; all existing browser ownership/session checks remain in place.
+- Added allowlisted `/worker-kit.zip`, Windows startup/key/connection-check
+  scripts under `product/tools`, and `docs/WINDOWS_INFERENCE.md`. No weights,
+  fake inference providers, external services, packages, training or publishing.
+- Worker credentials are supplied through Replit Secrets and hidden/local setup;
+  no credential values are in this handoff, source bundle or URLs.
+- Canonical ffmpeg output is 25 fps; persisted geometry and actual API video ID
+  tie selection to extraction. Remote WAVs are bounded, PCM16/16k/mono, with
+  actual sample duration checked against canonical media and zero offset.
+- Executed after syncing the parallel changes: inference protocol suite
+  (25 passed), ML suite (65 passed), worker suite (24 passed), API suite
+  (160 passed, one skipped). Suites were run in separate Python processes.
+  Protocol tests include real ffmpeg normalization but synthetic model responses.
+  These are NOT proof of real GPU isolation. Workflow, ZIP download and landing
+  page were verified in the task environment.
+- Operator screenshot confirms real model initialization on Windows. Actual
+  remote polling and upload-to-isolated-audio execution are still unverified.
+  The main Networking URL differs from the isolated task preview; main health
+  succeeded but worker handshake returned 404 because the changes were not merged.
+  The operator then explicitly disabled Private preview for a temporary test;
+  a subsequent Windows check to the task host still redirected. Do not assume
+  that changing main preview settings can expose this isolated task environment.
+- After merge: restart main workflow, check remote mode and worker-secret
+  presence without reading its value, then run Check-Connection.cmd against the
+  main Networking URL. Reuse the saved Windows key. Only then run the GPU worker
+  and validate a real multi-speaker clip, non-first selected face, alignment,
+  playable WAV and cross-session media denial. No production publication needed.
+- Operator allowed only a temporary public-preview test. Do not treat that as
+  permission for ongoing public access; restore private preview when testing
+  ends if it was temporarily changed. Private main previews need separately
+  authorized platform access; do not publish this task fork as a workaround.

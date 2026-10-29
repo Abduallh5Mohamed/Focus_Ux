@@ -37,3 +37,8 @@ externalPort = 80
 [postMerge]
 path = "scripts/post-merge.sh"
 timeoutMs = 240000
+
+[userenv]
+
+[userenv.shared]
+FOCUS_INFERENCE_MODE = "remote"
