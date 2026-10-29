@@ -1,1 +1,2 @@
 - [Dispatcher shutdown policy](dispatcher-shutdown.md) — prefer explicit shutdown failure over releasing ownership while inference may still be running.
+- [Degraded deletion startup](degraded-deletion-startup.md) — filesystem deletion failures must not block unrelated work or release dispatcher ownership.

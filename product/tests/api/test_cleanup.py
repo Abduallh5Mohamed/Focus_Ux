@@ -128,11 +128,18 @@ def test_cleanup_failure_retains_paths_and_retries(
                 # Use a fresh app: startup must exercise the actual helpers,
                 # not a mock of remove_media or remove_job_dir.
                 with open_api(settings) as failed:
-                    with pytest.raises(OSError, match="injected cleanup failure") as exc:
-                        failed.dispatcher.start()
-                    assert exc.value.errno == error_number
-                    assert not failed.dispatcher.lock_acquired
-                    assert not failed.dispatcher.lock.held
+                    with caplog.at_level(logging.ERROR, logger="focus_api.dispatcher"):
+                        assert failed.dispatcher.start()
+                    assert failed.dispatcher.wait_idle()
+                    assert failed.dispatcher.lock_acquired
+                    assert failed.dispatcher.lock.held
+                    records = [
+                        record for record in caplog.records
+                        if "startup cleanup failed" in record.getMessage()
+                    ]
+                    assert len(records) == 1
+                    assert data["video_id"] in records[0].getMessage()
+                    assert records[0].exc_info[1].errno == error_number
                     assert_private(failed, data, job_id)
                     assert_paths_retained(failed, data, original, canonical, thumbnail_paths)
 

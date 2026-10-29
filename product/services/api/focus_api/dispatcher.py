@@ -14,7 +14,10 @@ Crash recovery:
     touch PROCESSING jobs;
   * the lock holder then asks the worker to recover interrupted PROCESSING jobs
     (failed + PROCESSING_FAILED retryable per services/worker/worker.py) and
-    re-enqueues pending faces / queued jobs in creation order.
+    re-enqueues pending faces / queued jobs in creation order;
+  * filesystem cleanup failures allow degraded startup under the same lock.
+    Failed tombstones stay private and retain paths for retry on the next
+    startup or repeated deletion request; unrelated cleanup and work continue.
 """
 from __future__ import annotations
 
@@ -263,7 +266,16 @@ class Dispatcher:
     def _cleanup_deleted_videos(self) -> None:
         for video in self.repo.all_videos():
             if video.deleted:
-                self._process_cleanup(video.video_id)
+                try:
+                    self._process_cleanup(video.video_id)
+                except OSError:
+                    # Only filesystem failures permit degraded startup. Do not
+                    # hide repository/programming errors or release ownership.
+                    logger.exception(
+                        "startup cleanup failed for video %s; tombstone and paths "
+                        "retained for retry; continuing in degraded mode",
+                        video.video_id,
+                    )
 
     # -- deterministic test helper ------------------------------------------
     def drain(self, timeout: float = 30.0) -> int:

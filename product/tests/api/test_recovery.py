@@ -1,5 +1,6 @@
 """Restart regressions: fresh app/repository instances, same on-disk SQLite."""
 from contextlib import contextmanager
+import logging
 from pathlib import Path
 from threading import Event
 from unittest.mock import Mock
@@ -156,32 +157,119 @@ def test_restart_cleans_tombstoned_upload_and_preserves_other_media(tmp_path):
             assert runner.calls == []
 
 
-def test_startup_cleanup_failure_releases_lock_and_can_be_retried(tmp_path, monkeypatch):
+@pytest.mark.parametrize("failed_cleanup", ["remove_media", "remove_job_dir"])
+def test_restart_cleanup_failure_is_private_observable_and_does_not_block_work(
+    tmp_path, monkeypatch, caplog, failed_cleanup
+):
+    from .test_cleanup import assert_cleaned, assert_paths_retained, assert_private
+
     settings = make_settings(tmp_path)
     with open_api(settings) as before:
-        video_id, token, _ = before.upload_ok()
-        original = Path(before.repo.get_video(video_id).original_path)
-        assert before.delete_video(video_id, token).status_code == 202
+        deleted = [before.setup_video() for _ in range(3)]
+        completed = [enqueue_job(before, data, f"completed-{n}") for n, data in enumerate(deleted)]
+        before.drain()
+        originals = [before.repo.get_video(data["video_id"]).original_path for data in deleted]
+        failed_video = before.repo.get_video(deleted[0]["video_id"])
+        thumbnails = [face.thumbnail_path for face in before.repo.get_faces(failed_video.video_id)]
+        survivor = before.setup_video()
+        cancelled = enqueue_job(before, deleted[0], "cancel-on-delete")
+        queued_job = enqueue_job(before, survivor, "unrelated")
+        pending_video, pending_token, _ = before.upload_ok()
+        for data in deleted:
+            assert before.delete_video(data["video_id"], data["token"]).status_code == 202
 
+    # The same failure across fresh app/repository instances stays observable.
+    for attempt in range(2):
+        provider, runner = FakeCandidateProvider(), FakeExtractionRunner()
+        with open_api(settings, provider=provider, runner=runner) as after:
+            storage = after.app.state.storage
+            remove = getattr(storage, failed_cleanup)
+            target = failed_video.video_id if failed_cleanup == "remove_media" else completed[0]
+
+            def fail_one(ident):
+                if ident == target:
+                    raise PermissionError("temporary cleanup failure")
+                return remove(ident)
+
+            caplog.clear()
+            with monkeypatch.context() as patch:
+                patch.setattr(storage, failed_cleanup, fail_one)
+                with caplog.at_level(logging.ERROR, logger="focus_api.dispatcher"):
+                    assert after.dispatcher.start()
+                assert after.dispatcher.wait_idle()
+                assert after.dispatcher.lock_acquired and after.dispatcher.lock.held
+                records = [
+                    record for record in caplog.records
+                    if "startup cleanup failed" in record.getMessage()
+                ]
+                assert len(records) == 1
+                assert failed_video.video_id in records[0].getMessage()
+                assert "retained for retry" in records[0].getMessage()
+                assert "degraded mode" in records[0].getMessage()
+                assert isinstance(records[0].exc_info[1], PermissionError)
+                assert "temporary cleanup failure" in caplog.text
+                assert Path(originals[0]).is_file()
+                assert (settings.thumbs_dir / failed_video.video_id).is_dir()
+                assert_paths_retained(
+                    after, deleted[0], originals[0], failed_video.canonical_path, thumbnails
+                )
+                assert_private(after, deleted[0], completed[0])
+                assert after.get_job(cancelled, deleted[0]["token"]).status_code == 404
+                assert after.repo.get(cancelled).status is JobStatus.CANCELLED
+                for data, job, original in zip(deleted[1:], completed[1:], originals[1:]):
+                    assert_cleaned(
+                        after, data, job, original,
+                        settings.thumbs_dir / data["video_id"], settings.jobs_dir / job,
+                    )
+                assert after.get_job(queued_job, survivor["token"]).json()["status"] == "completed"
+                assert after.get_original(survivor["video_id"], survivor["token"]).status_code == 200
+                assert after.get_audio(queued_job, survivor["token"]).status_code == 200
+                assert after.get_faces(pending_video, pending_token).json()["status"] == "ready"
+                assert [call["job_id"] for call in runner.calls] == ([queued_job] if attempt == 0 else [])
+                assert [call["video_id"] for call in provider.calls] == ([pending_video] if attempt == 0 else [])
+
+                with open_api(settings) as contender:
+                    recover = Mock(wraps=contender.app.state.worker.recover_interrupted)
+                    cleanup = Mock(wraps=contender.dispatcher._cleanup_deleted_videos)
+                    with monkeypatch.context() as contender_patch:
+                        contender_patch.setattr(contender.app.state.worker, "recover_interrupted", recover)
+                        contender_patch.setattr(contender.dispatcher, "_cleanup_deleted_videos", cleanup)
+                        assert contender.dispatcher.start() is False
+                        recover.assert_not_called()
+                        cleanup.assert_not_called()
+                        assert not contender.dispatcher.lock_acquired
+                        assert not contender.dispatcher.lock.held
+                assert after.dispatcher.lock.held
+
+    # Once the filesystem recovers, a successor cleans everything idempotently
+    # without re-executing cancelled or completed jobs.
+    for _ in range(2):
+        runner = FakeExtractionRunner()
+        with open_api(settings, start_dispatcher=True, runner=runner) as retry:
+            assert retry.app.state.dispatcher_started
+            assert retry.dispatcher.wait_idle()
+            for data, job, original in zip(deleted, completed, originals):
+                assert_cleaned(
+                    retry, data, job, original,
+                    settings.thumbs_dir / data["video_id"], settings.jobs_dir / job,
+                )
+            assert runner.calls == []
+
+
+def test_unexpected_startup_cleanup_error_still_aborts_and_releases_lock(tmp_path, monkeypatch):
+    settings = make_settings(tmp_path)
     with open_api(settings) as failed:
         with monkeypatch.context() as patch:
             patch.setattr(
-                failed.app.state.storage, "remove_media",
-                Mock(side_effect=OSError("temporary cleanup failure")),
+                failed.dispatcher, "_cleanup_deleted_videos",
+                Mock(side_effect=RuntimeError("unexpected repository failure")),
             )
-            with pytest.raises(OSError, match="temporary cleanup failure"):
+            with pytest.raises(RuntimeError, match="unexpected repository failure"):
                 failed.dispatcher.start()
         assert not failed.dispatcher.lock_acquired
         assert not failed.dispatcher.lock.held
-        assert original.exists()
-        assert failed.repo.get_video(video_id).deleted
-
-        # A separate dispatcher must be able to obtain the released lock.
-        with open_api(settings, start_dispatcher=True) as retry:
-            assert retry.app.state.dispatcher_started
-            assert retry.dispatcher.wait_idle()
-            assert not original.exists()
-            assert retry.repo.get_video(video_id).original_path is None
+        with open_api(settings, start_dispatcher=True) as successor:
+            assert successor.app.state.dispatcher_started
 
 
 class BlockingRunner(FakeExtractionRunner):
