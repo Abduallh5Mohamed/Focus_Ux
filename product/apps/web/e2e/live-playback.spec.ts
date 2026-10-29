@@ -83,6 +83,65 @@ test('a never-responding upload times out in order and stop finishes with an exp
   expect(errors).toEqual([]);
 });
 
+for (const outcome of ['timeout', 'unmount', 'pagehide'] as const) {
+  test(`${outcome} cancels a never-responding stop without duplicate finalization or camera tracks`, async ({ page }) => {
+    await trackCapture(page);
+    await page.clock.install();
+    let stops = 0;
+    let aborted = 0;
+    let polls = 0;
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    page.on('requestfailed', (request) => {
+      if (new URL(request.url()).pathname.endsWith('/stop')) aborted++;
+    });
+    await page.route('**/api/live/sessions**', async (route) => {
+      const request = route.request();
+      const path = new URL(request.url()).pathname;
+      if (path.endsWith('/stop')) {
+        stops++;
+        return; // Leave finalization pending until the browser cancels the request.
+      }
+      if (/\/chunks\/\d+$/.test(path)) {
+        await route.fulfill({ json: { state: 'received', duplicate: false } });
+      } else if (request.method() === 'POST' && path.endsWith('/sessions')) {
+        await route.fulfill({ json: { live_session_id: 'stop-timeout', chunk_ms: 300, max_chunks: 100 } });
+      } else {
+        polls++;
+        await route.fulfill({ json: {
+          phase: 'live', target_face_id: null, chunks: [], final: { status: null }, error: null,
+        } });
+      }
+    });
+    await page.goto('/live');
+    await page.getByRole('button', { name: 'ابدأ التسجيل', exact: true }).click();
+    await page.getByRole('button', { name: 'إيقاف التسجيل', exact: true }).click();
+    await expect.poll(() => stops).toBe(1);
+    await expect(page.getByText('بنوقف…', { exact: true })).toBeVisible();
+    await expect.poll(() => page.evaluate(() => {
+      const tracks = (window as unknown as { captureTracks: MediaStreamTrack[] }).captureTracks;
+      return tracks.length >= 2 && tracks.every((track) => track.readyState === 'ended');
+    })).toBe(true);
+    if (outcome === 'timeout') {
+      await page.clock.fastForward(10_000);
+      await expect(page.getByText(/الخادم ما ردّش على طلب إنهاء التسجيل في الوقت المحدد/)).toBeVisible();
+      await expect(page.getByText('بنوقف…', { exact: true })).not.toBeVisible();
+    } else if (outcome === 'unmount') {
+      await page.getByRole('link', { name: 'ارفع فيديو', exact: true }).click();
+    } else {
+      await page.evaluate(() => window.dispatchEvent(new PageTransitionEvent('pagehide')));
+    }
+    await expect.poll(() => aborted).toBe(1);
+    // Drain a status request already in flight before checking that polling stays stopped.
+    await page.waitForTimeout(100);
+    const pollsAfterCancellation = polls;
+    await page.clock.fastForward(60_000);
+    expect(stops).toBe(1);
+    expect(polls).toBe(pollsAfterCancellation);
+    expect(errors).toEqual([]);
+  });
+}
+
 for (const teardown of ['unmount', 'pagehide'] as const) {
   test(`${teardown} cancels a pending upload without retrying or keeping camera tracks`, async ({ page }) => {
     await trackCapture(page);

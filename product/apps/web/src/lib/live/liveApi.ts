@@ -16,7 +16,7 @@ export interface LiveApi {
   setTarget(liveId: string, faceId: string): Promise<LiveSessionView>;
   chunkAudio(liveId: string, seq: number, signal?: AbortSignal): Promise<ArrayBuffer>;
   postPlayback(liveId: string, report: PlaybackReport): Promise<void>;
-  stop(liveId: string): Promise<LiveSessionView>;
+  stop(liveId: string, signal?: AbortSignal): Promise<LiveSessionView>;
   metrics(liveId: string): Promise<LiveMetrics>;
 }
 
@@ -73,7 +73,7 @@ export function createLiveApi(options: {
     postPlayback: async (liveId, report) => {
       await call(`/live/sessions/${id(liveId)}/playback`, post('', report));
     },
-    stop: (liveId) => json<LiveSessionView>(`/live/sessions/${id(liveId)}/stop`, post('')),
+    stop: (liveId, signal) => json<LiveSessionView>(`/live/sessions/${id(liveId)}/stop`, { ...post(''), signal }),
     metrics: (liveId) => json<LiveMetrics>(`/live/sessions/${id(liveId)}/metrics`),
   };
 }

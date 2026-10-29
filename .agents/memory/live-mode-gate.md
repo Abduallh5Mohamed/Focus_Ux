@@ -13,3 +13,9 @@ Synthetic browser/network regression results do not satisfy the real-device gate
 **Why:** they establish scheduling behavior, not inference quality or capture-to-play latency on the user's GPU and camera.
 
 **How to apply:** keep synthetic playback checks separate from GPU acceptance evidence; never enable live mode globally based on browser-test success alone.
+
+Do not automatically retry a live finalization request after a timeout or cancellation.
+
+**Why:** cancelling the browser's response does not undo server-side finalization; a lost reply leaves the outcome uncertain rather than proving the operation failed.
+
+**How to apply:** bound the request, release capture resources, and explain the uncertain outcome. Any future recovery should first inspect session status instead of blindly sending another finalization request.

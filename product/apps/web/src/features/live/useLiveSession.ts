@@ -23,6 +23,8 @@ export interface LiveSessionState {
 const POLL_MS = 500;
 const UPLOAD_TRIES = 3;
 const UPLOAD_TIMEOUT_MS = 10_000;
+const STOP_TIMEOUT_MS = 10_000;
+const STOP_TIMEOUT_MESSAGE = 'الخادم ما ردّش على طلب إنهاء التسجيل في الوقت المحدد. ممكن يكون لسه بيخلص؛ مش هنبعت طلب الإنهاء تاني تلقائيًا.';
 const sleep = (ms: number, signal: AbortSignal) => new Promise<void>((resolve) => {
   const done = () => {
     clearTimeout(timer);
@@ -221,12 +223,27 @@ export function useLiveSession(api: LiveApi) {
     patch({ stream: null });
     await current.uploads;
     if (current.closed) return;
+    const request = new AbortController();
+    const cancel = () => request.abort();
+    const signal = current.cancellation.signal;
+    signal.addEventListener('abort', cancel, { once: true });
+    if (signal.aborted) cancel();
+    let timedOut = false;
+    // One attempt only: aborting the response does not undo server finalization.
+    // Keep the deadline active through response-body parsing, not just headers.
+    const timer = setTimeout(() => {
+      timedOut = true;
+      request.abort();
+    }, STOP_TIMEOUT_MS);
     try {
-      await api.stop(current.id);
+      await api.stop(current.id, request.signal);
       if (current.closed) return;
       patch({ phase: 'finishing' });
     } catch (caught) {
-      if (!current.closed) await fail(describeError(caught).title);
+      if (!current.closed) await fail(timedOut ? STOP_TIMEOUT_MESSAGE : describeError(caught).title);
+    } finally {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', cancel);
     }
   }, [api, fail, patch]);
 
