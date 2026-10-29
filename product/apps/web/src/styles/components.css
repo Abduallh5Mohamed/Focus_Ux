@@ -326,6 +326,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
   padding: var(--sp-2) var(--sp-3);
   border-radius: var(--r-sm);
   background: var(--bg-elevated);
@@ -339,6 +340,13 @@
 .facts__val {
   font-weight: 700;
   font-size: var(--fs-base);
+}
+
+/* Long opaque ids stay on one line instead of wrapping the label out of shape. */
+.facts__val.mono {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ---------- Skeleton ---------- */

@@ -211,4 +211,48 @@ describe('createHttpApi', () => {
 
     await expect(api.fetchAudio('j1')).resolves.toBe(blob);
   });
+
+  it('attaches the token to same-origin protected media', async () => {
+    const blob = new Blob(['x'], { type: 'image/svg+xml' });
+    const fetchImpl = vi.fn(async () => fakeResponse(200, undefined, { blob }));
+    const api = createHttpApi({
+      baseUrl: 'https://api.test',
+      getToken: () => 'secret-token',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    await api.fetchMedia('/videos/v1/faces/f1/thumbnail');
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.test/videos/v1/faces/f1/thumbnail');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer secret-token');
+  });
+
+  it('never leaks the token to a foreign-origin media URL', async () => {
+    const blob = new Blob(['x'], { type: 'image/svg+xml' });
+    const fetchImpl = vi.fn(async () => fakeResponse(200, undefined, { blob }));
+    const api = createHttpApi({
+      baseUrl: 'https://api.test',
+      getToken: () => 'secret-token',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    await api.fetchMedia('https://cdn.evil.test/thumb.jpg');
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://cdn.evil.test/thumb.jpg');
+    expect((init.headers as Record<string, string> | undefined)?.Authorization).toBeUndefined();
+  });
+
+  it('fetches data: media without a token', async () => {
+    const blob = new Blob(['x'], { type: 'image/svg+xml' });
+    const fetchImpl = vi.fn(async () => fakeResponse(200, undefined, { blob }));
+    const api = createHttpApi({
+      baseUrl: 'https://api.test',
+      getToken: () => 'secret-token',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+
+    await api.fetchMedia('data:image/svg+xml;base64,AAA');
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect((init.headers as Record<string, string> | undefined)?.Authorization).toBeUndefined();
+  });
 });

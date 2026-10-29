@@ -32,6 +32,26 @@ Boots `vite preview` on port 4188 and asserts, against the real HTTP responses:
 
 Exit code 0 means all checks passed. 20 checks at the time of writing.
 
+## browser/ — real Chrome QA (Round 2)
+
+`apps/web/scripts/browser/run-qa.mjs` drives the **real** system Chrome via
+`puppeteer-core` (installed `--no-save`) against a running dev server. It is not part of
+the bundle and is not run by `npm test`.
+
+```bash
+cd product/apps/web
+npx vite --mode mock --port 5174 --strictPort      # terminal 1 (mock)
+node scripts/browser/run-qa.mjs http://localhost:5174   # terminal 2
+```
+
+It walks home → upload → face select → processing → result → refresh at 1280/390/320,
+writes screenshots to `tests/web/browser/artifacts/`, and records console/page/request
+failures, the keyboard focus sequence, and horizontal-overflow offenders in `summary.json`.
+`blob:… ERR_ABORTED` entries are expected (audio element aborting a revoked blob URL).
+
+`apps/web/scripts/browser/run-real-api.mjs` does the same upload path with **mock OFF**
+against a real API (`VITE_API_BASE_URL=…`), to confirm the UI actually talks to the server.
+
 ## Unit tests (in apps/web)
 
 | File | Covers |

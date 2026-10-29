@@ -90,13 +90,13 @@ export function TranscriptPanel({
         </div>
       ) : null}
 
-      {status === 'ready' && segments.length === 0 ? (
+      {status === 'ready' && !loading && segments.length === 0 ? (
         <EmptyState icon="file" title="مفيش كلام اتعرّف عليه">
           يمكن المقطع مفيهوش كلام واضح، أو الصوت منخفض جدًا.
         </EmptyState>
       ) : null}
 
-      {status === 'ready' && segments.length > 0 ? (
+      {status === 'ready' && !loading && segments.length > 0 ? (
         <ol className="transcript">
           {segments.map((segment, index) => (
             <li key={segment.id}>

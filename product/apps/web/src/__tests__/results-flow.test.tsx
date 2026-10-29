@@ -51,12 +51,12 @@ describe('ResultView', () => {
     });
   });
 
-  it('offers the isolated track once the WAV is fetched', async () => {
+  it('offers both tracks once the WAV and original are fetched', async () => {
     renderResults();
     await waitFor(() => {
       expect(screen.getByRole('radio', { name: 'المعزول' })).toBeEnabled();
+      expect(screen.getByRole('radio', { name: 'الأصل' })).toBeEnabled();
     });
-    expect(screen.getByRole('radio', { name: 'الأصل' })).toBeDisabled();
   });
 
   it('enables the WAV download only after the blob exists', async () => {

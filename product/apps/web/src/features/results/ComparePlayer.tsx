@@ -15,6 +15,10 @@ interface ComparePlayerProps {
   mode: TrackMode;
   onModeChange: (mode: TrackMode) => void;
   originalAvailable: boolean;
+  originalSource: 'memory' | 'fetched' | null;
+  originalLoading: boolean;
+  originalError: unknown;
+  onRetryOriginal: () => void;
   isolatedReady: boolean;
   isolatedLoading: boolean;
   isolatedError: unknown;
@@ -34,6 +38,10 @@ export function ComparePlayer({
   mode,
   onModeChange,
   originalAvailable,
+  originalSource,
+  originalLoading,
+  originalError,
+  onRetryOriginal,
   isolatedReady,
   isolatedLoading,
   isolatedError,
@@ -77,10 +85,40 @@ export function ComparePlayer({
           </button>
         </div>
 
-        {!originalAvailable ? (
+        {originalLoading ? (
+          <div className="row" aria-live="polite">
+            <Spinner />
+            <span className="hint">بنحمّل الصوت الأصلي من الخادم…</span>
+          </div>
+        ) : null}
+
+        {originalError ? (
+          <Notice
+            tone="warn"
+            title="مقادرناش نجيب الصوت الأصلي"
+            action={
+              <Button size="sm" variant="secondary" icon="restart" onClick={onRetryOriginal}>
+                جرّب تاني
+              </Button>
+            }
+          >
+            لسه تقدر تسمع وتنزّل الصوت المعزول. الصوت الأصلي ممكن يكون اتحذف أو الرابط قديم.
+          </Notice>
+        ) : null}
+
+        {!originalAvailable && !originalLoading && !originalError ? (
           <p className="hint">
-            الصوت الأصلي متاح بس في نفس الجلسة اللي رفعت فيها الفيديو. بعد إعادة تحميل الصفحة،
-            المعزول بس هو المتاح — مش بنعيد بناء الأصل من التخزين.
+            {originalSource === 'fetched'
+              ? 'الصوت الأصلي اتحمّل من الخادم عشان نقارن بيه بعد إعادة التحميل.'
+              : 'الصوت الأصلي متاح بس في نفس الجلسة اللي رفعت فيها الفيديو. بعد إعادة تحميل الصفحة من غير ما يكون محفوظ، المعزول بس المتاح — ومش بنعيد بناء الأصل من التخزين.'}
+          </p>
+        ) : null}
+
+        {originalAvailable ? (
+          <p className="hint">
+            {originalSource === 'memory'
+              ? 'الصوت الأصلي من نفس الفيديو اللي رفعته في الجلسة دي.'
+              : 'الصوت الأصلي اتجاب من الخادم (نفس المدخل اللي اتعزل منه الصوت).'}
           </p>
         ) : null}
 

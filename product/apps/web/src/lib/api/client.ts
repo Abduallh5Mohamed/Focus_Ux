@@ -42,6 +42,12 @@ export interface FocusApi {
   getTranscript(jobId: string, signal?: AbortSignal): Promise<TranscriptResponse>;
   /** Fetches a protected media URL (e.g. a face thumbnail) with the session token. */
   fetchMedia(url: string, signal?: AbortSignal): Promise<Blob>;
+  /**
+   * Fetches the original (canonical, timeline-equivalent) video for an honest A/B compare
+   * after a refresh, when the in-memory upload is gone. Approved endpoint:
+   * GET /videos/{id}/original — owner session Bearer token required.
+   */
+  fetchOriginal(videoId: VideoId, signal?: AbortSignal): Promise<Blob>;
   deleteVideo(videoId: VideoId): Promise<DeleteVideoResponse>;
 }
 
@@ -122,9 +128,12 @@ export function createHttpApi(options: HttpApiOptions): FocusApi {
   }
 
   async function requestBlob(path: string, signal?: AbortSignal): Promise<Blob> {
+    // An absolute URL is used as-is (same-origin media the API may return as a full link);
+    // a relative path is joined onto the API base. Either way the session token is attached.
+    const finalUrl = /^https?:/i.test(path) ? path : joinUrl(baseUrl, path);
     let response: Response;
     try {
-      response = await doFetch(joinUrl(baseUrl, path), {
+      response = await doFetch(finalUrl, {
         method: 'GET',
         headers: authHeaders(),
         signal,
@@ -231,11 +240,24 @@ export function createHttpApi(options: HttpApiOptions): FocusApi {
     },
 
     fetchMedia(url, signal) {
-      // Absolute http(s) media, plus data:/blob: URLs used by the dev mock adapter.
-      if (/^(https?:|data:|blob:)/i.test(url)) {
-        return fetchBlobAbsolute(doFetch, url, getToken, signal);
+      // data:/blob: are local/opaque; never carry credentials.
+      if (/^(data:|blob:)/i.test(url)) {
+        return fetchBlobAbsolute(doFetch, url, () => null, signal);
       }
-      return requestBlob(url, signal);
+
+      // Only attach the session token to media that belongs to the trusted API origin.
+      // A foreign-origin URL is fetched anonymously so we never leak the token to a
+      // third party. A relative path resolves against the API base (trusted) and is tokened.
+      const target = safeUrl(url, baseUrl);
+      const sameOrigin = target ? targetOriginMatches(target, baseUrl) : false;
+      if (sameOrigin) {
+        return requestBlob(url, signal);
+      }
+      return fetchBlobAbsolute(doFetch, url, () => null, signal);
+    },
+
+    fetchOriginal(videoId, signal) {
+      return requestBlob(`/videos/${encodeURIComponent(videoId)}/original`, signal);
     },
 
     deleteVideo(videoId) {
@@ -244,6 +266,23 @@ export function createHttpApi(options: HttpApiOptions): FocusApi {
       });
     },
   };
+}
+
+function safeUrl(value: string, base?: string): URL | null {
+  try {
+    return new URL(value, base && /^https?:/i.test(base) ? base : undefined);
+  } catch {
+    return null;
+  }
+}
+
+function targetOriginMatches(target: URL, baseUrl?: string): boolean {
+  if (!baseUrl || !/^https?:/i.test(baseUrl)) return false;
+  try {
+    return new URL(baseUrl).origin === target.origin;
+  } catch {
+    return false;
+  }
 }
 
 async function fetchBlobAbsolute(

@@ -33,12 +33,15 @@ export function ResultView({ job, videoId, onDeleted }: ResultViewProps): JSX.El
   const [audioReload, setAudioReload] = useState(0);
 
   const [originalUrl, setOriginalUrl] = useState<string | null>(null);
+  const [originalSource, setOriginalSource] = useState<'memory' | 'fetched' | null>(null);
+  const [originalLoading, setOriginalLoading] = useState(false);
+  const [originalError, setOriginalError] = useState<unknown>(null);
+  const [originalReload, setOriginalReload] = useState(0);
 
   const [transcript, setTranscript] = useState<TranscriptResponse | null>(null);
   const [transcriptLoading, setTranscriptLoading] = useState(false);
   const [transcriptError, setTranscriptError] = useState<unknown>(null);
   const [transcriptReload, setTranscriptReload] = useState(0);
-  const transcriptKey = useRef<string | null>(null);
 
   const [confirming, setConfirming] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -48,17 +51,56 @@ export function ResultView({ job, videoId, onDeleted }: ResultViewProps): JSX.El
   const audioFailed = job.audio_status === 'failed';
   const isolatedReady = Boolean(isolatedUrl) && !audioFailed;
 
-  /* ---------- original track (this tab only) ---------- */
+  /* ---------- original track ---------- */
+  // Preferred source: the in-memory File we just uploaded (exact bytes, no extra download).
   useEffect(() => {
     const file = getRememberedUpload(videoId);
     if (!file) {
       setOriginalUrl(null);
+      setOriginalSource(null);
       return;
     }
     const url = URL.createObjectURL(file);
     setOriginalUrl(url);
+    setOriginalSource('memory');
     return () => URL.revokeObjectURL(url);
   }, [videoId]);
+
+  // Fallback source: after a refresh the in-memory File is gone, so fetch the canonical
+  // original the server keeps (GET /videos/{id}/original). Only when nothing is in memory,
+  // so we never download the same file twice.
+  useEffect(() => {
+    if (!videoId) return;
+    if (getRememberedUpload(videoId)) return;
+
+    const controller = new AbortController();
+    let created: string | null = null;
+    setOriginalUrl(null);
+    setOriginalSource(null);
+    setOriginalLoading(true);
+    setOriginalError(null);
+
+    api
+      .fetchOriginal(videoId, controller.signal)
+      .then((blob) => {
+        if (controller.signal.aborted) return;
+        created = URL.createObjectURL(blob);
+        setOriginalUrl(created);
+        setOriginalSource('fetched');
+      })
+      .catch((caught: unknown) => {
+        if (controller.signal.aborted) return;
+        setOriginalError(caught);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setOriginalLoading(false);
+      });
+
+    return () => {
+      controller.abort();
+      if (created) URL.revokeObjectURL(created);
+    };
+  }, [api, videoId, originalReload]);
 
   /* ---------- isolated track ---------- */
   useEffect(() => {
@@ -103,10 +145,9 @@ export function ResultView({ job, videoId, onDeleted }: ResultViewProps): JSX.El
     const status = job.transcript_status;
     if (status === 'pending' || status === 'processing') return;
 
-    const key = `${job.job_id}:${status}:${transcriptReload}`;
-    if (transcriptKey.current === key) return;
-    transcriptKey.current = key;
-
+    // Deps are primitives, so this only re-runs when the status or an explicit retry
+    // changes. No key guard: under StrictMode a guard would abort the first fetch and
+    // then skip the remount fetch, leaving the panel stuck "loading" forever.
     const controller = new AbortController();
     setTranscriptLoading(true);
 
@@ -199,6 +240,10 @@ export function ResultView({ job, videoId, onDeleted }: ResultViewProps): JSX.El
         mode={mode}
         onModeChange={setMode}
         originalAvailable={Boolean(originalUrl)}
+        originalSource={originalSource}
+        originalLoading={originalLoading}
+        originalError={originalError}
+        onRetryOriginal={() => setOriginalReload((value) => value + 1)}
         isolatedReady={isolatedReady}
         isolatedLoading={isolatedLoading}
         isolatedError={isolatedError}

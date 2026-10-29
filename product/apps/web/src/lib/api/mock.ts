@@ -58,6 +58,19 @@ const STAGE_PLAN: Array<{ at: number; view: Partial<MockJobView> }> = [
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Dev/QA switch: when `focus-mock-transcript-fail=1` is set, the mock reports the
+ * transcript as failed while keeping audio usable. Lets the browser QA exercise the
+ * "transcript unavailable, audio still works" path without a real ASR provider.
+ */
+function transcriptFails(): boolean {
+  try {
+    return localStorage.getItem('focus-mock-transcript-fail') === '1';
+  } catch {
+    return false;
+  }
+}
+
 function randomId(prefix: string): string {
   const bytes = new Uint8Array(8);
   crypto.getRandomValues(bytes);
@@ -80,13 +93,13 @@ function placeholderThumbnail(label: string, hue: number): string {
 }
 
 /** Builds a small mono WAV so the compare player has something audible to test. */
-function buildMockWav(durationMs = 9_000, sampleRate = 16_000): Blob {
+function buildMockWav(durationMs = 9_000, sampleRate = 16_000, baseHz = 196): Blob {
   const frames = Math.floor((durationMs / 1000) * sampleRate);
   const data = new Int16Array(frames);
   for (let i = 0; i < frames; i += 1) {
     const t = i / sampleRate;
     const gate = Math.sin(Math.PI * ((t * 1.2) % 1)) ** 2;
-    const tone = Math.sin(2 * Math.PI * 196 * t) * 0.22 + Math.sin(2 * Math.PI * 392 * t) * 0.1;
+    const tone = Math.sin(2 * Math.PI * baseHz * t) * 0.22 + Math.sin(2 * Math.PI * baseHz * 2 * t) * 0.1;
     data[i] = Math.max(-1, Math.min(1, tone * gate)) * 0x7fff;
   }
 
@@ -118,13 +131,43 @@ export interface MockApi extends FocusApi {
   __completeAll(): void;
 }
 
+/**
+ * The dev mock keeps its in-memory state across reloads via sessionStorage so the
+ * after-refresh resume / original-comparison flows are exercisable. sessionStorage (not
+ * localStorage) keeps each browser tab isolated, which is what the QA harness wants.
+ * This is dev-only scaffolding; the real API persists on the server.
+ */
+const MOCK_PERSIST_KEY = 'focus-mock-state-v1';
+
+function loadPersisted(): { videos: [string, MockVideo][]; jobs: [string, MockJob][] } | null {
+  try {
+    const raw = sessionStorage.getItem(MOCK_PERSIST_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { videos?: [string, MockVideo][]; jobs?: [string, MockJob][] };
+    return { videos: parsed.videos ?? [], jobs: parsed.jobs ?? [] };
+  } catch {
+    return null;
+  }
+}
+
+function savePersisted(videos: Map<string, MockVideo>, jobs: Map<string, MockJob>): void {
+  try {
+    const payload = { videos: [...videos.entries()], jobs: [...jobs.entries()] };
+    sessionStorage.setItem(MOCK_PERSIST_KEY, JSON.stringify(payload));
+  } catch {
+    /* best-effort */
+  }
+}
+
 export function createMockApi(options: { latencyMs?: number; facesReadyMs?: number } = {}): MockApi {
   const latency = options.latencyMs ?? 350;
   const facesReadyMs = options.facesReadyMs ?? 1_600;
-  const videos = new Map<string, MockVideo>();
-  const jobs = new Map<string, MockJob>();
+  const initial = loadPersisted();
+  const videos = new Map<string, MockVideo>(initial?.videos ?? []);
+  const jobs = new Map<string, MockJob>(initial?.jobs ?? []);
   const byRequestId = new Map<string, string>();
   const forcedComplete = new Set<string>();
+  const persist = () => savePersisted(videos, jobs);
 
   function jobView(job: MockJob): MockJobView {
     const view: MockJobView = {
@@ -138,6 +181,7 @@ export function createMockApi(options: { latencyMs?: number; facesReadyMs?: numb
     for (const step of STAGE_PLAN) {
       if (elapsed >= step.at) Object.assign(view, step.view);
     }
+    if (transcriptFails() && elapsed >= 6_400) view.transcript = 'failed';
     return view;
   }
 
@@ -184,6 +228,7 @@ export function createMockApi(options: { latencyMs?: number; facesReadyMs?: numb
         facesReadyAt: Date.now() + facesReadyMs,
         faces: buildFaces(id),
       });
+      persist();
 
       const response: UploadVideoResponse = {
         video_id: id,
@@ -227,6 +272,7 @@ export function createMockApi(options: { latencyMs?: number; facesReadyMs?: numb
         clientRequestId: input.client_request_id,
       });
       byRequestId.set(input.client_request_id, id);
+      persist();
       return { job_id: id } satisfies CreateJobResponse;
     },
 
@@ -246,6 +292,13 @@ export function createMockApi(options: { latencyMs?: number; facesReadyMs?: numb
 
     async getTranscript(): Promise<TranscriptResponse> {
       await sleep(latency);
+      if (transcriptFails()) {
+        return {
+          status: 'failed',
+          segments: [],
+          error: { code: 'TRANSCRIPT_FAILED', message: 'transcription provider unavailable', retryable: true },
+        };
+      }
       const segments = [
         { id: 's1', start_ms: 0, end_ms: 2_400, text: 'أهلًا بيكم، أنا هحكي عن نفسي باختصار.' },
         { id: 's2', start_ms: 2_600, end_ms: 5_100, text: 'أنا من القاهرة وبشتغل في مجال التصميم.' },
@@ -255,8 +308,16 @@ export function createMockApi(options: { latencyMs?: number; facesReadyMs?: numb
     },
 
     async fetchMedia(url) {
+      // Mock media are data:/blob: URLs only; never attach a token.
       const response = await fetch(url);
       return response.blob();
+    },
+
+    async fetchOriginal() {
+      // Mock-only stand-in for GET /videos/{id}/original. Returns a clearly different tone
+      // so the after-refresh compare path (fetch -> play) is exercisable in UI QA. The real
+      // implementation streams the canonical uploaded bytes, not a synthesised clip.
+      return buildMockWav(9_000, 16_000, 294);
     },
 
     async deleteVideo(videoId) {
@@ -265,6 +326,7 @@ export function createMockApi(options: { latencyMs?: number; facesReadyMs?: numb
       for (const [jobId, job] of jobs) {
         if (job.videoId === videoId) jobs.delete(jobId);
       }
+      persist();
       return { deletion_pending: true };
     },
 

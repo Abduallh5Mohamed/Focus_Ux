@@ -3,15 +3,242 @@
   "runs": [
     {
       "viewport": "desktop",
-      "error": "Waiting failed: 15000ms exceeded"
+      "screenshots": {
+        "01-home": "..\\..\\tests\\web\\browser\\artifacts\\desktop-01-home.png",
+        "02-upload-empty": "..\\..\\tests\\web\\browser\\artifacts\\desktop-02-upload-empty.png",
+        "03-upload-filled": "..\\..\\tests\\web\\browser\\artifacts\\desktop-03-upload-filled.png",
+        "04-select-faces": "..\\..\\tests\\web\\browser\\artifacts\\desktop-04-select-faces.png",
+        "05-result-isolated": "..\\..\\tests\\web\\browser\\artifacts\\desktop-05-result-isolated.png",
+        "06-result-full": "..\\..\\tests\\web\\browser\\artifacts\\desktop-06-result-full.png",
+        "07-after-refresh": "..\\..\\tests\\web\\browser\\artifacts\\desktop-07-after-refresh.png"
+      },
+      "focusSequence": [
+        {
+          "tag": "a",
+          "text": "تخطَّ إلى المحتوى",
+          "cls": "skip-link"
+        },
+        {
+          "tag": "a",
+          "text": "FOCUS",
+          "cls": "app__brand"
+        },
+        {
+          "tag": "button",
+          "text": "ابدأ برفع فيديو",
+          "cls": "btn btn--primary"
+        },
+        {
+          "tag": "a",
+          "text": "إرشادات الرفع",
+          "cls": ""
+        },
+        {
+          "tag": "body",
+          "text": "تخطَّ إلى المحتوىFOCUSعزل صوت المتكل",
+          "cls": ""
+        },
+        {
+          "tag": "a",
+          "text": "تخطَّ إلى المحتوى",
+          "cls": "skip-link"
+        }
+      ],
+      "uploadReady": true,
+      "facesReady": true,
+      "reachedResult": true,
+      "isolatedReady": true,
+      "hasTranscript": true,
+      "originalBeforeRefresh": true,
+      "reachedResult2": true,
+      "isolatedReady2": true,
+      "transcriptAfterRefresh": true,
+      "emptyWhileLoading": false,
+      "originalAfterRefresh": true,
+      "overflow": {
+        "scrollWidth": 1280,
+        "clientWidth": 1280,
+        "overflow": false,
+        "offenders": []
+      },
+      "consoleErrors": 0,
+      "consoleWarnings": 0,
+      "pageErrors": 0,
+      "failedRequests": 2,
+      "errorSamples": [],
+      "pageErrorSamples": [],
+      "requestFailureSamples": [
+        {
+          "url": "blob:http://localhost:5174/3b9f5d57-945b-485b-b745-af0409426b87",
+          "failure": "net::ERR_ABORTED"
+        },
+        {
+          "url": "blob:http://localhost:5174/80cd7437-e344-40c5-837d-615c51cf552f",
+          "failure": "net::ERR_ABORTED"
+        }
+      ]
     },
     {
       "viewport": "mobile-390",
-      "error": "Waiting failed: 15000ms exceeded"
+      "screenshots": {
+        "01-home": "..\\..\\tests\\web\\browser\\artifacts\\mobile-390-01-home.png",
+        "02-upload-empty": "..\\..\\tests\\web\\browser\\artifacts\\mobile-390-02-upload-empty.png",
+        "03-upload-filled": "..\\..\\tests\\web\\browser\\artifacts\\mobile-390-03-upload-filled.png",
+        "04-select-faces": "..\\..\\tests\\web\\browser\\artifacts\\mobile-390-04-select-faces.png",
+        "05-result-isolated": "..\\..\\tests\\web\\browser\\artifacts\\mobile-390-05-result-isolated.png",
+        "06-result-full": "..\\..\\tests\\web\\browser\\artifacts\\mobile-390-06-result-full.png",
+        "07-after-refresh": "..\\..\\tests\\web\\browser\\artifacts\\mobile-390-07-after-refresh.png"
+      },
+      "focusSequence": [
+        {
+          "tag": "a",
+          "text": "تخطَّ إلى المحتوى",
+          "cls": "skip-link"
+        },
+        {
+          "tag": "a",
+          "text": "FOCUS",
+          "cls": "app__brand"
+        },
+        {
+          "tag": "button",
+          "text": "ابدأ برفع فيديو",
+          "cls": "btn btn--primary"
+        },
+        {
+          "tag": "button",
+          "text": "رجوع للطلب الأخير",
+          "cls": "btn btn--ghost"
+        },
+        {
+          "tag": "button",
+          "text": "ابدأ من جديد",
+          "cls": "btn btn--ghost btn--sm"
+        },
+        {
+          "tag": "a",
+          "text": "إرشادات الرفع",
+          "cls": ""
+        }
+      ],
+      "uploadReady": true,
+      "facesReady": true,
+      "reachedResult": true,
+      "isolatedReady": true,
+      "hasTranscript": true,
+      "originalBeforeRefresh": true,
+      "reachedResult2": true,
+      "isolatedReady2": true,
+      "transcriptAfterRefresh": true,
+      "emptyWhileLoading": false,
+      "originalAfterRefresh": true,
+      "overflow": {
+        "scrollWidth": 390,
+        "clientWidth": 390,
+        "overflow": false,
+        "offenders": []
+      },
+      "consoleErrors": 0,
+      "consoleWarnings": 0,
+      "pageErrors": 0,
+      "failedRequests": 3,
+      "errorSamples": [],
+      "pageErrorSamples": [],
+      "requestFailureSamples": [
+        {
+          "url": "blob:http://localhost:5174/0a54eb49-1025-4db4-9585-419254a650cb",
+          "failure": "net::ERR_ABORTED"
+        },
+        {
+          "url": "blob:http://localhost:5174/fd9c9006-5d49-4c57-b371-4ade28fc741f",
+          "failure": "net::ERR_ABORTED"
+        },
+        {
+          "url": "blob:http://localhost:5174/640720e9-66b9-4130-837f-d053bc6a5f1f",
+          "failure": "net::ERR_ABORTED"
+        }
+      ]
     },
     {
       "viewport": "mobile-320",
-      "error": "Waiting failed: 15000ms exceeded"
+      "screenshots": {
+        "01-home": "..\\..\\tests\\web\\browser\\artifacts\\mobile-320-01-home.png",
+        "02-upload-empty": "..\\..\\tests\\web\\browser\\artifacts\\mobile-320-02-upload-empty.png",
+        "03-upload-filled": "..\\..\\tests\\web\\browser\\artifacts\\mobile-320-03-upload-filled.png",
+        "04-select-faces": "..\\..\\tests\\web\\browser\\artifacts\\mobile-320-04-select-faces.png",
+        "05-result-isolated": "..\\..\\tests\\web\\browser\\artifacts\\mobile-320-05-result-isolated.png",
+        "06-result-full": "..\\..\\tests\\web\\browser\\artifacts\\mobile-320-06-result-full.png",
+        "07-after-refresh": "..\\..\\tests\\web\\browser\\artifacts\\mobile-320-07-after-refresh.png"
+      },
+      "focusSequence": [
+        {
+          "tag": "a",
+          "text": "تخطَّ إلى المحتوى",
+          "cls": "skip-link"
+        },
+        {
+          "tag": "a",
+          "text": "FOCUS",
+          "cls": "app__brand"
+        },
+        {
+          "tag": "button",
+          "text": "ابدأ برفع فيديو",
+          "cls": "btn btn--primary"
+        },
+        {
+          "tag": "button",
+          "text": "رجوع للطلب الأخير",
+          "cls": "btn btn--ghost"
+        },
+        {
+          "tag": "button",
+          "text": "ابدأ من جديد",
+          "cls": "btn btn--ghost btn--sm"
+        },
+        {
+          "tag": "a",
+          "text": "إرشادات الرفع",
+          "cls": ""
+        }
+      ],
+      "uploadReady": true,
+      "facesReady": true,
+      "reachedResult": true,
+      "isolatedReady": true,
+      "hasTranscript": true,
+      "originalBeforeRefresh": true,
+      "reachedResult2": true,
+      "isolatedReady2": true,
+      "transcriptAfterRefresh": true,
+      "emptyWhileLoading": false,
+      "originalAfterRefresh": true,
+      "overflow": {
+        "scrollWidth": 321,
+        "clientWidth": 320,
+        "overflow": false,
+        "offenders": []
+      },
+      "consoleErrors": 0,
+      "consoleWarnings": 0,
+      "pageErrors": 0,
+      "failedRequests": 3,
+      "errorSamples": [],
+      "pageErrorSamples": [],
+      "requestFailureSamples": [
+        {
+          "url": "blob:http://localhost:5174/28feb192-56ba-450b-aa1d-124d828051ff",
+          "failure": "net::ERR_ABORTED"
+        },
+        {
+          "url": "blob:http://localhost:5174/f3fcc880-3975-4d5a-aefc-630ad28b42cd",
+          "failure": "net::ERR_ABORTED"
+        },
+        {
+          "url": "blob:http://localhost:5174/e3c6ddfd-b93f-486e-aa40-c0a50818ef12",
+          "failure": "net::ERR_ABORTED"
+        }
+      ]
     }
   ],
   "launched": true,
