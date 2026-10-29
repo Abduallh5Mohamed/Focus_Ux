@@ -14,6 +14,7 @@ Layout::
 """
 from __future__ import annotations
 
+import logging
 import os
 import shutil
 import time
@@ -21,6 +22,8 @@ import uuid
 from pathlib import Path
 
 from .config import Settings
+
+logger = logging.getLogger("focus_api.storage")
 
 VIDEO_EXTENSIONS = {
     "video/mp4": ".mp4",
@@ -49,7 +52,7 @@ class Storage:
         self.cleanup_stale_temp()
 
     def cleanup_stale_temp(self) -> list[str]:
-        """Remove abandoned ``*.upload`` files from crashed uploads."""
+        """Remove stale uploads; log failures and leave them for a later retry."""
         removed: list[str] = []
         cutoff = time.time() - self.settings.cleanup_temp_max_age_s
         if not self.settings.tmp_dir.is_dir():
@@ -59,8 +62,15 @@ class Storage:
                 if entry.stat().st_mtime < cutoff:
                     entry.unlink()
                     removed.append(str(entry))
+            except FileNotFoundError:
+                # Another cleanup or the upload itself may have moved the file.
+                continue
             except OSError:
-                pass
+                logger.warning(
+                    "Temporary upload cleanup failed for %s; retained for a later retry",
+                    entry,
+                    exc_info=True,
+                )
         return removed
 
     # -- paths ---------------------------------------------------------------
