@@ -62,3 +62,7 @@ server. Uploads can be accepted, but detection reports an explicit failure.
 The original Windows GPU/assets paths are not available in this workspace.
 Do not substitute fake audio or claim the ML tests verify real inference.
 No public deployment was performed.
+
+## Error-metric tool
+
+`product/packages/eval/focus_eval` scores existing isolation outputs (wrong-person rate, CER/WER on normalised Arabic, SI-SDRi) and compares two runs for regressions. It needs only `numpy`, runs no engine/GPU/ASR, and the test set template lives in `product/datasets/egyptian_eval/` (see its README). Run its tests with `PYTHONPATH=product python -m pytest product/tests/eval -q`. Real measurements must be produced on the GPU machine.

@@ -5,3 +5,7 @@ __pycache__/
 node_modules/
 product/apps/web/dist/
 runtime/replit/
+product/datasets/*/clips/**/*.wav
+product/datasets/*/clips/**/*.mp4
+product/datasets/*/clips/**/*.mov
+product/datasets/*/clips/**/*.m4a

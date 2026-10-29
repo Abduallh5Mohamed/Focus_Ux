@@ -1,0 +1,347 @@
+{
+ "schema_version": 1,
+ "dataset_id": "egyptian-eval-v0",
+ "clips": [
+  {
+   "id": "baseline_01",
+   "status": "template",
+   "scenario": "two speakers, both faces clear and still",
+   "tags": [
+    "baseline"
+   ],
+   "video": "clips/baseline_01/video.mp4",
+   "mix_audio": "clips/baseline_01/mix.wav",
+   "source": {
+    "description": "",
+    "url": "",
+    "license": "",
+    "recorded_by": ""
+   },
+   "speakers": [
+    {
+     "id": "a",
+     "ref_audio": "clips/baseline_01/a_ref.wav",
+     "transcript": "clips/baseline_01/a.txt",
+     "transcript_status": "human_verified"
+    },
+    {
+     "id": "b",
+     "ref_audio": "clips/baseline_01/b_ref.wav",
+     "transcript": "clips/baseline_01/b.txt",
+     "transcript_status": "human_verified"
+    }
+   ],
+   "targets": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "id": "baseline_02",
+   "status": "template",
+   "scenario": "two speakers, both faces clear and still",
+   "tags": [
+    "baseline"
+   ],
+   "video": "clips/baseline_02/video.mp4",
+   "mix_audio": "clips/baseline_02/mix.wav",
+   "source": {
+    "description": "",
+    "url": "",
+    "license": "",
+    "recorded_by": ""
+   },
+   "speakers": [
+    {
+     "id": "a",
+     "ref_audio": "clips/baseline_02/a_ref.wav",
+     "transcript": "clips/baseline_02/a.txt",
+     "transcript_status": "human_verified"
+    },
+    {
+     "id": "b",
+     "ref_audio": "clips/baseline_02/b_ref.wav",
+     "transcript": "clips/baseline_02/b.txt",
+     "transcript_status": "human_verified"
+    }
+   ],
+   "targets": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "id": "head_motion_01",
+   "status": "template",
+   "scenario": "target turns and nods while talking",
+   "tags": [
+    "head_motion"
+   ],
+   "video": "clips/head_motion_01/video.mp4",
+   "mix_audio": "clips/head_motion_01/mix.wav",
+   "source": {
+    "description": "",
+    "url": "",
+    "license": "",
+    "recorded_by": ""
+   },
+   "speakers": [
+    {
+     "id": "a",
+     "ref_audio": "clips/head_motion_01/a_ref.wav",
+     "transcript": "clips/head_motion_01/a.txt",
+     "transcript_status": "human_verified"
+    },
+    {
+     "id": "b",
+     "ref_audio": "clips/head_motion_01/b_ref.wav",
+     "transcript": "clips/head_motion_01/b.txt",
+     "transcript_status": "human_verified"
+    }
+   ],
+   "targets": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "id": "head_motion_02",
+   "status": "template",
+   "scenario": "target near the frame edge, moving",
+   "tags": [
+    "head_motion"
+   ],
+   "video": "clips/head_motion_02/video.mp4",
+   "mix_audio": "clips/head_motion_02/mix.wav",
+   "source": {
+    "description": "",
+    "url": "",
+    "license": "",
+    "recorded_by": ""
+   },
+   "speakers": [
+    {
+     "id": "a",
+     "ref_audio": "clips/head_motion_02/a_ref.wav",
+     "transcript": "clips/head_motion_02/a.txt",
+     "transcript_status": "human_verified"
+    },
+    {
+     "id": "b",
+     "ref_audio": "clips/head_motion_02/b_ref.wav",
+     "transcript": "clips/head_motion_02/b.txt",
+     "transcript_status": "human_verified"
+    }
+   ],
+   "targets": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "id": "face_disappears_01",
+   "status": "template",
+   "scenario": "target face leaves frame or is covered mid-clip",
+   "tags": [
+    "face_disappears"
+   ],
+   "video": "clips/face_disappears_01/video.mp4",
+   "mix_audio": "clips/face_disappears_01/mix.wav",
+   "source": {
+    "description": "",
+    "url": "",
+    "license": "",
+    "recorded_by": ""
+   },
+   "speakers": [
+    {
+     "id": "a",
+     "ref_audio": "clips/face_disappears_01/a_ref.wav",
+     "transcript": "clips/face_disappears_01/a.txt",
+     "transcript_status": "human_verified"
+    },
+    {
+     "id": "b",
+     "ref_audio": "clips/face_disappears_01/b_ref.wav",
+     "transcript": "clips/face_disappears_01/b.txt",
+     "transcript_status": "human_verified"
+    }
+   ],
+   "targets": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "id": "face_disappears_02",
+   "status": "template",
+   "scenario": "target looks away for several seconds while speaking",
+   "tags": [
+    "face_disappears"
+   ],
+   "video": "clips/face_disappears_02/video.mp4",
+   "mix_audio": "clips/face_disappears_02/mix.wav",
+   "source": {
+    "description": "",
+    "url": "",
+    "license": "",
+    "recorded_by": ""
+   },
+   "speakers": [
+    {
+     "id": "a",
+     "ref_audio": "clips/face_disappears_02/a_ref.wav",
+     "transcript": "clips/face_disappears_02/a.txt",
+     "transcript_status": "human_verified"
+    },
+    {
+     "id": "b",
+     "ref_audio": "clips/face_disappears_02/b_ref.wav",
+     "transcript": "clips/face_disappears_02/b.txt",
+     "transcript_status": "human_verified"
+    }
+   ],
+   "targets": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "id": "similar_voices_01",
+   "status": "template",
+   "scenario": "two speakers of the same sex and similar pitch",
+   "tags": [
+    "similar_voices"
+   ],
+   "video": "clips/similar_voices_01/video.mp4",
+   "mix_audio": "clips/similar_voices_01/mix.wav",
+   "source": {
+    "description": "",
+    "url": "",
+    "license": "",
+    "recorded_by": ""
+   },
+   "speakers": [
+    {
+     "id": "a",
+     "ref_audio": "clips/similar_voices_01/a_ref.wav",
+     "transcript": "clips/similar_voices_01/a.txt",
+     "transcript_status": "human_verified"
+    },
+    {
+     "id": "b",
+     "ref_audio": "clips/similar_voices_01/b_ref.wav",
+     "transcript": "clips/similar_voices_01/b.txt",
+     "transcript_status": "human_verified"
+    }
+   ],
+   "targets": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "id": "similar_voices_02",
+   "status": "template",
+   "scenario": "two speakers of the same sex and similar pitch",
+   "tags": [
+    "similar_voices"
+   ],
+   "video": "clips/similar_voices_02/video.mp4",
+   "mix_audio": "clips/similar_voices_02/mix.wav",
+   "source": {
+    "description": "",
+    "url": "",
+    "license": "",
+    "recorded_by": ""
+   },
+   "speakers": [
+    {
+     "id": "a",
+     "ref_audio": "clips/similar_voices_02/a_ref.wav",
+     "transcript": "clips/similar_voices_02/a.txt",
+     "transcript_status": "human_verified"
+    },
+    {
+     "id": "b",
+     "ref_audio": "clips/similar_voices_02/b_ref.wav",
+     "transcript": "clips/similar_voices_02/b.txt",
+     "transcript_status": "human_verified"
+    }
+   ],
+   "targets": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "id": "overlap_01",
+   "status": "template",
+   "scenario": "speakers talk over each other for several seconds",
+   "tags": [
+    "overlap"
+   ],
+   "video": "clips/overlap_01/video.mp4",
+   "mix_audio": "clips/overlap_01/mix.wav",
+   "source": {
+    "description": "",
+    "url": "",
+    "license": "",
+    "recorded_by": ""
+   },
+   "speakers": [
+    {
+     "id": "a",
+     "ref_audio": "clips/overlap_01/a_ref.wav",
+     "transcript": "clips/overlap_01/a.txt",
+     "transcript_status": "human_verified"
+    },
+    {
+     "id": "b",
+     "ref_audio": "clips/overlap_01/b_ref.wav",
+     "transcript": "clips/overlap_01/b.txt",
+     "transcript_status": "human_verified"
+    }
+   ],
+   "targets": [
+    "a",
+    "b"
+   ]
+  },
+  {
+   "id": "overlap_02",
+   "status": "template",
+   "scenario": "overlapping speech with head movement",
+   "tags": [
+    "overlap",
+    "head_motion"
+   ],
+   "video": "clips/overlap_02/video.mp4",
+   "mix_audio": "clips/overlap_02/mix.wav",
+   "source": {
+    "description": "",
+    "url": "",
+    "license": "",
+    "recorded_by": ""
+   },
+   "speakers": [
+    {
+     "id": "a",
+     "ref_audio": "clips/overlap_02/a_ref.wav",
+     "transcript": "clips/overlap_02/a.txt",
+     "transcript_status": "human_verified"
+    },
+    {
+     "id": "b",
+     "ref_audio": "clips/overlap_02/b_ref.wav",
+     "transcript": "clips/overlap_02/b.txt",
+     "transcript_status": "human_verified"
+    }
+   ],
+   "targets": [
+    "a",
+    "b"
+   ]
+  }
+ ]
+}
