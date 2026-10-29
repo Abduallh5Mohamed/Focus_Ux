@@ -1,29 +1,7 @@
 from pathlib import Path
 
-import pytest
-
-from .fakes import DEFAULT_FACES, FakeExtractionRunner, make_wav_bytes
-from .fixtures_media import make_mp4_bytes
+from .fakes import FakeExtractionRunner
 from .test_uploads import assert_error
-
-
-@pytest.fixture
-def ready_media(make_api):
-    api = make_api()
-    data = api.setup_video()
-    response = api.create_job(data["video_id"], data["face_id"], "ready", data["token"])
-    assert response.status_code == 202
-    job = response.json()["job_id"]
-    assert api.get_job(job, data["token"]).json()["status"] == "queued"
-    api.drain()
-    assert api.get_job(job, data["token"]).json()["status"] == "completed"
-    _, stranger, _ = api.upload_ok()
-    video, face = data["video_id"], data["face_id"]
-    return api, data, job, stranger, [
-        (f"/videos/{video}/original", make_mp4_bytes(), "video/mp4"),
-        (f"/videos/{video}/faces/{face}/thumbnail", DEFAULT_FACES[0].thumbnail_bytes, "image/jpeg"),
-        (f"/jobs/{job}/audio", make_wav_bytes(), "audio/wav"),
-    ]
 
 
 def test_all_media_require_owner_bearer_not_query_token(ready_media):

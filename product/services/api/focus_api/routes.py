@@ -6,6 +6,7 @@ docs/02_CONTRACTS.md exactly. Protected media never accepts a token in the URL.
 from __future__ import annotations
 
 import logging
+import re
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
@@ -54,14 +55,17 @@ def _required_session(request: Request, service: ApiService) -> str:
 
 def _parse_range(header: str, size: int) -> tuple[int, int]:
     """Parse one ``bytes=`` range. Raises ValueError when unsatisfiable."""
+    if size <= 0:
+        raise ValueError("range requires a nonempty file")
     if not header.lower().startswith("bytes="):
         raise ValueError("unsupported range unit")
     spec = header[6:].strip()
-    if not spec or "," in spec:
-        raise ValueError("multiple ranges are not supported")
-    start_raw, sep, end_raw = spec.partition("-")
-    if sep == "":
-        raise ValueError("malformed range")
+    # int() also accepts signs, underscores, whitespace and Unicode digits,
+    # none of which belong in HTTP byte positions. Reject multiple ranges too.
+    match = re.fullmatch(r"([0-9]*)-([0-9]*)", spec)
+    if match is None:
+        raise ValueError("malformed or multiple ranges")
+    start_raw, end_raw = match.groups()
     if start_raw == "":
         if end_raw == "":
             raise ValueError("malformed range")
@@ -82,18 +86,18 @@ def _parse_range(header: str, size: int) -> tuple[int, int]:
 
 def _file_response(request: Request, path: Path, media_type: str) -> Response:
     size = path.stat().st_size
-    range_header = request.headers.get("range")
+    range_headers = request.headers.getlist("range")
     headers = {
         "Accept-Ranges": "bytes",
         "Cache-Control": "private, no-store",
     }
-    if range_header:
+    if range_headers:
         try:
-            start, end = _parse_range(range_header, size)
+            start, end = _parse_range(",".join(range_headers), size)
         except (ValueError, TypeError):
             return Response(
                 status_code=416,
-                headers={"Content-Range": f"bytes */{size}", "Accept-Ranges": "bytes"},
+                headers={**headers, "Content-Range": f"bytes */{size}"},
             )
         length = end - start + 1
         with open(path, "rb") as handle:
