@@ -381,6 +381,162 @@ def _receive(connection, expected):
     return value
 
 
+def _cleaner_crash_contender(root, role, connection):
+    """Report a gate open before blocking, then use the real storage protocol."""
+    import builtins
+
+    from services.api.focus_api import upload_ownership
+
+    storage = Storage(make_settings(root, cleanup_temp_max_age_s=0.02))
+    reported = False
+
+    def traced_open(path, *args, **kwargs):
+        nonlocal reported
+        handle = builtins.open(path, *args, **kwargs)
+        if path == storage._temp_gate and not reported:
+            reported = True
+            stat = os.fstat(handle.fileno())
+            connection.send(("opened", (stat.st_dev, stat.st_ino)))
+        return handle
+
+    upload_ownership.open = traced_open
+    try:
+        if role == "cleaner":
+            connection.send(("done", storage.cleanup_stale_temp()))
+        else:
+            with storage.own_temp_upload() as path:
+                path.write_bytes(b"new upload")
+                os.utime(path, (1, 1))
+                connection.send(("created", str(path)))
+                assert connection.poll(15), "upload creator was not resumed"
+                assert connection.recv() == "promote"
+                assert path.read_bytes() == b"new upload"
+                os.replace(path, storage.settings.media_dir / "recovered.mp4")
+            connection.send(("done", None))
+    except BaseException:
+        connection.send(("error", traceback.format_exc()))
+        raise
+    finally:
+        connection.close()
+
+
+@pytest.mark.parametrize("crash_point", ["held", "unlink"])
+def test_cleaner_crash_releases_gate_and_recovers_uploads(
+    tmp_path, upload_processes, crash_point
+):
+    settings = make_settings(tmp_path, cleanup_temp_max_age_s=0.02)
+    storage = Storage(settings)
+    storage.ensure()
+    # Sort before the UUID-named active upload, so the crash boundary is exact.
+    abandoned = settings.tmp_dir / "000-abandoned.upload"
+    remaining = settings.tmp_dir / "zzz-abandoned.upload"
+    for path in (abandoned, remaining):
+        path.write_bytes(b"abandoned")
+        os.utime(path, (1, 1))
+        path.with_suffix(".upload.lock").touch()
+    lease = abandoned.with_suffix(".upload.lock")
+    orphan = settings.tmp_dir / "zzz-orphan.upload.lock"
+    orphan.touch()
+    context, start, start_cleaner = upload_processes
+    connections = []
+
+    try:
+        with storage.own_temp_upload() as active:
+            active.write_bytes(b"active upload")
+            os.utime(active, (1, 1))
+            active_lease = active.with_suffix(".upload.lock")
+            # Keep the original gate alive to detect unlink/recreation even if
+            # the filesystem would otherwise reuse its identity after the crash.
+            with storage._temp_gate.open("a+b") as gate_handle:
+                stat = os.fstat(gate_handle.fileno())
+                identity = (stat.st_dev, stat.st_ino)
+                crashing, crash_pipe = start_cleaner(tmp_path)
+                assert _receive(crash_pipe, "opened") == identity
+                _receive(crash_pipe, "held")
+                if crash_point == "unlink":
+                    crash_pipe.send("continue")
+                    assert _receive(crash_pipe, "unlink") == str(lease)
+                    assert not abandoned.exists()
+                    assert lease.is_file()
+                    # Prove this is the unlocked-sidecar / before-unlink window,
+                    # not merely a crash somewhere inside its lease context.
+                    with file_lock(lease, blocking=False):
+                        pass
+                else:
+                    assert abandoned.read_bytes() == b"abandoned"
+
+                contenders = {}
+                for role in ("cleaner", "creator"):
+                    parent, child = context.Pipe()
+                    connections.append(parent)
+                    process = start(_cleaner_crash_contender, tmp_path, role, child)
+                    child.close()
+                    contenders[role] = (process, parent)
+                    assert _receive(parent, "opened") == identity
+
+                with pytest.raises(BlockingIOError):
+                    with file_lock(storage._temp_gate, blocking=False):
+                        pytest.fail("crashing cleaner did not hold the gate")
+                for _, connection in contenders.values():
+                    assert not connection.poll(0.1), "contender bypassed the held gate"
+
+                # Hard termination skips Python finally blocks and explicit
+                # unlocks: only OS handle reclamation can unblock the waiters.
+                crashing.kill()
+                crashing.join(timeout=15)
+                assert crashing.exitcode is not None
+                assert crashing.exitcode != 0
+
+                cleaner, cleaner_pipe = contenders["cleaner"]
+                expected = [str(remaining)]
+                if crash_point == "held":
+                    expected.insert(0, str(abandoned))
+                assert _receive(cleaner_pipe, "done") == expected
+                cleaner.join(timeout=15)
+                assert cleaner.exitcode == 0
+
+                creator, creator_pipe = contenders["creator"]
+                created = Path(_receive(creator_pipe, "created"))
+                created_lease = created.with_suffix(".upload.lock")
+                assert active.read_bytes() == b"active upload"
+                assert active_lease.is_file()
+                assert created.read_bytes() == b"new upload"
+                assert created_lease.is_file()
+                assert not any(
+                    path.exists() for path in (
+                        abandoned, lease, remaining,
+                        remaining.with_suffix(".upload.lock"), orphan,
+                    )
+                )
+                assert storage.cleanup_stale_temp() == []
+                assert active.read_bytes() == b"active upload"
+                assert created.read_bytes() == b"new upload"
+                assert active_lease.is_file()
+                assert created_lease.is_file()
+                stat = storage._temp_gate.stat()
+                assert (stat.st_dev, stat.st_ino) == identity
+
+                creator_pipe.send("promote")
+                assert _receive(creator_pipe, "done") is None
+                creator.join(timeout=15)
+                assert creator.exitcode == 0
+                assert not created.exists()
+                assert not created_lease.exists()
+                assert (settings.media_dir / "recovered.mp4").read_bytes() == b"new upload"
+                assert set(settings.tmp_dir.iterdir()) == {active, active_lease}
+
+        assert storage.cleanup_stale_temp() == [str(active)]
+        assert storage.cleanup_stale_temp() == []
+        Storage(settings).ensure()
+        assert not list(settings.tmp_dir.iterdir())
+        assert (settings.media_dir / "recovered.mp4").read_bytes() == b"new upload"
+        stat = storage._temp_gate.stat()
+        assert (stat.st_dev, stat.st_ino) == identity
+    finally:
+        for connection in connections:
+            connection.close()
+
+
 def test_simultaneous_cleaners_keep_one_gate_identity(tmp_path, upload_processes):
     settings = make_settings(tmp_path, cleanup_temp_max_age_s=0.02)
     storage = Storage(settings)
