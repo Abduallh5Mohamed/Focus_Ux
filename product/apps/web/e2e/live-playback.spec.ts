@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { createServer } from 'node:http';
 import { installAudioProbe, markerWav, probe } from './audioProbe';
 
 /** Keep the real capture tracks so removing srcObject alone cannot pass cleanup checks. */
@@ -213,6 +214,105 @@ for (const failure of [
     expect(errors).toEqual([]);
   });
 }
+
+test('finalization deadline cancels a JSON body stalled after headers without retrying or retaining camera tracks', async ({ page }) => {
+  let stops = 0;
+  let bodyConnectionClosed = false;
+  // route.fulfill buffers bodies, so use a real streaming response for this regression.
+  const server = createServer((request, response) => {
+    response.setHeader('Access-Control-Allow-Origin', '*');
+    response.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+    if (request.method === 'OPTIONS') {
+      response.writeHead(204);
+      response.end();
+      return;
+    }
+    stops++;
+    response.writeHead(200, { 'Content-Type': 'application/json' });
+    response.flushHeaders();
+    response.write('{"phase":');
+    response.on('close', () => { bodyConnectionClosed = true; });
+    // Deliberately never end the body, even though headers have been delivered.
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const address = server.address();
+  if (!address || typeof address === 'string') throw new Error('Streaming server did not bind a port');
+  try {
+    await trackCapture(page);
+    await page.clock.install();
+    await page.addInitScript(() => {
+      const json = Response.prototype.json;
+      const bodyRead = { started: false, aborted: false, completed: false };
+      Object.assign(window, { stopBodyRead: bodyRead });
+      Response.prototype.json = async function () {
+        if (!new URL(this.url).pathname.endsWith('/stop')) return json.call(this);
+        bodyRead.started = true;
+        try {
+          const value = await json.call(this);
+          bodyRead.completed = true;
+          return value;
+        } catch (error) {
+          bodyRead.aborted = error instanceof DOMException && error.name === 'AbortError';
+          throw error;
+        }
+      };
+    });
+    let polls = 0;
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.route('**/api/live/sessions**', async (route) => {
+      const request = route.request();
+      const path = new URL(request.url()).pathname;
+      if (path.endsWith('/stop')) {
+        await route.continue({ url: `http://127.0.0.1:${address.port}/stop` });
+      } else if (/\/chunks\/\d+$/.test(path)) {
+        await route.fulfill({ json: { state: 'received', duplicate: false } });
+      } else if (request.method() === 'POST' && path.endsWith('/sessions')) {
+        await route.fulfill({ json: { live_session_id: 'body-timeout', chunk_ms: 300, max_chunks: 100 } });
+      } else {
+        polls++;
+        await route.fulfill({ json: {
+          phase: 'live', target_face_id: null, chunks: [], final: { status: null }, error: null,
+        } });
+      }
+    });
+    await page.goto('/live');
+    await page.getByRole('button', { name: 'ابدأ التسجيل', exact: true }).click();
+    await page.getByRole('button', { name: 'إيقاف التسجيل', exact: true }).click();
+    const bodyRead = () => page.evaluate(() =>
+      (window as unknown as { stopBodyRead: { started: boolean; aborted: boolean; completed: boolean } }).stopBodyRead);
+    const tracksReleased = () => page.evaluate(() => {
+      const tracks = (window as unknown as { captureTracks: MediaStreamTrack[] }).captureTracks;
+      return tracks.length >= 2 && tracks.every((track) => track.readyState === 'ended');
+    });
+    await expect.poll(bodyRead).toEqual({ started: true, aborted: false, completed: false });
+    expect(stops).toBe(1);
+    expect(bodyConnectionClosed).toBe(false);
+    await expect(page.getByText('بنوقف…', { exact: true })).toBeVisible();
+    await expect.poll(tracksReleased).toBe(true);
+    await page.clock.fastForward(9_000);
+    expect((await bodyRead()).aborted).toBe(false);
+    await expect(page.getByText('بنوقف…', { exact: true })).toBeVisible();
+    await page.clock.fastForward(1_000);
+    await expect(page.getByText(
+      'الخادم ما ردّش على طلب إنهاء التسجيل في الوقت المحدد. ممكن يكون لسه بيخلص؛ مش هنبعت طلب الإنهاء تاني تلقائيًا.',
+      { exact: true },
+    )).toBeVisible();
+    await expect(page.getByText('بنوقف…', { exact: true })).not.toBeVisible();
+    await expect.poll(bodyRead).toEqual({ started: true, aborted: true, completed: false });
+    await expect.poll(() => bodyConnectionClosed).toBe(true);
+    await page.waitForTimeout(100); // Let any already-in-flight status response settle.
+    const pollsAfterTimeout = polls;
+    await page.clock.fastForward(60_000);
+    expect(stops).toBe(1);
+    expect(polls).toBe(pollsAfterTimeout);
+    expect(await tracksReleased()).toBe(true);
+    expect(errors).toEqual([]);
+  } finally {
+    server.closeAllConnections();
+    await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  }
+});
 
 for (const teardown of ['unmount', 'pagehide'] as const) {
   test(`${teardown} cancels a pending upload without retrying or keeping camera tracks`, async ({ page }) => {
