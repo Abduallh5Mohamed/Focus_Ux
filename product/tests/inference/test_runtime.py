@@ -46,6 +46,41 @@ def test_worker_normalizes_site_url_without_leaking_key():
         NoRedirect().redirect_request(None, None, None, None, None, None)
 
 
+@pytest.mark.parametrize("url", [
+    "http://example.com:5000", "http://localhost:5000", "http://127.0.0.2:5000",
+    "http://127.0.0.1:8000", "http://127.0.0.1:5000/?key=x",
+    "http://user@127.0.0.1:5000", "https://example.com",
+])
+def test_local_trial_refuses_everything_except_explicit_loopback(url):
+    with pytest.raises(ValueError):
+        WorkerClient(url, "test-key", local_api=True)
+
+
+def test_local_trial_requires_opt_in_and_never_uses_preview_key(monkeypatch, tmp_path):
+    from tools import windows_worker
+    with pytest.raises(ValueError):
+        WorkerClient("http://127.0.0.1:5000", "test-key")
+    with pytest.raises(ValueError, match="preview credentials"):
+        WorkerClient("http://127.0.0.1:5000", "test-key", "preview-key", local_api=True)
+    token = tmp_path / "local-key"
+    token.write_text("test-local-key")
+    monkeypatch.setattr(windows_worker, "LOCAL_TOKEN_FILE", token)
+    # Existing cloud credentials must not even be read for local trials.
+    monkeypatch.setattr(windows_worker, "TOKEN_FILE", tmp_path / "absent-cloud-key")
+    monkeypatch.setattr(windows_worker, "PREVIEW_TOKEN_FILE", tmp_path / "absent-preview-key")
+    client = windows_worker.saved_client("http://127.0.0.1:5000/api", local_api=True)
+    calls = []
+    def open_request(request, timeout):
+        calls.append(request)
+        return ResponseBody(b'{"worker_protocol":1}')
+    monkeypatch.setattr(client.opener, "open", open_request)
+    client.preflight()
+    assert client.url == "http://127.0.0.1:5000/api"
+    assert calls[0].get_header("Authorization") == "Bearer test-local-key"
+    assert calls[0].get_header("X-focus-worker-token") == "test-local-key"
+    assert client.preview_token is None
+
+
 class ResponseBody(io.BytesIO):
     def __init__(self, payload, content_type="application/json"):
         super().__init__(payload)

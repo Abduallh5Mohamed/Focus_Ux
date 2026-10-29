@@ -1,5 +1,9 @@
 # Windows GPU inference connection
 
+For an entirely local Windows trial (UI + isolated API + existing GPU worker),
+use [LOCAL_WINDOWS_TRIAL.md](LOCAL_WINDOWS_TRIAL.md). The instructions below
+describe the separate Replit-connected setup, not the all-local launcher.
+
 ## Status and external blockers
 
 The user confirmed the old application isolated audio on their Windows computer
