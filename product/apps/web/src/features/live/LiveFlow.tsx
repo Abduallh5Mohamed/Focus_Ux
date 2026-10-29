@@ -111,6 +111,12 @@ export function LiveFlow({ liveApi }: LiveFlowProps): JSX.Element {
         </Notice>
       ) : null}
 
+      {state.rebuffers > 0 ? (
+        <Notice tone="warn" title="الصوت اتأخر">
+          بنأخر التشغيل عشان المقاطع تتسمع بالترتيب، من غير تداخل.
+        </Notice>
+      ) : null}
+
       {view ? (
         <Card>
           <CardHead title="المقاطع" hint={`عمق الطابور ${view.queue_depth} — إعادة تأخير التشغيل ${state.rebuffers}`} />

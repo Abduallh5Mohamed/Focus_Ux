@@ -96,6 +96,7 @@ export function useLiveSession(api: LiveApi) {
         return;
       }
       if (view.target_face_id && current.player) {
+        current.player.updateChunks(view.chunks);
         for (const chunk of view.chunks) {
           if (chunk.state === 'ready' && !current.fetched.has(chunk.seq)) {
             current.fetched.add(chunk.seq);
