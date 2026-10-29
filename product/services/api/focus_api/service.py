@@ -95,48 +95,48 @@ class ApiService:
             raise invalid_media("the uploaded file is not a video")
 
         video_id = uuid.uuid4().hex
-        temp_path = self.storage.new_temp_path()
         total = 0
-        try:
-            with open(temp_path, "wb") as out:
-                while True:
-                    chunk = stream.read(_CHUNK)
-                    if not chunk:
-                        break
-                    total += len(chunk)
-                    if total > self.settings.max_upload_bytes:
-                        raise limit_exceeded(
-                            f"upload exceeds the {self.settings.max_upload_bytes // (1024 * 1024)} MB limit"
-                        )
-                    out.write(chunk)
-            if total <= 0:
-                raise invalid_media("the uploaded file is empty")
+        with self.storage.own_temp_upload() as temp_path:
             try:
-                probe = probe_video(temp_path)
-            except ProbeError as exc:
-                if exc.code == "LIMIT_EXCEEDED":
-                    raise limit_exceeded(exc.message) from exc
-                raise invalid_media(exc.message) from exc
-            if probe.duration_ms > self.settings.max_video_ms:
-                raise limit_exceeded(
-                    f"video exceeds the {self.settings.max_video_ms / 1000:g}s limit"
-                )
-            extension = VIDEO_EXTENSIONS.get(probe.mime_type)
-            if extension is None:
-                raise invalid_media("unsupported video container")
-            final_path = self.storage.media_path(video_id, extension)
-            os.replace(temp_path, final_path)
-            temp_path = None  # type: ignore[assignment]
-        finally:
-            if temp_path is not None and Path(temp_path).exists():
+                with open(temp_path, "wb") as out:
+                    while True:
+                        chunk = stream.read(_CHUNK)
+                        if not chunk:
+                            break
+                        total += len(chunk)
+                        if total > self.settings.max_upload_bytes:
+                            raise limit_exceeded(
+                                f"upload exceeds the {self.settings.max_upload_bytes // (1024 * 1024)} MB limit"
+                            )
+                        out.write(chunk)
+                if total <= 0:
+                    raise invalid_media("the uploaded file is empty")
                 try:
-                    Path(temp_path).unlink()
-                except OSError:
-                    logger.warning(
-                        "Failed-upload cleanup failed for %s; retained for stale-upload cleanup",
-                        temp_path,
-                        exc_info=True,
+                    probe = probe_video(temp_path)
+                except ProbeError as exc:
+                    if exc.code == "LIMIT_EXCEEDED":
+                        raise limit_exceeded(exc.message) from exc
+                    raise invalid_media(exc.message) from exc
+                if probe.duration_ms > self.settings.max_video_ms:
+                    raise limit_exceeded(
+                        f"video exceeds the {self.settings.max_video_ms / 1000:g}s limit"
                     )
+                extension = VIDEO_EXTENSIONS.get(probe.mime_type)
+                if extension is None:
+                    raise invalid_media("unsupported video container")
+                final_path = self.storage.media_path(video_id, extension)
+                os.replace(temp_path, final_path)
+                temp_path = None  # type: ignore[assignment]
+            finally:
+                if temp_path is not None and Path(temp_path).exists():
+                    try:
+                        Path(temp_path).unlink()
+                    except OSError:
+                        logger.warning(
+                            "Failed-upload cleanup failed for %s; retained for stale-upload cleanup",
+                            temp_path,
+                            exc_info=True,
+                        )
 
         now = time.time()
         video = VideoRecord(

@@ -19,9 +19,11 @@ import os
 import shutil
 import time
 import uuid
+from contextlib import contextmanager, ExitStack
 from pathlib import Path
 
 from .config import Settings
+from .upload_ownership import file_lock
 
 logger = logging.getLogger("focus_api.storage")
 
@@ -52,16 +54,33 @@ class Storage:
         self.cleanup_stale_temp()
 
     def cleanup_stale_temp(self) -> list[str]:
-        """Remove stale uploads; log failures and leave them for a later retry."""
+        """Remove old, unowned uploads; never infer abandonment from age alone."""
         removed: list[str] = []
         cutoff = time.time() - self.settings.cleanup_temp_max_age_s
         if not self.settings.tmp_dir.is_dir():
             return removed
-        for entry in self.settings.tmp_dir.glob("*.upload"):
+        # Include leases whose owner died before creating (or after moving) data.
+        entries = set(self.settings.tmp_dir.glob("*.upload"))
+        entries.update(
+            path.with_suffix("") for path in self.settings.tmp_dir.glob("*.upload.lock")
+        )
+        for entry in sorted(entries):
             try:
-                if entry.stat().st_mtime < cutoff:
-                    entry.unlink()
-                    removed.append(str(entry))
+                with file_lock(self._temp_gate):
+                    lease_path = entry.with_suffix(".upload.lock")
+                    with file_lock(lease_path, blocking=False):
+                        try:
+                            if entry.stat().st_mtime < cutoff:
+                                entry.unlink()
+                                removed.append(str(entry))
+                        except FileNotFoundError:
+                            pass
+                    # The gate prevents another owner/cleaner opening a sidecar
+                    # while it is being unlocked and removed.
+                    lease_path.unlink(missing_ok=True)
+            except BlockingIOError:
+                # Active uploads can remain paused beyond the age threshold.
+                continue
             except FileNotFoundError:
                 # Another cleanup or the upload itself may have moved the file.
                 continue
@@ -77,6 +96,35 @@ class Storage:
     def new_temp_path(self) -> Path:
         self.settings.tmp_dir.mkdir(parents=True, exist_ok=True)
         return self.settings.tmp_dir / f"{uuid.uuid4().hex}.upload"
+
+    @property
+    def _temp_gate(self) -> Path:
+        return self.settings.storage_root / "temp-ownership.lock"
+
+    @contextmanager
+    def own_temp_upload(self):
+        """Own a unique path before publishing data, through validation/move."""
+        path = self.new_temp_path()
+        lease_path = path.with_suffix(".upload.lock")
+        with ExitStack() as lease:
+            with file_lock(self._temp_gate):
+                lease.enter_context(file_lock(lease_path, blocking=False))
+            try:
+                yield path
+            finally:
+                # On a failed gate/unlink, ExitStack still releases ownership.
+                # Leave the sidecar for a later cleanup rather than mask the
+                # upload's result with a sidecar housekeeping failure.
+                try:
+                    with file_lock(self._temp_gate):
+                        lease.close()
+                        lease_path.unlink(missing_ok=True)
+                except OSError:
+                    logger.warning(
+                        "Temporary upload lease cleanup failed for %s; retained for a later retry",
+                        lease_path,
+                        exc_info=True,
+                    )
 
     def media_path(self, video_id: str, extension: str) -> Path:
         ext = extension if extension.startswith(".") else f".{extension}"
