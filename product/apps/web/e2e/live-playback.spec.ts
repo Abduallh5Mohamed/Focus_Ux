@@ -142,6 +142,78 @@ for (const outcome of ['timeout', 'unmount', 'pagehide'] as const) {
   });
 }
 
+for (const failure of [
+  { name: '401 unauthorized', status: 401, error: 'انتهت الجلسة. ابدأ برفع الفيديو من جديد.' },
+  { name: '403 forbidden', status: 403, error: 'انتهت الجلسة. ابدأ برفع الفيديو من جديد.' },
+  { name: '500 retryable server error', status: 500, error: 'حصل خطأ في الخادم. جرّب تاني.' },
+  { name: '503 retryable unavailable error', status: 503, error: 'المعالجة مشغولة حاليًا. جرّب بعد شوية.' },
+  { name: 'immediate connection failure', status: null, error: 'تعذّر الوصول للخادم. اتأكد من الاتصال وجرّب تاني.' },
+]) {
+  test(`${failure.name} rejects stop without retrying, polling or keeping capture tracks`, async ({ page }) => {
+    await trackCapture(page);
+    await page.clock.install();
+    let stops = 0;
+    let polls = 0;
+    let uploads = 0;
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.route('**/api/live/sessions**', async (route) => {
+      const request = route.request();
+      const path = new URL(request.url()).pathname;
+      if (path.endsWith('/stop')) {
+        stops++;
+        expect(request.method()).toBe('POST');
+        if (failure.status === null) await route.abort('connectionfailed');
+        // Empty payload exercises production status mapping, including retryable 5xx.
+        else await route.fulfill({ status: failure.status, json: {} });
+      } else if (/\/chunks\/\d+$/.test(path)) {
+        uploads++;
+        await route.fulfill({ json: { state: 'received', duplicate: false } });
+      } else if (request.method() === 'POST' && path.endsWith('/sessions')) {
+        await route.fulfill({ json: { live_session_id: 'stop-rejected', chunk_ms: 300, max_chunks: 100 } });
+      } else {
+        expect(request.method()).toBe('GET');
+        polls++;
+        await route.fulfill({ json: {
+          phase: 'live', target_face_id: null, chunks: [], final: { status: null }, error: null,
+        } });
+      }
+    });
+    await page.goto('/live');
+    await page.getByRole('button', { name: 'ابدأ التسجيل', exact: true }).click();
+    await expect.poll(() => polls).toBeGreaterThan(0);
+    // Establish that recurring polling is active before finalization fails.
+    await page.clock.runFor(600);
+    await expect.poll(() => polls).toBeGreaterThan(1);
+    await page.getByRole('button', { name: 'إيقاف التسجيل', exact: true }).click();
+    const error = page.getByRole('alert').filter({ hasText: failure.error });
+    await expect(error).toBeVisible();
+    await expect(page.getByText('بنوقف…', { exact: true })).not.toBeVisible();
+    await expect(page.getByText('بنخلص', { exact: true })).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'ابدأ التسجيل', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'إيقاف التسجيل', exact: true })).not.toBeVisible();
+    await expect.poll(() => page.evaluate(() => {
+      const tracks = (window as unknown as { captureTracks: MediaStreamTrack[] }).captureTracks;
+      return ['audio', 'video'].every((kind) => tracks.some((track) => track.kind === kind))
+        && tracks.every((track) => track.readyState === 'ended');
+    })).toBe(true);
+    await expect(page.locator('video').evaluate((video: HTMLVideoElement) => video.srcObject === null))
+      .resolves.toBe(true);
+    expect(stops).toBe(1);
+    // Settle any in-flight status response, then pass the deadline and retry windows.
+    await page.waitForTimeout(100);
+    const pollsAfterFailure = polls;
+    const uploadsAfterFailure = uploads;
+    await page.clock.fastForward(60_000);
+    await page.clock.runFor(1_000);
+    expect(stops).toBe(1);
+    expect(polls).toBe(pollsAfterFailure);
+    expect(uploads).toBe(uploadsAfterFailure);
+    await expect(error).toBeVisible();
+    expect(errors).toEqual([]);
+  });
+}
+
 for (const teardown of ['unmount', 'pagehide'] as const) {
   test(`${teardown} cancels a pending upload without retrying or keeping camera tracks`, async ({ page }) => {
     await trackCapture(page);
