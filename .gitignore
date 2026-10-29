@@ -1,0 +1,7 @@
+.pythonlibs/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+node_modules/
+product/apps/web/dist/
+runtime/replit/

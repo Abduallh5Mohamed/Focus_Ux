@@ -12,8 +12,16 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
-    strictPort: false,
+    host: '0.0.0.0',
+    port: 5000,
+    strictPort: true,
+    allowedHosts: true,
+    proxy: {
+      '/api': {
+        target: 'http://127.0.0.1:8000',
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+    },
   },
   build: {
     target: 'es2020',
@@ -28,7 +36,7 @@ export default defineConfig({
     // Serialised: the jsdom environments are heavy and parallel workers were being
     // dropped intermittently on Windows, which silently skipped test files.
     pool: 'forks',
-    poolOptions: { forks: { singleFork: true } },
+    maxWorkers: 1,
     fileParallelism: false,
   },
 });
