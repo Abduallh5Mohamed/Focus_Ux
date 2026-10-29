@@ -101,15 +101,11 @@ class Storage:
         for entry in self.settings.media_dir.glob(f"{_safe(video_id)}.*"):
             removed.append(_unlink(entry))
         thumbs = self.settings.thumbs_dir / _safe(video_id)
-        if thumbs.is_dir():
-            removed.extend(_rmtree(thumbs))
+        removed.extend(_rmtree(thumbs))
         return [p for p in removed if p]
 
     def remove_job_dir(self, job_id: str) -> list[str]:
-        directory = self.job_dir(job_id)
-        if directory.exists():
-            return _rmtree(directory)
-        return []
+        return _rmtree(self.job_dir(job_id))
 
 
 def _safe(value: str) -> str:
@@ -124,7 +120,9 @@ def _unlink(path: Path) -> str:
     try:
         path.unlink()
         return str(path)
-    except OSError:
+    except FileNotFoundError:
+        # Already removed is success; all other failures must reach the
+        # dispatcher so persisted paths remain available for a later retry.
         return ""
 
 
@@ -134,6 +132,10 @@ def _rmtree(path: Path) -> list[str]:
         removed.append(str(child))
     try:
         shutil.rmtree(path)
-    except OSError:
-        return []
+    except FileNotFoundError as exc:
+        # Only a missing root is an idempotent success. A missing child during
+        # traversal can leave the rest of the tree behind and needs a retry.
+        if exc.filename is not None and Path(exc.filename) == path:
+            return []
+        raise
     return removed

@@ -355,6 +355,9 @@ class ApiService:
     def delete_video(self, video_id: str, session_id: str) -> dict:
         video = self._owned_video(video_id, session_id, allow_deleted=True)
         if video.deleted:
+            # A previous attempt may have failed after revoking access. The
+            # queue deduplicates in-flight requests; a later DELETE retries.
+            self.dispatcher.enqueue_cleanup(video_id)
             return {"deletion_pending": True}
         self.repo.mark_video_deleted(video_id)
         queued = self.repo.cancel_queued_for_video(video_id)

@@ -246,6 +246,8 @@ class Dispatcher:
         for job in self.repo.jobs_for_video(video_id):
             self.storage.remove_job_dir(job.job_id)
         self.storage.remove_media(video_id)
+        # Storage raises on incomplete deletion (including partial rmtree).
+        # Retain the tombstone and paths until every removal has succeeded.
         self.repo.clear_media_paths(video_id)
 
     def _cleanup_deleted_videos(self) -> None:
