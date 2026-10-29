@@ -81,32 +81,45 @@ export function useLiveSession(api: LiveApi) {
     closed: boolean;
     stopping: boolean;
     cancellation: AbortController;
-  }>({ id: null, capture: null, player: null, uploads: Promise.resolve(), fetched: new Set(), poll: null, closed: false, stopping: false, cancellation: new AbortController() });
+    starting: boolean;
+    sessionToken?: string;
+    cleanupRequested: boolean;
+  }>({ id: null, capture: null, player: null, uploads: Promise.resolve(), fetched: new Set(), poll: null, closed: false, stopping: false, cancellation: new AbortController(), starting: false, cleanupRequested: false });
 
   const patch = useCallback((next: Partial<LiveSessionState>) => setState((prev) => ({ ...prev, ...next })), []);
 
-  const release = useCallback(async () => {
-    const current = live.current;
+  const cleanupStartup = useCallback((current: typeof live.current) => {
+    if (!current.starting || !current.id || current.cleanupRequested) return;
+    current.cleanupRequested = true;
+    // Do not abort Create: its response is needed to identify and authenticate cleanup.
+    // Stop is idempotent; finalizing an empty session releases the server's active slot.
+    void api.stop(current.id, { sessionToken: current.sessionToken, keepalive: true })
+      .catch((error) => console.warn('Could not stop interrupted live startup', error));
+  }, [api]);
+
+  const release = useCallback(async (current = live.current) => {
     current.closed = true;
     current.cancellation.abort();
     if (current.poll !== null) window.clearTimeout(current.poll);
     current.poll = null;
+    current.player?.close();
+    cleanupStartup(current);
     await current.capture?.stop();
     current.capture = null;
-  }, []);
+  }, [cleanupStartup]);
 
   const fail = useCallback(
-    async (message: string) => {
-      await release();
-      live.current.player?.close();
+    async (message: string, current = live.current) => {
+      if (current.closed || current !== live.current) return;
+      await release(current);
+      if (current !== live.current) return;
       patch({ phase: 'error', error: message, stream: null });
     },
     [patch, release],
   );
 
   const uploadChunk = useCallback(
-    (chunk: CapturedChunk) => {
-      const current = live.current;
+    (chunk: CapturedChunk, current = live.current) => {
       current.uploads = current.uploads.then(async () => {
         const signal = current.cancellation.signal;
         if (!current.id || signal.aborted) return;
@@ -177,27 +190,34 @@ export function useLiveSession(api: LiveApi) {
   }, [api, fail, patch]);
 
   const start = useCallback(async () => {
+    void release(live.current);
     const current: typeof live.current = {
       ...live.current, id: null, capture: null, player: null, poll: null,
       closed: false, stopping: false, fetched: new Set<number>(),
       uploads: Promise.resolve(), cancellation: new AbortController(),
+      starting: true, sessionToken: undefined, cleanupRequested: false,
     };
     live.current = current;
     patch({ phase: 'starting', error: null, view: null, metrics: null, uploadFailures: [], rebuffers: 0 });
     try {
       const created = await api.create();
-      if (current.closed) return;
-      if (created.session_token) saveSession({ token: created.session_token });
       current.id = created.live_session_id;
+      current.sessionToken = created.session_token;
+      if (current.closed) {
+        cleanupStartup(current);
+        return;
+      }
+      if (created.session_token) saveSession({ token: created.session_token });
       const player = new LivePlayer(() => current.capture?.startedWallMs ?? Date.now());
+      current.player = player;
       await player.unlock();
       if (current.closed) {
         player.close();
         return;
       }
-      current.player = player;
       const capture = await startCapture({
-        chunkMs: created.chunk_ms, onChunk: uploadChunk, onError: (m) => void fail(m),
+        chunkMs: created.chunk_ms, onChunk: (chunk) => uploadChunk(chunk, current),
+        onError: (m) => void fail(m, current), signal: current.cancellation.signal,
       });
       if (current.closed) {
         // Left the screen while the camera permission was pending: release it at once.
@@ -206,12 +226,13 @@ export function useLiveSession(api: LiveApi) {
         return;
       }
       current.capture = capture;
+      current.starting = false;
       patch({ phase: 'recording', stream: current.capture.stream });
       void pump();
     } catch (caught) {
-      await fail(caught instanceof Error && !('code' in caught) ? caught.message : describeError(caught).detail);
+      await fail(caught instanceof Error && !('code' in caught) ? caught.message : describeError(caught).detail, current);
     }
-  }, [api, fail, patch, pump, uploadChunk]);
+  }, [api, cleanupStartup, fail, patch, pump, release, uploadChunk]);
 
   const stop = useCallback(async () => {
     const current = live.current;
@@ -236,7 +257,7 @@ export function useLiveSession(api: LiveApi) {
       request.abort();
     }, STOP_TIMEOUT_MS);
     try {
-      await api.stop(current.id, request.signal);
+      await api.stop(current.id, { signal: request.signal });
       if (current.closed) return;
       patch({ phase: 'finishing' });
     } catch (caught) {
@@ -260,19 +281,14 @@ export function useLiveSession(api: LiveApi) {
   // Leaving the screen must never leave the camera or audio running.
   useEffect(() => {
     const onHide = () => {
-      const current = live.current;
-      current.closed = true;
-      current.cancellation.abort();
-      if (current.poll !== null) window.clearTimeout(current.poll);
-      void current.capture?.stop();
-      current.player?.close();
+      void release(live.current);
     };
     window.addEventListener('pagehide', onHide);
     return () => {
       window.removeEventListener('pagehide', onHide);
       onHide();
     };
-  }, []);
+  }, [release]);
 
   return { state, start, stop, selectTarget, liveId: live.current.id };
 }

@@ -19,3 +19,9 @@ Do not automatically retry a live finalization request after a timeout or cancel
 **Why:** cancelling the browser's response does not undo server-side finalization; a lost reply leaves the outcome uncertain rather than proving the operation failed.
 
 **How to apply:** bound the request, release capture resources, and explain the uncertain outcome. Any future recovery should first inspect session status instead of blindly sending another finalization request.
+
+Interrupted startup cleanup is best-effort in the browser, not a guarantee after a tab or process disappears.
+
+**Why:** aborting a Create request cannot establish that the server did not create a session, and a closed page may never receive the response needed to identify its session. A keepalive cleanup request helps only once that identity is known.
+
+**How to apply:** preserve the original owner for delayed cleanup, never let an abandoned startup alter its replacement, and treat server-side idle recovery as a separate protection rather than claiming browser teardown covers hard exits.

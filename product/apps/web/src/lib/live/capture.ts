@@ -23,6 +23,7 @@ export async function startCapture(options: {
   chunkMs: number;
   onChunk: (chunk: CapturedChunk) => void;
   onError: (message: string) => void;
+  signal?: AbortSignal;
 }): Promise<Capture> {
   if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
     throw new Error('المتصفح ده مش بيدعم التسجيل من الكاميرا.');
@@ -32,6 +33,10 @@ export async function startCapture(options: {
     audio: { echoCancellation: true, noiseSuppression: true },
   });
   const releaseTracks = () => stream.getTracks().forEach((track) => track.stop());
+  if (options.signal?.aborted) {
+    releaseTracks();
+    throw new DOMException('Capture cancelled', 'AbortError');
+  }
   const mimeType = pickMimeType();
   if (!mimeType) {
     releaseTracks();

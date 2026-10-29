@@ -68,6 +68,28 @@ def test_chunk_alone_is_undecodable_but_stream_decodes(make_api, stream):
         live_decode.decode_window(stream[1], api.settings.storage_root / "x.mp4", start_s=0, duration_s=2)
 
 
+def test_interrupted_empty_startup_releases_slot_without_stopping_replacement(make_api):
+    api = make_api()
+    created = api.client.post("/live/sessions").json()
+    sid, token = created["live_session_id"], created["session_token"]
+    path = f"/live/sessions/{sid}/stop"
+    assert api.client.post(path, headers=H(token)).status_code == 200
+    api.drain()
+    abandoned = api.client.get(f"/live/sessions/{sid}", headers=H(token)).json()
+    assert abandoned["phase"] == "failed"
+    assert abandoned["final"]["error"]["code"] == "NO_AUDIO"
+    replacement = api.client.post("/live/sessions")
+    assert replacement.status_code == 201
+    body = replacement.json()
+    # Repeated cleanup is idempotent and remains scoped to the abandoned owner/id.
+    assert api.client.post(path, headers=H(token)).status_code == 200
+    assert api.client.post(path, headers=H(body["session_token"])).status_code == 404
+    api.drain()
+    current = api.client.get(f'/live/sessions/{body["live_session_id"]}',
+                             headers=H(body["session_token"])).json()
+    assert current["phase"] == "awaiting_chunk"
+
+
 def test_full_session_flow_and_final_transcript(make_api, stream):
     api = make_api(transcriber=FakeTranscriber())
     api.settings.live_max_queue_depth = 10

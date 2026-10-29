@@ -16,7 +16,7 @@ export interface LiveApi {
   setTarget(liveId: string, faceId: string): Promise<LiveSessionView>;
   chunkAudio(liveId: string, seq: number, signal?: AbortSignal): Promise<ArrayBuffer>;
   postPlayback(liveId: string, report: PlaybackReport): Promise<void>;
-  stop(liveId: string, signal?: AbortSignal): Promise<LiveSessionView>;
+  stop(liveId: string, options?: { signal?: AbortSignal; sessionToken?: string; keepalive?: boolean }): Promise<LiveSessionView>;
   metrics(liveId: string): Promise<LiveMetrics>;
 }
 
@@ -30,7 +30,7 @@ export function createLiveApi(options: {
   async function call(path: string, init: RequestInit = {}): Promise<Response> {
     const token = options.getToken();
     const headers: Record<string, string> = { ...(init.headers as Record<string, string> | undefined) };
-    if (token) headers.Authorization = `Bearer ${token}`;
+    if (token && !headers.Authorization) headers.Authorization = `Bearer ${token}`;
     let response: Response;
     try {
       response = await doFetch(joinUrl(options.baseUrl, path), { ...init, headers });
@@ -57,7 +57,16 @@ export function createLiveApi(options: {
   const id = encodeURIComponent;
 
   return {
-    create: () => json<LiveCreateResponse>('/live/sessions', { method: 'POST', headers: { Accept: 'application/json' } }),
+    create: async () => {
+      // Preserve this request's owner even if another startup changes browser storage.
+      const token = options.getToken();
+      const created = await json<LiveCreateResponse>('/live/sessions', {
+        method: 'POST', headers: {
+          Accept: 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
+      return { ...created, session_token: created.session_token ?? token ?? undefined };
+    },
     putChunk: (liveId, chunk, signal) =>
       json(
         `/live/sessions/${id(liveId)}/chunks/${chunk.seq}?capture_start_ms=${Math.round(
@@ -73,7 +82,13 @@ export function createLiveApi(options: {
     postPlayback: async (liveId, report) => {
       await call(`/live/sessions/${id(liveId)}/playback`, post('', report));
     },
-    stop: (liveId, signal) => json<LiveSessionView>(`/live/sessions/${id(liveId)}/stop`, { ...post(''), signal }),
+    stop: (liveId, cleanup) => json<LiveSessionView>(`/live/sessions/${id(liveId)}/stop`, {
+      ...post(''), signal: cleanup?.signal, keepalive: cleanup?.keepalive,
+      headers: {
+        Accept: 'application/json',
+        ...(cleanup?.sessionToken ? { Authorization: `Bearer ${cleanup.sessionToken}` } : {}),
+      },
+    }),
     metrics: (liveId) => json<LiveMetrics>(`/live/sessions/${id(liveId)}/metrics`),
   };
 }
