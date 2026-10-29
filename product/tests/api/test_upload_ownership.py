@@ -1,4 +1,5 @@
 """Real processes must not mistake a paused upload for abandoned data."""
+import logging
 import multiprocessing
 import os
 import queue
@@ -12,6 +13,7 @@ from threading import BrokenBarrierError
 
 import pytest
 
+from services.api.focus_api import storage as storage_module
 from services.api.focus_api.storage import Storage
 from services.api.focus_api.upload_ownership import file_lock
 
@@ -152,6 +154,91 @@ def test_lease_protects_against_another_storage_in_same_process(tmp_path):
         assert path.read_bytes() == b"paused"
     # A failed upload whose file could not be deleted is no longer protected.
     assert Storage(settings).cleanup_stale_temp() == [str(path)]
+    assert not list(settings.tmp_dir.iterdir())
+
+
+@pytest.mark.parametrize("failure_point", ["gate", "sidecar-unlink"])
+@pytest.mark.parametrize("upload_fails", [False, True], ids=["success", "upload-error"])
+def test_exit_housekeeping_failure_preserves_result_and_releases_lease(
+    tmp_path, monkeypatch, caplog, failure_point, upload_fails
+):
+    settings = make_settings(tmp_path)
+    storage = Storage(settings)
+    storage.ensure()
+    housekeeping_error = PermissionError("injected lease housekeeping failure")
+    upload_error = RuntimeError("original upload failure")
+    result = object()
+    original_unlink = Path.unlink
+    path = None
+    lease_path = None
+    armed = False
+    injected = []
+
+    @contextmanager
+    def failing_gate(lock_path, *, blocking=True):
+        if armed and lock_path == storage._temp_gate:
+            injected.append("gate")
+            raise housekeeping_error
+        with file_lock(lock_path, blocking=blocking):
+            yield
+
+    def failing_unlink(target, *args, **kwargs):
+        if armed and target == lease_path:
+            injected.append("sidecar-unlink")
+            raise housekeeping_error
+        return original_unlink(target, *args, **kwargs)
+
+    def upload():
+        nonlocal path, lease_path, armed
+        with storage.own_temp_upload() as owned_path:
+            path = owned_path
+            lease_path = path.with_suffix(".upload.lock")
+            path.write_bytes(b"abandoned upload data")
+            os.utime(path, (1, 1))
+            # Prove that a real OS lease is held before injecting an exit fault.
+            with pytest.raises(BlockingIOError):
+                with file_lock(lease_path, blocking=False):
+                    pytest.fail("upload did not hold its lease")
+            armed = True
+            if upload_fails:
+                raise upload_error
+        return result
+
+    with caplog.at_level(logging.WARNING, logger="focus_api.storage"):
+        with monkeypatch.context() as patch:
+            if failure_point == "gate":
+                patch.setattr(storage_module, "file_lock", failing_gate)
+            else:
+                patch.setattr(Path, "unlink", failing_unlink)
+            if upload_fails:
+                with pytest.raises(RuntimeError) as raised:
+                    upload()
+                assert raised.value is upload_error
+            else:
+                assert upload() is result
+
+    assert injected == [failure_point]
+    assert path.read_bytes() == b"abandoned upload data"
+    assert lease_path.exists()
+    warnings = [
+        record for record in caplog.records
+        if record.name == "focus_api.storage" and record.levelno == logging.WARNING
+    ]
+    assert len(warnings) == 1
+    assert "Temporary upload lease cleanup failed" in warnings[0].getMessage()
+    assert str(lease_path) in warnings[0].getMessage()
+    assert warnings[0].exc_info[1] is housekeeping_error
+
+    # Reacquire the leftover sidecar, not a replacement: both exit failure
+    # branches must release the OS lease even though its file remains.
+    with file_lock(lease_path, blocking=False):
+        assert lease_path.exists()
+
+    cleaner = Storage(settings)
+    assert cleaner.cleanup_stale_temp() == [str(path)]
+    assert not path.exists()
+    assert not lease_path.exists()
+    assert cleaner.cleanup_stale_temp() == []
     assert not list(settings.tmp_dir.iterdir())
 
 
