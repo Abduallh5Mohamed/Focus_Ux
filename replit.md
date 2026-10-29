@@ -46,8 +46,8 @@ PYTHONPATH=product python -m pytest product/tests/ml -q
 PYTHONPATH=product python -m pytest product/tests/api -q
 ```
 
-After syncing the parallel changes, the worker suite passed 24 tests, ML passed
-65 tests, and API passed 160 tests with one skip. The prior web run passed 53 tests.
+Current handoff verification is recorded in `docs/LOCAL_TRIAL_VERIFICATION.md`;
+the separate Windows-local procedure is in `docs/LOCAL_WINDOWS_TRIAL.md`.
 The API suite covers uploads, sessions, protected media, queued deletion, and
 unavailable providers using test-only inference doubles. API helpers use relative
 package imports to avoid the worker's top-level `fakes` module.

@@ -25,6 +25,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "product" / "packages" / "ml"))
 sys.path.insert(0, str(ROOT / "product"))
 TOKEN_FILE = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "FocusWorker" / "worker-token"
+LOCAL_TOKEN_FILE = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "FocusLocalTrial" / "worker-token"
 PREVIEW_TOKEN_FILE = TOKEN_FILE.parent / "preview-access-token"
 
 
@@ -42,8 +43,19 @@ class NoRedirect(HTTPRedirectHandler):
 
 
 class WorkerClient:
-    def __init__(self, url, token, preview_token=None):
+    def __init__(self, url, token, preview_token=None, *, local_api=False):
         parts = urlsplit(url)
+        if local_api:
+            if url not in ("http://127.0.0.1:5000", "http://127.0.0.1:5000/api"):
+                raise ValueError("local API must be http://127.0.0.1:5000")
+            if preview_token:
+                raise ValueError("preview credentials must never be sent to the local API")
+            self.url, self.token = "http://127.0.0.1:5000/api", token
+            self.preview_token = None
+            # Do not send loopback credentials through an inherited HTTP proxy.
+            from urllib.request import ProxyHandler
+            self.opener = build_opener(ProxyHandler({}), NoRedirect())
+            return
         if (
             parts.scheme != "https" or not parts.hostname or parts.username or parts.password
             or parts.query or parts.fragment or parts.path not in ("", "/", "/api", "/api/")
@@ -200,7 +212,11 @@ def setup_preview_access():
     print("Private preview access saved locally. No token was printed or sent to chat.")
 
 
-def saved_client(url):
+def saved_client(url, *, local_api=False):
+    if local_api:
+        if not LOCAL_TOKEN_FILE.is_file():
+            raise RuntimeError("Start scripts/start-local-api.ps1 first.")
+        return WorkerClient(url, LOCAL_TOKEN_FILE.read_text().strip(), local_api=True)
     if not TOKEN_FILE.is_file():
         raise RuntimeError("Run Setup-Key.cmd first.")
     preview_token = (
@@ -239,8 +255,8 @@ def single_worker():
             yield
 
 
-def run(url, focus):
-    client = saved_client(url)
+def run(url, focus, *, local_api=False):
+    client = saved_client(url, local_api=True) if local_api else saved_client(url)
     print("Checking website connection before loading models...", flush=True)
     client.preflight()
     print("FOCUS connection verified.", flush=True)
@@ -305,19 +321,29 @@ def main():
     parser.add_argument("--preview-access", action="store_true")
     parser.add_argument("--url")
     parser.add_argument("--focus", default="A:/focus")
+    parser.add_argument("--local-api", action="store_true",
+                        help="Use only the loopback trial API and its separate local credential")
     args = parser.parse_args()
+    if args.local_api and (args.setup or args.preview_access):
+        parser.error("--local-api cannot change existing worker or preview credentials")
+    if args.local_api:
+        args.url = args.url or "http://127.0.0.1:5000"
     if args.setup:
         setup()
     elif args.preview_access:
         setup_preview_access()
     elif args.check:
         url = args.url or input("Website HTTPS address: ").strip()
-        saved_client(url).preflight()
-        print("FOCUS connection verified. Now use Start-Worker.cmd.")
+        client = saved_client(url, local_api=True) if args.local_api else saved_client(url)
+        client.preflight()
+        print("FOCUS connection verified. " + (
+            "Now start the worker with --local-api." if args.local_api
+            else "Now use Start-Worker.cmd."
+        ))
     else:
         url = args.url or input("Website HTTPS address: ").strip()
         with single_worker():
-            run(url, args.focus)
+            run(url, args.focus, local_api=args.local_api)
 
 
 if __name__ == "__main__":
