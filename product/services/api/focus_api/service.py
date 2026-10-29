@@ -132,7 +132,11 @@ class ApiService:
                 try:
                     Path(temp_path).unlink()
                 except OSError:
-                    pass
+                    logger.warning(
+                        "Failed-upload cleanup failed for %s; retained for stale-upload cleanup",
+                        temp_path,
+                        exc_info=True,
+                    )
 
         now = time.time()
         video = VideoRecord(

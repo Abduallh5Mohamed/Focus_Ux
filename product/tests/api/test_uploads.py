@@ -1,5 +1,15 @@
 """HTTP upload/session contracts; fixtures contain metadata, not real inference."""
+import errno
+import logging
+import os
+import time
+from contextlib import closing
+from pathlib import Path
+
 import pytest
+from fastapi.testclient import TestClient
+
+from services.api.focus_api import service as service_module
 
 from .fakes import FakeCandidateProvider
 from .fixtures_media import make_mp4_bytes
@@ -88,3 +98,80 @@ def test_exact_size_and_duration_limits_are_accepted(make_api, make_settings_for
     assert api.get_original(video, token).content == payload
     assert [p.name for p in api.settings.media_dir.iterdir()] == [f"{video}.mp4"]
     assert not list(api.settings.tmp_dir.iterdir())
+
+
+@pytest.mark.parametrize("error_number", [errno.EACCES, errno.EIO], ids=["permission", "io"])
+@pytest.mark.parametrize("failure", ["empty", "invalid", "size", "duration", "move"])
+def test_failed_upload_cleanup_warns_without_masking_error_and_can_retry(
+    make_api, make_settings_for, monkeypatch, caplog, error_number, failure,
+):
+    payload = make_mp4_bytes()
+    overrides = {}
+    if failure == "empty":
+        payload = b""
+    elif failure == "invalid":
+        payload = b"not a video"
+    elif failure == "size":
+        overrides["max_upload_bytes"] = len(payload) - 1
+    elif failure == "duration":
+        overrides["max_video_ms"] = 999
+    api = make_api(settings=make_settings_for(**overrides))
+    target = api.settings.tmp_dir / "failed.upload"
+    monkeypatch.setattr(api.app.state.storage, "new_temp_path", lambda: target)
+    cleanup_error = OSError(error_number, "injected failed-upload cleanup failure", str(target))
+    upload_error = OSError(errno.ENOSPC, "injected upload move failure")
+    real_unlink = Path.unlink
+
+    def fail_unlink(path, *args, **kwargs):
+        if path == target:
+            raise cleanup_error
+        return real_unlink(path, *args, **kwargs)
+
+    def fail_move(*args, **kwargs):
+        raise upload_error
+
+    with monkeypatch.context() as patch:
+        patch.setattr(Path, "unlink", fail_unlink)
+        if failure == "move":
+            patch.setattr(service_module.os, "replace", fail_move)
+        with caplog.at_level(logging.WARNING):
+            # Keep the existing app lifespan; this client only observes the
+            # HTTP response instead of re-raising unhandled server exceptions.
+            with closing(TestClient(api.app, raise_server_exceptions=False)) as client:
+                response = client.post(
+                    "/videos", files={"file": ("clip.mp4", payload, "video/mp4")},
+                )
+
+    if failure == "move":
+        assert response.status_code == 500
+        assert response.json() == {"error": {
+            "code": "SERVER_ERROR", "message": "internal server error", "retryable": True,
+        }}
+        errors = [r for r in caplog.records if r.name == "focus_api"]
+        assert len(errors) == 1
+        assert errors[0].exc_info[1] is upload_error
+    else:
+        limited = failure in ("size", "duration")
+        assert_error(response, 413 if limited else 400,
+                     "LIMIT_EXCEEDED" if limited else "INVALID_MEDIA")
+
+    warnings = [r for r in caplog.records if r.name == "focus_api.service"]
+    assert len(warnings) == 1
+    assert warnings[0].levelno == logging.WARNING
+    assert str(target) in warnings[0].getMessage()
+    assert "retained for stale-upload cleanup" in warnings[0].getMessage()
+    assert warnings[0].exc_info[1] is cleanup_error
+    assert "injected failed-upload cleanup failure" in caplog.text
+    assert target.exists()
+    assert not list(api.settings.media_dir.iterdir())
+    assert api.drain() == 0
+
+    storage = api.app.state.storage
+    assert storage.cleanup_stale_temp() == []  # Do not delete fresh leftovers.
+    stale = time.time() - api.settings.cleanup_temp_max_age_s - 10
+    os.utime(target, (stale, stale))
+    caplog.clear()
+    assert storage.cleanup_stale_temp() == [str(target)]
+    assert not target.exists()
+    assert storage.cleanup_stale_temp() == []
+    assert not caplog.records
