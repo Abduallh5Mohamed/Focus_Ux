@@ -9,6 +9,7 @@ from pathlib import Path
 from . import SCHEMA_VERSION
 from .compare import DEFAULT_CER_INCREASE, DEFAULT_SI_SDRI_DROP_DB, Thresholds, compare_reports
 from .dataset import STATUS_TEMPLATE, DatasetError, load_dataset, validate_dataset
+from .gate import DEFAULT_RTF_TARGET, decide
 from .evaluate import DEFAULT_AMBIGUOUS_MARGIN_DB, evaluate
 
 TEMPLATE_SCENARIOS = [
@@ -121,6 +122,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--include-provisional", action="store_true")
     p.add_argument("--out")
 
+    p = sub.add_parser("gate", help="adopt/reject a speed change: quality + RTF")
+    p.add_argument("--baseline", required=True)
+    p.add_argument("--candidate", required=True)
+    p.add_argument("--si-sdri-drop-db", type=float, default=DEFAULT_SI_SDRI_DROP_DB)
+    p.add_argument("--cer-increase", type=float, default=DEFAULT_CER_INCREASE)
+    p.add_argument("--rtf-target", type=float, default=DEFAULT_RTF_TARGET)
+    p.add_argument("--out")
+
     p = sub.add_parser("init-template", help="write a 10-clip template manifest")
     p.add_argument("--out", required=True, help="dataset directory to create")
 
@@ -153,6 +162,15 @@ def main(argv: list[str] | None = None) -> int:
             _write_json(a.out, rep)
             print(render_report(rep))
             return 0
+        if a.cmd == "gate":
+            base = json.loads(Path(a.baseline).read_text(encoding="utf-8"))
+            cand = json.loads(Path(a.candidate).read_text(encoding="utf-8"))
+            res = decide(base, cand, Thresholds(a.si_sdri_drop_db, a.cer_increase), a.rtf_target)
+            _write_json(a.out, res)
+            print(f"VERDICT: {res['verdict'].upper()}  RTF {res['rtf']}")
+            print(*[f"  - {r}" for r in res["reasons"]], sep="\n")
+            print(render_compare(res["quality"]))
+            return {"adopt": 0, "reject": 1, "inconclusive": 3}[res["verdict"]]
         if a.cmd == "compare":
             base = json.loads(Path(a.baseline).read_text(encoding="utf-8"))
             cand = json.loads(Path(a.candidate).read_text(encoding="utf-8"))

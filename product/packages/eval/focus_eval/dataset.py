@@ -10,6 +10,7 @@ Layout (all paths relative to the dataset directory)::
 """
 from __future__ import annotations
 
+import hashlib
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -62,6 +63,23 @@ class Dataset:
 
     def path(self, rel: str) -> Path:
         return self.root / rel
+
+    def fingerprint(self) -> str:
+        """Content hash of the manifest plus every file a READY clip references
+        (mix, references, transcripts). Two reports are comparable only when
+        this matches, so replacing clips or fixing a transcript changes it."""
+        h = hashlib.sha256()
+        h.update((self.root / "manifest.json").read_bytes())
+        for clip in self.clips:
+            if clip.status != STATUS_READY:
+                continue
+            rels = [clip.mix_audio] + [s.ref_audio for s in clip.speakers]
+            rels += [s.transcript for s in clip.speakers if s.transcript]
+            for rel in sorted(rels):
+                f = self.path(rel)
+                h.update(rel.encode("utf-8"))
+                h.update(f.read_bytes() if f.is_file() else b"<missing>")
+        return h.hexdigest()
 
 
 def load_dataset(root: str | Path) -> Dataset:

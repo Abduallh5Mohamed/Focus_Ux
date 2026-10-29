@@ -30,6 +30,9 @@ def compare_reports(base: dict, cand: dict, th: Thresholds | None = None) -> dic
     inconclusive: list[str] = []
     if base["dataset_id"] != cand["dataset_id"]:
         inconclusive.append(f"dataset differs: {base['dataset_id']!r} vs {cand['dataset_id']!r}")
+    fb, fc = base.get("dataset_fingerprint"), cand.get("dataset_fingerprint")
+    if fb != fc:
+        inconclusive.append("dataset content differs (fingerprint mismatch or missing); reports score different data")
     b_rows = {_key(r): r for r in base["rows"]}
     c_rows = {_key(r): r for r in cand["rows"]}
     common = sorted(set(b_rows) & set(c_rows))

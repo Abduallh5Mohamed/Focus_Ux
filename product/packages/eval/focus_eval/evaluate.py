@@ -18,6 +18,26 @@ from .dataset import PROVISIONAL, STATUS_READY, VERIFIED, Clip, Dataset
 from .textnorm import error_counts
 
 DEFAULT_AMBIGUOUS_MARGIN_DB = 3.0
+LENGTH_TOLERANCE_S = 0.1   # output length must match the mixture within this
+FRAME_S = 0.1              # continuity check frame size
+DROPOUT_MAX_FRACTION = 0.1  # max share of reference-active frames the output may leave silent
+
+
+def _dropout_fraction(est, ref) -> float:
+    """Share of frames where the reference speaks but the output is (near) silent."""
+    n = int(FRAME_S * 16000)
+    frames = min(len(est), len(ref)) // n
+    if frames == 0:
+        return 0.0
+    e = est[: frames * n].reshape(frames, n)
+    r = ref[: frames * n].reshape(frames, n)
+    e_rms = (e ** 2).mean(axis=1) ** 0.5
+    r_rms = (r ** 2).mean(axis=1) ** 0.5
+    active = r_rms > 0.25 * r_rms.mean()
+    if not active.any():
+        return 0.0
+    silent = e_rms < 1e-3 * max(r_rms.mean(), 1e-12)
+    return float((active & silent).sum() / active.sum())
 
 
 def _score_row(ds: Dataset, clip: Clip, target: str, run: Path, mix, refs, margin_db: float) -> dict:
@@ -37,6 +57,22 @@ def _score_row(ds: Dataset, clip: Clip, target: str, run: Path, mix, refs, margi
         return row
     try:
         est = load_audio(est_path)
+        diff_s = (len(est) - len(mix)) / 16000.0
+        row["length_diff_s"] = round(diff_s, 3)
+        problem = None
+        if abs(diff_s) > LENGTH_TOLERANCE_S:
+            problem = (f"output is {abs(diff_s):.2f}s {'shorter' if diff_s < 0 else 'longer'} "
+                       f"than the mixture (tolerance {LENGTH_TOLERANCE_S}s)")
+        else:
+            drop = _dropout_fraction(est, refs[target])
+            row["dropout_fraction"] = round(drop, 4)
+            if drop > DROPOUT_MAX_FRACTION:
+                problem = f"output is silent in {drop:.0%} of the frames where the target speaks"
+        if problem:
+            row["audio_status"] = "truncated"
+            row["error"] = problem
+            row["text_status"] = "not_scored"
+            return row
         s_est, lag, edge = aligned_si_sdr(est.copy(), refs[target].copy())
         s_mix, _, _ = aligned_si_sdr(mix.copy(), refs[target].copy())
         row.update(
@@ -107,6 +143,7 @@ def summarize(rows: list[dict]) -> dict:
         "n_audio_ok": len(ok),
         "n_missing_audio": sum(r["audio_status"] == "missing_audio" for r in rows),
         "n_audio_error": sum(r["audio_status"] == "error" for r in rows),
+        "n_truncated": sum(r["audio_status"] == "truncated" for r in rows),
         "wrong_person": {
             "evaluable": len(person),
             "wrong": len(wrong),
@@ -144,10 +181,16 @@ def evaluate(ds: Dataset, run_dir: str | Path, ambiguous_margin_db: float = DEFA
         for target in clip.targets:
             rows.append(_score_row(ds, clip, target, run, mix, refs, ambiguous_margin_db))
 
+    fingerprint = ds.fingerprint()
     tags = sorted({t for r in rows for t in r["tags"]})
+    bench = None
+    if meta.is_file():
+        bench = json.loads(meta.read_text(encoding="utf-8")).get("bench_by_clip")
     return {
         "schema_version": SCHEMA_VERSION,
+        "bench_by_clip": bench,
         "dataset_id": ds.dataset_id,
+        "dataset_fingerprint": fingerprint,
         "run_label": label,
         "not_ready_clips": not_ready,
         "thresholds": {"ambiguous_margin_db": ambiguous_margin_db},

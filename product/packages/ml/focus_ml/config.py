@@ -25,6 +25,9 @@ import os
 from dataclasses import dataclass
 
 
+TRACKING_MODES = ("reference", "adaptive")
+
+
 def _optional_str(env, name: str) -> str | None:
     value = env.get(name)
     return value if value else None
@@ -51,6 +54,20 @@ class AdapterConfig:
     sample_rate: int = 16000
     fps: int = 25
     merge: str = "direct"
+    # "reference" = legacy cadence (the validated default). "adaptive" is opt-in
+    # until it passes the A/B quality gate on the GPU machine.
+    tracking_mode: str = "reference"
+    adaptive_min_confidence: float = 0.6
+    adaptive_max_interval: int = 32
+    adaptive_edge_interval: int = 8
+    adaptive_identity_iou: float = 0.3
+    adaptive_max_hold_frames: int = 12
+
+    def __post_init__(self) -> None:
+        if self.tracking_mode not in TRACKING_MODES:
+            raise ValueError(
+                f"tracking_mode must be one of {TRACKING_MODES}, got {self.tracking_mode!r}"
+            )
 
     @classmethod
     def from_env(cls, env: "dict | None" = None) -> "AdapterConfig":
@@ -60,6 +77,7 @@ class AdapterConfig:
             model_cache=_optional_str(sources, "FOCUS_MODEL_CACHE"),
             max_video_seconds=_forced_int(sources, "FOCUS_MAX_VIDEO_SECONDS", 15),
             max_upload_mb=_forced_int(sources, "FOCUS_MAX_UPLOAD_MB", 50),
+            tracking_mode=_optional_str(sources, "FOCUS_TRACKING_MODE") or "reference",
         )
 
     @classmethod

@@ -66,3 +66,5 @@ No public deployment was performed.
 ## Error-metric tool
 
 `product/packages/eval/focus_eval` scores existing isolation outputs (wrong-person rate, CER/WER on normalised Arabic, SI-SDRi) and compares two runs for regressions. It needs only `numpy`, runs no engine/GPU/ASR, and the test set template lives in `product/datasets/egyptian_eval/` (see its README). Run its tests with `PYTHONPATH=product python -m pytest product/tests/eval -q`. Real measurements must be produced on the GPU machine.
+
+Adaptive face tracking (`focus_ml/adaptive_tracking.py`) is opt-in and unvalidated; `python -m focus_eval gate` decides adoption from GPU-machine runs. See `docs/DEV1_ML.md`.

@@ -37,6 +37,7 @@ import sys
 import time
 from typing import Callable, Optional, Sequence
 
+from focus_ml.adaptive_tracking import AdaptiveConfig, AdaptiveFaceTracker
 from focus_ml.config import AdapterConfig
 from focus_ml.errors import (
     FaceNotFoundError,
@@ -211,6 +212,9 @@ class LegacyDolphinAdapter:
     def __init__(self, config: AdapterConfig | None = None):
         self.config = config if config is not None else AdapterConfig.from_env()
         self._backend_memo: dict | None = None
+        # Per-run tracking report (counts, stage times, loss events) of the most
+        # recent extract_target call; also written to <job_dir>/tracking_report.json.
+        self.last_tracking_report: dict | None = None
 
     def available(self) -> bool:
         try:
@@ -539,6 +543,13 @@ class LegacyDolphinAdapter:
         track_start = time.perf_counter()
         track_result = self._track_stage(backend, frames, video_path, target, cfg, video_id)
         timings["detect_track"] = round(time.perf_counter() - track_start, 2)
+        tracking_report = track_result["report"]
+        for key in ("full_detects", "light_tracks", "landmark_calls"):
+            timings[key] = float(tracking_report.get(key, 0))
+        timings["detect_s"] = float(tracking_report.get("detect_s", 0.0))
+        timings["landmark_s"] = float(tracking_report.get("landmark_s", 0.0))
+        tracking_report["tracking_mode"] = cfg.tracking_mode
+        self.last_tracking_report = tracking_report
         mouth_start = time.perf_counter()
         mouth_roi, roi_warnings = self._mouth_roi(
             backend["inference"],
@@ -563,6 +574,7 @@ class LegacyDolphinAdapter:
         timings["separate_wall"] = round(time.perf_counter() - separate_start, 2)
         if on_progress is not None:
             on_progress("separating", 1.0)
+        self._write_tracking_report(str(job_dir), tracking_report)
         result_warnings = list(track_result["warnings"])
         result_warnings.extend(roi_warnings)
         result_warnings.extend(fps_warnings)
@@ -576,6 +588,14 @@ class LegacyDolphinAdapter:
             timings=timings,
             warnings=result_warnings,
         )
+
+    @staticmethod
+    def _write_tracking_report(job_dir: str, report: dict) -> None:
+        import json
+
+        os.makedirs(job_dir, exist_ok=True)
+        with open(os.path.join(job_dir, "tracking_report.json"), "w", encoding="utf-8") as handle:
+            json.dump(report, handle, ensure_ascii=False, indent=1)
 
     def _backend_from_bundle(self, models: ModelBundle, cfg: AdapterConfig) -> dict:
         """Reuse the already-activated engine handles instead of re-importing
@@ -670,9 +690,32 @@ class LegacyDolphinAdapter:
         target_reacquired = False
         any_detection_after_first = False
         cached_detected: list = []
+        if cfg.tracking_mode == "adaptive":
+            adaptive_boxes, report, adaptive_warnings = self._adaptive_boxes(
+                backend, frames, speaker_boxes[speaker_slot], cfg
+            )
+            boxes_history = [[] for _ in range(n_spk)]
+            boxes_history[speaker_slot] = adaptive_boxes
+            stage_warnings.extend(adaptive_warnings)
+            faces_bgr, landmarks, lm_stats = self._finalize_track(
+                backend, frames, boxes_history, speaker_slot, cfg
+            )
+            report.update(lm_stats)
+            return {
+                "faces_bgr": faces_bgr, "landmarks": landmarks,
+                "warnings": stage_warnings, "report": report,
+            }
+        ref_stats = {"mode": "reference", "frames": len(frames), "full_detects": 1,
+                     "light_tracks": 0, "hold_frames": 0, "detect_s": 0.0,
+                     "events": [], "loss_intervals": []}
         for i in range(1, len(frames)):
             if i % detect_every == 0:
+                detect_started = time.perf_counter()
                 current = self._detect_frame(detect_faces, _bgr_to_rgb(frames[i]))
+                ref_stats["detect_s"] = round(
+                    ref_stats["detect_s"] + time.perf_counter() - detect_started, 4
+                )
+                ref_stats["full_detects"] += 1
                 cached_detected = [
                     inference.face2head([box], FACE_BOX_SCALE)[0] for box in current
                 ]
@@ -695,14 +738,56 @@ class LegacyDolphinAdapter:
                 "the selected face was never re-matched by the tracker after "
                 "the first frame"
             )
-        faces_bgr, landmarks = self._finalize_track(
+        faces_bgr, landmarks, lm_stats = self._finalize_track(
             backend, frames, boxes_history, speaker_slot, cfg
         )
-        return {"faces_bgr": faces_bgr, "landmarks": landmarks, "warnings": stage_warnings}
+        ref_stats.update(lm_stats)
+        return {
+            "faces_bgr": faces_bgr, "landmarks": landmarks,
+            "warnings": stage_warnings, "report": ref_stats,
+        }
+
+    def _adaptive_boxes(self, backend, frames, first_box, cfg) -> tuple[list, dict, list]:
+        """Opt-in adaptive tracking of the TARGET only (see adaptive_tracking).
+        Returns (per-frame boxes, report, warnings). Unvalidated on a GPU."""
+        from focus_ml.light_tracker import template_box_tracker  # lazy (needs cv2)
+
+        inference = backend["inference"]
+        detect_faces = backend["detect_faces"]
+
+        def detect(frame):
+            found = self._detect_frame(detect_faces, _bgr_to_rgb(frame))
+            return [inference.face2head([box], FACE_BOX_SCALE)[0] for box in found]
+
+        tracker = AdaptiveFaceTracker(
+            AdaptiveConfig(
+                min_confidence=cfg.adaptive_min_confidence,
+                max_interval=cfg.adaptive_max_interval,
+                edge_interval=min(cfg.adaptive_edge_interval, cfg.adaptive_max_interval),
+                identity_iou_min=cfg.adaptive_identity_iou,
+                max_hold_frames=cfg.adaptive_max_hold_frames,
+                fps=cfg.fps,
+            ),
+            (int(frames[0].shape[1]), int(frames[0].shape[0])),
+            detect,
+            template_box_tracker,
+        )
+        boxes = [tracker.start(frames[0], first_box).box]
+        for i in range(1, len(frames)):
+            boxes.append(tracker.step(i, frames[i]).box)
+        tracker.finalize()
+        report = tracker.report()
+        warnings = [
+            f"target {'lost' if loss['declared_lost'] else 'uncertain'} from "
+            f"{loss['start_ms']} ms to {loss['end_ms']} ms ({loss['reason']}); "
+            f"the last known face box was held"
+            for loss in report["loss_intervals"]
+        ]
+        return boxes, report, warnings
 
     def _finalize_track(
         self, backend: dict, frames: list, boxes_history, speaker_slot: int, cfg
-    ) -> tuple[list, list]:
+    ) -> tuple[list, list, dict]:
         """Port of legacy runner lines 139-170 order (GPU-exercised): the
         detector frame is converted to RGB ONCE per use, the landmarker
         receives RGB, and the stored face crop is pixels[..., ::-1] (BGR)
@@ -717,6 +802,7 @@ class LegacyDolphinAdapter:
 
         target_history = boxes_history[speaker_slot]
         faces, landmarks = [], []
+        lm_calls, lm_seconds = 0, 0.0
         for frame_index, frame in enumerate(frames):
             frame_rgb = _bgr_to_rgb(frame)
             box = target_history[frame_index]
@@ -728,7 +814,10 @@ class LegacyDolphinAdapter:
             pixels_rgb = np.asarray(crop)
             landmark_cycle = frame_index % cfg.landmark_every == 0 or not landmarks
             if landmark_cycle:
+                lm_started = time.perf_counter()
                 preds = fa.get_landmarks(pixels_rgb)
+                lm_seconds += time.perf_counter() - lm_started
+                lm_calls += 1
                 if preds is None or len(preds) == 0:
                     if frame_index == 0:
                         raise FaceNotFoundError(
@@ -742,7 +831,9 @@ class LegacyDolphinAdapter:
                 current = landmarks[-1]
             faces.append(pixels_rgb[..., ::-1])
             landmarks.append(current)
-        return faces, landmarks
+        return faces, landmarks, {
+            "landmark_calls": lm_calls, "landmark_s": round(lm_seconds, 4),
+        }
 
     def _mouth_roi(self, inference, faces_bgr, lms, cfg) -> tuple[object, list[str]]:
         """Port of legacy ``crop_patch_frames`` + gray conversion for the

@@ -184,3 +184,111 @@ def test_regression_status_and_exit_code_stay_distinct(env):
     base = _report(env, "base")
     bad = _report(env, "bad", swap=True)
     assert compare_reports(base, bad)["status"] == "regression"
+
+
+def test_short_clean_prefix_is_truncated_not_ok(env):
+    import numpy as np
+    from eval_helpers import write_wav
+
+    tmp, ds_dir, sigs = env
+    run = make_run(tmp / "short", sigs, label="short")
+    write_wav(run / "c1" / "a.wav", sigs["a"][: len(sigs["a"]) // 4])
+    rep = evaluate(load_dataset(ds_dir), run)
+    row = next(r for r in rep["rows"] if r["speaker_id"] == "a")
+    assert row["audio_status"] == "truncated" and "si_sdri" not in row
+    assert rep["summary"]["n_truncated"] == 1
+    base = _report(env, "full")
+    kinds = {r["kind"] for r in compare_reports(base, rep)["regressions"]}
+    assert "audio_lost" in kinds
+
+
+def test_fingerprint_change_makes_compare_inconclusive(env):
+    tmp, ds_dir, sigs = env
+    base = _report(env, "before")
+    (ds_dir / "clips" / "c1" / "a.txt").write_text("نص مصحح بعد المراجعة", encoding="utf-8")
+    after = evaluate(load_dataset(ds_dir), make_run(tmp / "after", sigs, label="after"))
+    assert base["dataset_fingerprint"] != after["dataset_fingerprint"]
+    cmp = compare_reports(base, after)
+    assert cmp["status"] == "inconclusive"
+    assert any("fingerprint" in r for r in cmp["inconclusive_reasons"])
+
+
+def _with_bench(rep, rtf, failed=0):
+    rep = json.loads(json.dumps(rep))
+    rep["bench_by_clip"] = {"c1": {"rtf": rtf, "n_failed": failed}}
+    return rep
+
+
+def test_gate_verdicts(env):
+    from focus_eval.gate import decide
+
+    good = _report(env, "good")
+    base = _with_bench(good, 1.2)
+    assert decide(base, _with_bench(good, 0.7))["verdict"] == "adopt"
+    assert decide(base, _with_bench(good, 0.9))["verdict"] == "reject"          # misses RTF target
+    assert decide(base, _with_bench(good, 0.7, failed=1))["verdict"] == "reject"
+    assert decide(base, good)["verdict"] == "inconclusive"                      # no speed data
+    bad = _with_bench(_report(env, "bad", swap=True), 0.5)                      # fast but wrong person
+    assert decide(base, bad)["verdict"] == "reject"
+
+
+def test_gate_rejects_when_one_target_drops_over_half_a_db(env):
+    from focus_eval.gate import decide
+
+    good = _report(env, "good")
+    base = _with_bench(good, 1.2)
+    cand = _with_bench(good, 0.6)
+    next(r for r in cand["rows"] if r["speaker_id"] == "b")["si_sdri"] -= 0.7   # "B" regresses
+    res = decide(base, cand)
+    assert res["verdict"] == "reject"
+    assert any("si_sdri_drop" in r for r in res["reasons"])
+
+
+def test_91_percent_length_output_is_not_complete(env):
+    from eval_helpers import write_wav
+
+    tmp, ds_dir, sigs = env
+    run = make_run(tmp / "p91", sigs, label="p91")
+    write_wav(run / "c1" / "a.wav", sigs["a"][: int(len(sigs["a"]) * 0.91)])
+    rep = evaluate(load_dataset(ds_dir), run)
+    row = next(r for r in rep["rows"] if r["speaker_id"] == "a")
+    assert row["audio_status"] == "truncated" and "shorter" in row["error"]
+    from focus_eval.gate import decide
+    base = _with_bench(_report(env, "full"), 1.2)
+    assert decide(base, _with_bench(rep, 0.5))["verdict"] == "reject"
+
+
+def test_silent_gap_in_output_is_flagged_even_with_full_length(env):
+    import numpy as np
+    from eval_helpers import write_wav
+
+    tmp, ds_dir, sigs = env
+    run = make_run(tmp / "gap", sigs, label="gap")
+    est = sigs["a"].copy()
+    est[len(est) // 4: len(est) * 3 // 4] = 0.0          # half the clip dropped, same length
+    write_wav(run / "c1" / "a.wav", est)
+    rep = evaluate(load_dataset(ds_dir), run)
+    row = next(r for r in rep["rows"] if r["speaker_id"] == "a")
+    assert row["audio_status"] == "truncated" and "silent" in row["error"]
+
+
+def _two_clip(rep, bench):
+    rep = json.loads(json.dumps(rep))
+    rep["rows"] += [dict(r, clip_id="c2") for r in rep["rows"]]
+    rep["bench_by_clip"] = bench
+    return rep
+
+
+def test_gate_needs_speed_on_every_clip(env):
+    from focus_eval.gate import decide
+
+    good = _report(env, "good")
+    fast = {"rtf": 0.5, "n_failed": 0}
+    base = _two_clip(good, {"c1": {"rtf": 1.2, "n_failed": 0}, "c2": {"rtf": 1.2, "n_failed": 0}})
+    assert decide(base, _two_clip(good, {"c1": fast, "c2": fast}))["verdict"] == "adopt"
+    unbenchmarked = decide(base, _two_clip(good, {"c1": fast}))
+    assert unbenchmarked["verdict"] == "inconclusive" and "c2" in " ".join(unbenchmarked["reasons"])
+    slow = decide(base, _two_clip(good, {"c1": fast, "c2": {"rtf": 0.95, "n_failed": 0}}))
+    assert slow["verdict"] == "reject" and any("clip c2" in r for r in slow["reasons"])
+    failed = decide(base, _two_clip(good, {"c1": fast, "c2": {"rtf": None, "n_failed": 2}}))
+    assert failed["verdict"] == "reject"
