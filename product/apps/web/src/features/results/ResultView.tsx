@@ -250,6 +250,7 @@ export function ResultView({ job, videoId, onDeleted }: ResultViewProps): JSX.El
         onRetryIsolated={() => setAudioReload((value) => value + 1)}
         durationMs={durationMs}
         sampleRate={sampleRate}
+        followPeriods={job.result?.follow_periods}
       />
 
       <div className="grid-2">

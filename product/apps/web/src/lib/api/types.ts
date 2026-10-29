@@ -76,7 +76,20 @@ export type JobStage =
 export type AudioStatus = 'pending' | 'ready' | 'failed';
 export type TranscriptStatus = 'pending' | 'processing' | 'ready' | 'failed';
 
+export type FollowState = 'visual' | 'voice_follow' | 'uncertain' | 'conflict';
+
+export interface FollowPeriod {
+  start_ms: number;
+  end_ms: number;
+  state: FollowState;
+  reason: string;
+  similarity?: number | null;
+  output_allowed: boolean;
+}
+
 export interface JobResult {
+  /** Optional: absent until the voice-follow models are approved and integrated. */
+  follow_periods?: FollowPeriod[];
   duration_ms?: number;
   sample_rate?: number;
   source_offset_ms?: number;

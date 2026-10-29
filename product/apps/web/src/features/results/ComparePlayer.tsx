@@ -5,6 +5,7 @@ import { Button } from '../../components/Button';
 import { Spinner } from '../../components/Spinner';
 import { describeError } from '../../lib/api/errors';
 import { formatClock, formatDuration } from '../../lib/format';
+import type { FollowPeriod } from '../../lib/api/types';
 import type { AudioTransport } from './useAudioTransport';
 import './results.css';
 
@@ -25,7 +26,14 @@ interface ComparePlayerProps {
   onRetryIsolated: () => void;
   durationMs?: number;
   sampleRate?: number;
+  followPeriods?: FollowPeriod[];
 }
+
+const FOLLOW_LABEL: Record<string, string> = {
+  voice_follow: 'متابعة بالصوت',
+  uncertain: 'غير متأكد',
+  conflict: 'تعارض الصوت مع الوش',
+};
 
 /** Static bar pattern: a level display, not a computed waveform (we never fake analysis). */
 const BARS = Array.from({ length: 56 }, (_, index) => {
@@ -48,6 +56,7 @@ export function ComparePlayer({
   onRetryIsolated,
   durationMs,
   sampleRate,
+  followPeriods,
 }: ComparePlayerProps) {
   const total = transport.duration || (durationMs ? durationMs / 1000 : 0);
   const progress = total > 0 ? Math.min(1, transport.currentTime / total) : 0;
@@ -135,6 +144,30 @@ export function ComparePlayer({
               />
             ))}
           </div>
+
+          {followPeriods && followPeriods.some((p) => p.state !== 'visual') && total > 0 ? (
+            <div className="follow-strip" aria-label="فترات المتابعة بالصوت">
+              {followPeriods
+                .filter((p) => p.state !== 'visual')
+                .map((p) => (
+                  <span
+                    key={`${p.start_ms}-${p.state}`}
+                    className={`follow-strip__seg follow-strip__seg--${p.state}`}
+                    style={{
+                      insetInlineStart: `${(p.start_ms / 1000 / total) * 100}%`,
+                      width: `${((p.end_ms - p.start_ms) / 1000 / total) * 100}%`,
+                    }}
+                    title={FOLLOW_LABEL[p.state]}
+                  />
+                ))}
+              <span className="hint">
+                {followPeriods.some((p) => p.state === 'voice_follow') ? 'متابعة بالصوت ' : ''}
+                {followPeriods.some((p) => p.state === 'uncertain' || p.state === 'conflict')
+                  ? '· فيه فترات غير مؤكدة'
+                  : ''}
+              </span>
+            </div>
+          ) : null}
 
           <div className="transport">
             <button

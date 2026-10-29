@@ -73,6 +73,9 @@ class Job:
     duration_ms: Optional[int] = None
     source_offset_ms: int = 0
     audio_warnings: list[str] = field(default_factory=list)
+    # Voice-follow periods (focus_ml.voice_follow.Period.as_dict()); empty until
+    # an approved voiceprint model is integrated.
+    follow_periods: list[dict] = field(default_factory=list)
     transcript_segments: list[TranscriptSegment] = field(default_factory=list)
     error: Optional[ErrorPayload] = None
     queue_position: int = 0
@@ -80,6 +83,7 @@ class Job:
     def copied(self) -> "Job":
         clone = copy.copy(self)
         clone.audio_warnings = list(self.audio_warnings)
+        clone.follow_periods = [dict(p) for p in self.follow_periods]
         clone.transcript_segments = list(self.transcript_segments)
         if self.error is not None:
             clone.error = ErrorPayload(**vars(self.error))
@@ -110,5 +114,6 @@ class Job:
                 "duration_ms": self.duration_ms,
                 "source_offset_ms": self.source_offset_ms,
                 "transcript_status": self.transcript_status.value,
+                **({"follow_periods": self.follow_periods} if self.follow_periods else {}),
             },
         }
