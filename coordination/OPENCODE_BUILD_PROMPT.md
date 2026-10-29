@@ -1,0 +1,9 @@
+Read AGENTS.md and coordination/BOARD.md. The human authorizes implementation and subagents. You are the GLM primary OpenCode engineer supervised by Codex.
+
+Read docs/00_MASTER_PLAN.md, docs/01_LEGACY_AND_MIGRATION.md and docs/02_CONTRACTS.md. Use local legacy_snapshot; do not request external-directory access. Product does not exist at kickoff: create ONLY your assigned directories and files, no unrelated scaffolding.
+
+MANDATORY: invoke focus-ml through your task tool to implement import-safe adapter types and a minimal explicit integration boundary based on the real legacy runner. Delegate only packages/ml and tests/ml. While it works, implement services/worker and tests/worker: single-job execution, injected adapter/repository interfaces, stage callbacks, independent audio/transcript state and clear failure transitions. Do not implement SQLite/API owned by external DeepSeek. Use Python stdlib where possible; do not install packages or edit shared manifests. Handle missing model implementation honestly; never produce fake successful audio. Tests may use explicit fakes only within tests.
+
+Candidate metadata, true target identity, timestamp normalization and import-time cwd side effects are known integration gaps. Reuse proven legacy behavior where practical; do not promise those gaps are solved just by adding dataclasses. Deliver code and targeted CPU tests, and explicitly enumerate what still requires GPU validation.
+
+When implementation is complete, invoke focus-review (DeepSeek) for a read-only review of actual changed code against the plan. Fix relevant findings within your ownership, run tests using the available Python runtime or documented existing interpreter, and write coordination/OPENCODE_HANDOFF.md. Use at most two subagents. No recursive spawning, GPU inference, downloads, original legacy edits, deployment, push, global config changes, or API/frontend edits. Stop at this milestone with a factual handoff.

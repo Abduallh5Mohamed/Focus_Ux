@@ -1,0 +1,19 @@
+{
+  "baseUrl": "http://localhost:5174",
+  "runs": [
+    {
+      "viewport": "desktop",
+      "error": "Waiting failed: 15000ms exceeded"
+    },
+    {
+      "viewport": "mobile-390",
+      "error": "Waiting failed: 15000ms exceeded"
+    },
+    {
+      "viewport": "mobile-320",
+      "error": "Waiting failed: 15000ms exceeded"
+    }
+  ],
+  "launched": true,
+  "launchError": null
+}

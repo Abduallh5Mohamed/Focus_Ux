@@ -1,0 +1,30 @@
+[
+ {
+  "case": "A",
+  "lag_ms": 0.0,
+  "si_sdr_mix": -2.86,
+  "si_sdr_est": 14.82,
+  "si_sdri": 17.68
+ },
+ {
+  "case": "B",
+  "lag_ms": 0.0,
+  "si_sdr_mix": 2.85,
+  "si_sdr_est": 11.23,
+  "si_sdri": 8.38
+ },
+ {
+  "case": "A_downscale0.5",
+  "lag_ms": 0.0,
+  "si_sdr_mix": -2.86,
+  "si_sdr_est": 14.76,
+  "si_sdri": 17.62
+ },
+ {
+  "case": "B_downscale0.5",
+  "lag_ms": 0.0,
+  "si_sdr_mix": 2.85,
+  "si_sdr_est": 0.49,
+  "si_sdri": -2.36
+ }
+]

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOCUS — أول زوج اختبار حقيقي (SI-SDRi + WER)</title>
+<style>
+  :root{--bg:#0f1220;--card:#181c2f;--ink:#e9ecf5;--mut:#a7b0c8;--ok:#2ecc71;--bad:#e74c3c;--warn:#f1c40f;--acc:#5b8cff;--line:#2a3050;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:1100px;margin:0 auto;padding:28px 20px 90px}
+  h1{font-size:25px;margin:0 0 6px}
+  h2{font-size:19px;margin:30px 0 10px;border-right:4px solid var(--acc);padding-right:10px}
+  h3{font-size:15px;margin:16px 0 8px;color:#cfd7ef}
+  .sub{color:var(--mut);font-size:14px;margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:right;vertical-align:top}
+  th{background:#20263f;color:#dfe5fb;font-weight:600}
+  tr:nth-child(even) td{background:#1b2036}
+  code,.mono{font-family:Consolas,monospace;background:#0b0e18;padding:1px 6px;border-radius:6px;font-size:12.5px;direction:ltr;display:inline-block}
+  pre{background:#0b0e18;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;direction:ltr;text-align:left;font-size:12.5px}
+  .ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}.warn{color:var(--warn);font-weight:700}.mut{color:var(--mut)}
+  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700}
+  .p-ok{background:rgba(46,204,113,.15);color:#7ee2a8;border:1px solid rgba(46,204,113,.4)}
+  .p-nt{background:rgba(241,196,15,.12);color:#ffe27a;border:1px solid rgba(241,196,15,.4)}
+  ul{margin:6px 0;padding-right:22px}li{margin:3px 0}
+  .kpi{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}
+  .kpi div{flex:1 1 160px;background:#12162a;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .kpi b{display:block;font-size:19px}.kpi span{color:var(--mut);font-size:12px}
+  .small{font-size:12.5px;color:var(--mut)}
+  .quote{border-right:3px solid var(--acc);padding-right:10px;color:#c9d2ea;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>FOCUS — أول زوج اختبار حقيقي: SI-SDRi + WER</h1>
+<div class="sub">
+Dolphin (نافذة 2s + دمج مُصلَح) على زوج من تسجيلات إنترنت · RTX 3060 6GB · تجربة أولية (مش إثبات أداء في تجمع حقيقي).
+</div>
+
+<div class="kpi">
+  <div><b class="ok">+17.6 dB</b><span>SI-SDRi للشخص A (Mariam)</span></div>
+  <div><b class="ok">+8.2 dB</b><span>SI-SDRi للشخص B (Linguamid)</span></div>
+  <div><b class="ok">1.59→0.65</b><span>WER A: خلطة→مستخرج (مبدئي)</span></div>
+  <div><b class="ok">0.54→0.36</b><span>WER B: خلطة→مستخرج (مبدئي)</span></div>
+</div>
+
+<h2>1) المصدران والفحص</h2>
+<div class="card">
+<table>
+<tr><th>الشخص</th><th>المصدر</th><th>المقطع</th><th>الفحص</th></tr>
+<tr><td>A — Mariam</td><td>talkinarabic — "Mariam introduces herself in Egyptian Arabic"<br><span class="mono">talkinarabic.com/egyptian/phrases/introducing-yourself/</span></td><td class="mono">26–40s (14s)</td><td class="ok">شخص واحد، لقطة ثابتة كاملة، الفم واضح طوال المقطع، فواصل صمت حقيقية (0.0001) ⇒ <b>بدون موسيقى</b></td></tr>
+<tr><td>B — Linguamid</td><td>YouTube — "How to Easily Introduce Yourself in Egyptian Arabic in ONLY 5 MINS"<br><span class="mono">youtube.com/watch?v=Det_2fKTb3g</span></td><td class="mono">24–38s (14s)</td><td class="warn">شخص واحد، لقطة كاملة (بلا split-screen)، الفم واضح، لكن فيه <b>أرضية خلفية مستمرة (~-40dB)</b> — مش استوديو نقي</td></tr>
+</table>
+<p class="small"><b>لم أفترض الصلاحية من العنوان:</b> فحصت إطارات فعلية. في Linguamid مقاطع split-screen (سلايدات درس) عند ~t90/t200 — استبعدتها واخترت نافذة full-frame (24–38s). في Mariam الفيديو كله لقطة واحدة لشخص واحد.</p>
+<p class="small"><b>استبدال:</b> لم أستبدل مصدرًا؛ لكن Linguamid فيه أرضية خلفية مستمرة (~-40dB) لم أستطع تأكيدها كموسيقى أم room tone — أُدرِجت كقيد (المراجع من الإنترنت وليست استوديو نقي).</p>
+</div>
+
+<h2>2) بناء الخلطة والمراجع (تم التحقق)</h2>
+<div class="card">
+<table>
+<tr><th>الخطوة</th><th>النتيجة</th></tr>
+<tr><td>قص المقطعين (14s)</td><td class="mono">a_seg.mp4 (26–40s) · b_seg.mp4 (24–38s)</td></tr>
+<tr><td>مراجع 16k mono + loudnorm −23 LUFS</td><td class="mono">p1_a_ref.wav (14.02s, peak 0.778) · p1_b_ref.wav (14.00s, peak 0.710)</td></tr>
+<tr><td>خلطة (amix normalize=0)</td><td class="mono">p1_mix.wav — peak <b>0.78</b> ⇒ <b>بدون clipping</b></td></tr>
+<tr><td>تركيب نفس الخلطة في فيديو كل شخص (PCM، 25fps CFR)</td><td class="mono">p1_a_in.mov · p1_b_in.mov</td></tr>
+<tr><td><b>التحقق: الموديل يستقبل الخلطة فعلًا؟</b></td><td class="ok">corr(المستخرَج من الإدخال، الخلطة) = <b>1.0000</b> للاثنين</td></tr>
+</table>
+<p class="small">استخدمت PCM في الـmux (لا AAC) ⇒ بلا تأخير ترميز. المحاذاة في القياس لاحقًا طلعت lag = 0.0 ms، ما يؤكد التزامن.</p>
+</div>
+
+<h2>3) النتائج: SI-SDRi (على نفس الجزء الزمني)</h2>
+<div class="card">
+<table>
+<tr><th>الشخص</th><th>SI-SDR الخلطة</th><th>SI-SDR المستخرج</th><th>SI-SDRi</th><th>lag</th></tr>
+<tr><td>A — Mariam</td><td class="mono">−2.82 dB</td><td class="mono">14.79 dB</td><td class="ok mono">+17.61 dB</td><td class="mono">0.0 ms</td></tr>
+<tr><td>B — Linguamid</td><td class="mono">2.81 dB</td><td class="mono">11.03 dB</td><td class="ok mono">+8.23 dB</td><td class="mono">0.0 ms</td></tr>
+<tr><td><b>المتوسط</b></td><td colspan="2"></td><td class="ok mono"><b>+12.92 dB</b></td><td></td></tr>
+</table>
+<h3>تحقق أن كل مستخرج يخص الشخص الصحيح (مش مجرد إشارة مختلفة)</h3>
+<table>
+<tr><th>المقارنة</th><th>SI-SDR</th><th>الدلالة</th></tr>
+<tr><td>estA ↔ refA</td><td class="ok mono">+14.79</td><td>يطابق صاحبه</td></tr>
+<tr><td>estA ↔ refB</td><td class="bad mono">−30.63</td><td>لا يطابق الآخر</td></tr>
+<tr><td>estB ↔ refB</td><td class="ok mono">+11.03</td><td>يطابق صاحبه</td></tr>
+<tr><td>estB ↔ refA</td><td class="bad mono">−34.54</td><td>لا يطابق الآخر</td></tr>
+</table>
+<p class="small">فجوة ~45 dB بين مطابقة الصاحب ومطابقة الآخر ⇒ <b>عزل صحيح للهدف</b>، وليس مجرد «إشارتين مختلفتين».</p>
+</div>
+
+<h2>4) النتائج: WER (مبدئي)</h2>
+<div class="card">
+<table>
+<tr><th>الشخص</th><th>WER(خلطة)</th><th>WER(مستخرج)</th></tr>
+<tr><td>A — Mariam</td><td class="mono">1.588</td><td class="ok mono">0.647</td></tr>
+<tr><td>B — Linguamid</td><td class="mono">0.536</td><td class="ok mono">0.357</td></tr>
+</table>
+<p class="warn">تحذير منهجي: النص المرجعي = تفريغ ASR للصوت النظيف (whisper <span class="mono">small</span>)، <b>وليس نصًا بشريًا مُدقّقًا</b> ⇒ الأرقام <b>مبدئية</b> وتحتاج مراجعة بشرية قبل اعتبارها WER نهائيًا. لم أعتبر الترجمة الآلية ground truth. (WER الخلطة &gt;1 للشخص A طبيعي لأن الخلطة تحتوي المتكلمين فتُدخل كلمات B.)</p>
+<h3>النصوص للمراجعة (A)</h3>
+<pre>ref: و الشوية فرنسي و الشوية تركي أنا كنت معيدة في جماعة بارد في نيوورك بس دلوقتي عالي
+est: شوية فرانساوي و شوية تول أنا كنت شويدا سيجمع بارد في نيورد بس الوقت</pre>
+<h3>النصوص للمراجعة (B)</h3>
+<pre>ref: أنا كويس اسمك ايه أنا اسمي حميد انت عندك ام سنة أنا عندي 36 سنة بتشتغل ايه بشتغل دكتور بشتغل مهندس شكراً سلام عليكم عليكم السلام تفهم ايه
+est: أنا كويس اسمك ايه أنا اسم حمين انت عندك انا انا عندي بتجتغل ايه بشتغل دكتور بشتغل مهندس شكرا سلام عليكم عليكم سلام عليكم اصلاة</pre>
+<p class="small">الاتجاه ثابت في الحالتين (المستخرج أفضل من الخلطة) ومتوافق مع SI-SDRi، لكن القيم المطلقة تتأثر بجودة ASR الصغير واللهجة.</p>
+</div>
+
+<h2>5) وقت التشغيل</h2>
+<div class="card">
+<table>
+<tr><th>الهدف</th><th>المدة الكلية (14s، تشغيل بارد)</th></tr>
+<tr><td>A — Mariam</td><td class="mono">160.97 s</td></tr>
+<tr><td>B — Linguamid</td><td class="mono">176.70 s</td></tr>
+</table>
+<p class="small">يشمل cold start + تجهيز الوجه + forward (نوافذ 2s) + mux. <b>ليس</b> زمنًا لحظيًا؛ الطلب المتكرر (نماذج محمّلة) أقل بكثير لكن لم يُقس كخط كامل هنا. لا أصف النظام بأنه live.</p>
+</div>
+
+<h2>6) الحدود والاستنتاج</h2>
+<div class="card">
+<ul>
+<li><b>المراجع من تسجيلات إنترنت</b> (Mariam نقي نسبيًا؛ Linguamid فيه أرضية ~-40dB) — ليست تسجيلات استوديو نظيفة.</li>
+<li>الخلطة <b>مصنوعة بالخلط</b> (A+B) وليست تداخلًا طبيعيًا مسجَّلًا في غرفة واحدة ⇒ تجربة مضبوطة، مش محادثة حقيقية.</li>
+<li>زوج واحد فقط ⇒ <b>لا نعمّم</b> على المصري عمومًا أو على ضعاف السمع.</li>
+<li>WER <b>مبدئي</b> (نص مرجعي = ASR، يحتاج مراجعة بشرية).</li>
+</ul>
+<p><b>الاستنتاج:</b> على أول زوج حقيقي، Dolphin (2s + دمج مُصلَح) <b>يحسّن وضوح الهدف بوضوح</b>: SI-SDRi +17.6/+8.2 dB، وكل مستخرج يطابق صاحبه بفجوة ~45 dB عن الآخر، وWER ينخفض في الحالتين. النتيجة <b>مشجّعة كتجربة أولية</b> وليست إثبات أداء نهائي.</p>
+</div>
+
+<div class="card">
+<p class="small">
+الملفات في <span class="mono">A:\focus\data\gt5\</span>:
+<span class="mono">p1_mix.wav</span> (الخلطة) · <span class="mono">p1_a_ref.wav</span>, <span class="mono">p1_b_ref.wav</span> (المراجع) · <span class="mono">p1_a_est.wav</span>, <span class="mono">p1_b_est.wav</span> (المخرجات) · <span class="mono">p1_a_in.mov</span>, <span class="mono">p1_b_in.mov</span> (الفيديوهات بالخلطة) · <span class="mono">p1_a.txt</span>, <span class="mono">p1_b.txt</span> (النصوص للمراجعة) · <span class="mono">gt_build.json</span>, <span class="mono">cross_check.json</span>, <span class="mono">wer_provisional.json</span>.<br>
+السكريبتات: <span class="mono">A:\focus\tools\{build_gt,gt_wer,cross_check}.py</span> · اللوجات: <span class="mono">A:\focus\logs\{gt_a,gt_b,wer_run}.log</span>.
+</p>
+</div>
+
+</div>
+</body>
+</html>

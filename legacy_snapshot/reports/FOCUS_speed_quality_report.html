@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOCUS — تقرير السرعة والجودة (جولة 8)</title>
+<style>
+  :root{--bg:#0f1220;--card:#181c2f;--ink:#e9ecf5;--mut:#a7b0c8;--ok:#2ecc71;--bad:#e74c3c;--warn:#f1c40f;--acc:#5b8cff;--line:#2a3050;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:1140px;margin:0 auto;padding:28px 20px 90px}
+  h1{font-size:24px;margin:0 0 6px}
+  h2{font-size:19px;margin:30px 0 10px;border-right:4px solid var(--acc);padding-right:10px}
+  h3{font-size:15px;margin:16px 0 8px;color:#cfd7ef}
+  .sub{color:var(--mut);font-size:14px;margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+  th,td{border:1px solid var(--line);padding:7px 9px;text-align:right;vertical-align:top}
+  th{background:#20263f;color:#dfe5fb;font-weight:600}
+  tr:nth-child(even) td{background:#1b2036}
+  code,.mono{font-family:Consolas,monospace;background:#0b0e18;padding:1px 5px;border-radius:6px;font-size:12px;direction:ltr;display:inline-block}
+  pre{background:#0b0e18;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;direction:ltr;text-align:left;font-size:12px}
+  .ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}.warn{color:var(--warn);font-weight:700}.mut{color:var(--mut)}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700}
+  .p-ok{background:rgba(46,204,113,.15);color:#7ee2a8;border:1px solid rgba(46,204,113,.4)}
+  .p-bad{background:rgba(231,76,60,.15);color:#ff9a8d;border:1px solid rgba(231,76,60,.4)}
+  .p-nt{background:rgba(241,196,15,.12);color:#ffe27a;border:1px solid rgba(241,196,15,.4)}
+  ul{margin:6px 0;padding-right:22px}li{margin:3px 0}
+  .kpi{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}
+  .kpi div{flex:1 1 160px;background:#12162a;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .kpi b{display:block;font-size:19px}.kpi span{color:var(--mut);font-size:12px}
+  .small{font-size:12.5px;color:var(--mut)}
+  .hr{height:1px;background:var(--line);margin:20px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>FOCUS — جولة تحسين السرعة والجودة (8)</h1>
+<div class="sub">
+gt5 (زوج Mariam/Linguamid) · RTX 3060 6GB · Dolphin 2s + دمج direct · تحسين عاملًا واحدًا في كل تجربة.
+</div>
+
+<div class="kpi">
+  <div><b class="ok">140.9 → 66.6–74.2s</b><span>زمن الطلب الدافئ (runner الآمن، الهدفان)</span></div>
+  <div><b class="ok">+17.62 dB</b><span>SI-SDRi (A) — محفوظ (baseline +17.60)</span></div>
+  <div><b class="ok">+8.38 dB</b><span>SI-SDRi (B) — محفوظ (baseline +8.25)</span></div>
+  <div><b class="bad">light: لا</b><span>dolphin_light ليس drop-in (مخرجات مختلفة)</span></div>
+</div>
+
+<h2>1) إعادة إنتاج الـbaseline</h2>
+<div class="card">
+<p>أعدت تشغيل <span class="mono">Inference_focus.py</span> على نفس gt5 (عمليتان منفصلتان):</p>
+<table>
+<tr><th>الهدف</th><th>wall (بارد)</th><th>SI-SDR خلطة</th><th>SI-SDR مستخرج</th><th>SI-SDRi</th></tr>
+<tr><td>A — Mariam</td><td class="mono">140.89 s</td><td class="mono">−2.82</td><td class="mono">14.78</td><td class="ok mono">+17.60</td></tr>
+<tr><td>B — Linguamid</td><td class="mono">139.39 s</td><td class="mono">2.81</td><td class="mono">11.05</td><td class="ok mono">+8.25</td></tr>
+</table>
+<p class="small">الأرقام السابقة (+17.61/+8.23) اتأكدت (فرق ≤0.02 dB). الزمن اختلف عن 161/177s السابقة (≈140s الآن) — أرقام الزمن مش مضمونة بين التشغيلات؛ الجودة ثابتة.</p>
+</div>
+
+<h2>2) الـRunner المستمر + مسار الصوت فقط</h2>
+<div class="card">
+<p><span class="mono">tools/focus_runner.py</span>: يحمّل face_alignment + retinaface + Dolphin مرة واحدة، warmup خارج التوقيت. كل طلب <b>يعيد قراءة الفيديو وتجهيزه ويشغّل العزل فعلًا</b> (لا reuse للـcrops/الناتج). مسار مباشر: الوجوه في الذاكرة (لا كتابة/فك ترميز faces/*.mp4)، WAV فقط (بلا MP4)، شخص واحد.</p>
+<table>
+<tr><th>النسخة</th><th>التغييرات</th><th>cold (A/B)</th><th>warm e2e (A/B، متوسط 3)</th><th>detect_track (warm)</th><th>forward (warm)</th><th>VRAM peak</th><th>SI-SDRi A</th><th>SI-SDRi B</th></tr>
+<tr><td>Baseline</td><td>الحالي (عملية/طلب)</td><td class="mono">140.9 / 139.4</td><td class="mut">— (بارد فقط)</td><td>—</td><td>—</td><td class="mono">~4646*</td><td class="mono">+17.60</td><td class="mono">+8.25</td></tr>
+<tr><td><b>Runner</b></td><td>نماذج محمّلة + مسار مباشر (بلا face-video) + WAV فقط</td><td class="mono">107.8 / 95.6</td><td class="ok mono">74.2 / 66.6</td><td class="mono">61–72 / 59–60 s</td><td class="mono">1.6–1.9 / 1.6–1.7 s</td><td class="mono">3971</td><td class="ok mono">+17.68</td><td class="ok mono">+8.38</td></tr>
+<tr><td><b>Runner + downscale 0.5</b> <span class="pill p-bad">غير آمن</span></td><td>كشف على نصف الدقة ثم تحويل الصناديق للأصل (القص من الأصل)</td><td class="mono">73.1 / 67.0</td><td class="warn mono">45.3 / 41.8</td><td class="mono">36–39 / 33–37 s</td><td class="mono">~1.7 / 1.6–1.7</td><td class="mono">3971</td><td class="ok mono">+17.62</td><td class="bad mono">−2.36 (B انهار)</td></tr>
+</table>
+<p class="small">* VRAM baseline من قياس سابق (torch). القيم أعلاه torch allocated peak. forward = زمن العزل فقط (CUDA events). detect_track يشمل retinaface + face_alignment + التتبّع.</p>
+<h3>تفصيل المراحل (A، warm)</h3>
+<table>
+<tr><th>النسخة</th><th>read_frames</th><th>detect_track</th><th>mouth_roi</th><th>extract_audio</th><th>forward</th><th>write</th><th>wall</th></tr>
+<tr><td>Runner</td><td class="mono">2.7</td><td class="mono">72.0 / 65.5 / 61.1</td><td class="mono">3.5 / 2.7 / 3.2</td><td class="mono">0.23</td><td class="mono">1.86 / 1.62 / 1.76</td><td class="mono">0.01</td><td class="mono">80.6 / 73.3 / 68.8</td></tr>
+<tr><td>+downscale 0.5</td><td class="mono">2.6</td><td class="mono">37.0 / 38.6 / 36.3</td><td class="mono">3.5 / 3.6 / 2.8</td><td class="mono">0.17</td><td class="mono">1.88 / 1.72 / 1.67</td><td class="mono">0.01</td><td class="mono">45.4 / 46.9 / 43.5</td></tr>
+</table>
+<p class="small"><b>أين ذهب الوقت؟</b> detect_track هو الاختناق (~60s بلا downscale، ~35s معه). forward = 1.6–1.9s فقط. <b>downscale 0.5</b> خفّض detect_track ~22–24s، لكنه حافظ على جودة A فقط (+17.62) و<b>كسر B</b> (−2.36) ⇒ غير ثابت الهوية، غير آمن.</p>
+<p class="small"><b>تجربة reuse-prep (معلّمة):</b> لو أُعيد استخدام mouth ROI + الصوت المحسوبين، الطلب = forward + كتابة ≈ <b>1.8–2.0s</b> (من separate_wall). لكن الـrunner الأساسي <b>لا</b> يستخدم هذا (يعيد التجهيز كل مرة) — الـ1.8s ليست زمن الطلب الحقيقي.</p>
+</div>
+
+<h2>3) dolphin_light (تجربة مقارنة محدودة)</h2>
+<div class="card">
+<p>المصدر: GitHub <span class="mono">JusperLee/Dolphin</span> — أُعلن <span class="mono">dolphin_light.py</span> (2026-04-09) بـFFT-based DCT/IDCT (O(T log T) بدل O(T²)). نزّلته وقارنته بنفس الأوزان/المدخل.</p>
+<table>
+<tr><th>البند</th><th>النتيجة</th></tr>
+<tr><td>مفاتيح الأوزان</td><td class="mono">0 missing، 98 unexpected (video_encoder.recon_model.*)</td></tr>
+<tr><td>المعاملات</td><td class="mono">light 11.10M vs orig 7.00M (+4.10M غير مدرَّبة)</td></tr>
+<tr><td>2s: تطابق المخرجات</td><td class="bad mono">corr 0.927، max diff 0.16 ⇒ مش متطابق</td></tr>
+<tr><td>2s: الزمن/الذاكرة</td><td class="bad mono">light 1634ms vs orig 801ms (light أبطأ!)</td></tr>
+<tr><td>4s: الأصلي</td><td class="bad">OOM (peak 8612 MiB)</td></tr>
+<tr><td>4s: light</td><td class="warn mono">ينجح 4617ms، peak 8288 MiB (oversubscribed)</td></tr>
+</table>
+<p class="small"><b>الحكم:</b> light <b>ليس drop-in</b> — عنده 98 معامل recon_model غير مدرَّبة (random) تُغيّر المخرج (corr 0.93)، وهو <b>أبطأ على 2s</b>، وجودته على 4s غير مُتحقَّقة. ينفع ذاكريًا لـ4s لكن جودته غير مثبتة. <b>لم أستخدمه</b> (لا إعادة تدريب، حسب طلبك).</p>
+</div>
+
+<h2>4) الجودة بعد تثبيت المسار الأسرع</h2>
+<div class="card">
+<ul>
+<li><b>نافذة 2s مقابل 4s:</b> 4s على الأصلي = OOM؛ على light = ينجح لكن بجودة غير متحققة (recon_model غير مدرَّب). ⇒ <b>2s يبقى الخيار الوحيد الموثوق على 6GB</b>.</li>
+<li><b>direct مقابل OLA:</b> الـrunner يستخدم direct (0 أصفار عند الوصلات؛ إعادة بناء identity خطأ 0.0). من جولة سابقة: OLA50 يجعل الوصلة أنعم (~0.0003 مقابل 0.0094) مقابل ×1.67 نوافذ. متاح لو الوصلات مهمة سمعيًا.</li>
+<li><b>FP16:</b> forward = 1.6–1.9s فقط (لا الاختناق) ⇒ autocast FP16 هيوفّر ~0.8s من أصل 45–70s. <b>مش مجدي</b> حاليًا (الاختناق في الوجه لا الموديل). لم أفعّله.</li>
+<li><b>بلا denoising/خلط تلقائي:</b> لم أضف أي معالجة بعدية.</li>
+</ul>
+</div>
+
+<h2>5) الاختيار النهائي</h2>
+<div class="card">
+<h3>(أ) أسرع نسخة حافظت على الجودة</h3>
+<p><b>Runner بلا downscale</b> (النسخة الآمنة): A warm <b>74.2s</b>، B warm <b>66.6s</b> (من 140.9/139.4 baseline ≈ <b>1.9–2.1×</b>)، SI-SDRi <b>+17.68 / +8.38</b> مقابل baseline <b>+17.60 / +8.25</b> (فرق <b>+0.08 / +0.13 dB</b>).</p>
+<p class="bad">downscale 0.5 أسرع (A 45.3s، B 41.8s) لكنه <b>كسر جودة B</b> (SI-SDRi −2.36؛ est corr 0.75 مع النسخة السليمة) ⇒ غير ثابت الهوية، مرفوض.</p>
+<h3>(ب) أفضل جودة</h3>
+<p><b>نفس الـRunner بلا downscale</b>: A <b>+17.68</b>، B <b>+8.38</b> — أفضل من baseline وأسرع 1.9–2.1×. (لا توجد نسخة جودة أعلى مُتحقَّقة.)</p>
+<p class="small"><b>الخلاصة:</b> السرعة تحسّنت 1.9–2.1× <b>بدون خسارة جودة</b> للهدفين. downscale أسرع لكنه غير ثابت الهوية (B انهار) ⇒ لم أختره. التحسين الآمن من: نماذج محمّلة + إزالة ترميز face-video + WAV فقط. الاختناق المتبقي = face_alignment (landmarks كل فريم) — تقليله تجربة جودة منفصلة لم أُنفّذها حفاظًا على الجودة.</p>
+</div>
+
+<h2>6) الحدود</h2>
+<div class="card">
+<ul>
+<li>زوج gt5 واحد ⇒ مقارنة هندسية أولية فقط، لا تعميم على مستخدمين/تسجيلات أخرى.</li>
+<li>المراجع من تسجيلات إنترنت (B فيه أرضية ~-40dB)، والخلطة مصنوعة بالخلط.</li>
+<li>اللقطة شبه ثابتة ⇒ لا تُثبت متانة التتبّع مع حركة رأس قوية.</li>
+<li>الزمن متغيّر بين التشغيلات (OS cache/thermal)؛ الجودة ثابتة.</li>
+<li><b>مش live:</b> 45–70s لطلب 14s (حتى دافئ)؛ forward وحده 1.7s لكن التجهيز يهيمن.</li>
+</ul>
+</div>
+
+<div class="hr"></div>
+<p class="small">
+الملفات: <span class="mono">A:\focus\tools\focus_runner.py</span> (الرَنر) · <span class="mono">light_compare.py</span> · <span class="mono">eval_runner_all.py</span>.<br>
+الأوامر: <span class="mono">python focus_runner.py --video data/gt5/p1_a_in.mov --out data/gt5/run_a --reps 3</span> · أضف <span class="mono">--downscale 0.5</span>.<br>
+المخرجات: <span class="mono">data/gt5/run_a_warm{0,1,2}.wav</span>، <span class="mono">run_b_warm*.wav</span>، <span class="mono">run_a_ds_warm*.wav</span>، <span class="mono">run_b_ds_warm*.wav</span> · JSON: <span class="mono">run_a_bench.json</span>، <span class="mono">run_b_bench.json</span>، <span class="mono">run_a_ds_bench.json</span>، <span class="mono">runner_eval.json</span>، <span class="mono">light_compare.json</span>.
+</p>
+
+</div>
+</body>
+</html>

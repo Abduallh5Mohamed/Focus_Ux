@@ -1,0 +1,158 @@
+[
+  {
+    "source": "A:\\focus\\tools\\focus_runner.py",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\tools\\focus_runner.py",
+    "bytes": 11196,
+    "sha256": "cd88baf7dbb46c93c2dfea314bfd5e6bc861df26aaf18e3914e035f72d8fe77d"
+  },
+  {
+    "source": "A:\\focus\\tools\\focus_runner2.py",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\tools\\focus_runner2.py",
+    "bytes": 13864,
+    "sha256": "854de77dc25eaa3ab709739b0a00ab2ae42b66e7965ce8ce6b657fb277358f56"
+  },
+  {
+    "source": "A:\\focus\\tools\\align_eval.py",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\tools\\align_eval.py",
+    "bytes": 4614,
+    "sha256": "f9311a4af6465ebdc9153a1b9295698521191bf30e070536cc9072912e980618"
+  },
+  {
+    "source": "A:\\focus\\tools\\build_gt.py",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\tools\\build_gt.py",
+    "bytes": 3387,
+    "sha256": "319f15fb1ae1813f068d8ba67cfb2ec774e804920110210a07e9e22ee074c651"
+  },
+  {
+    "source": "A:\\focus\\tools\\gt_wer.py",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\tools\\gt_wer.py",
+    "bytes": 2797,
+    "sha256": "f64b5ecf303b17d51e62974957cc76e2fad4290d1644637a8ff791b6532a5846"
+  },
+  {
+    "source": "A:\\focus\\tools\\cross_check.py",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\tools\\cross_check.py",
+    "bytes": 1303,
+    "sha256": "660602eb6bff4c2ce71795efe7802eae89978c8cd120b1e5a7e1fc3ad6a55cbd"
+  },
+  {
+    "source": "A:\\focus\\tools\\eval_runner_all.py",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\tools\\eval_runner_all.py",
+    "bytes": 1852,
+    "sha256": "895ba53f82bb28524fe26edf988ac1883a8b2a184077b843797748a710efea58"
+  },
+  {
+    "source": "A:\\focus\\tools\\eval_v2.py",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\tools\\eval_v2.py",
+    "bytes": 1850,
+    "sha256": "e0b9fa25c78989817be1e95635ee1ed269512f0cea4eef399f3e12a2b6ca7453"
+  },
+  {
+    "source": "A:\\focus\\tools\\run_focus.ps1",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\tools\\run_focus.ps1",
+    "bytes": 915,
+    "sha256": "f3125c49c3704ad3064142f00d3eb1df3f86ce0fb8b08d5de59b1a70b64bffd0"
+  },
+  {
+    "source": "A:\\focus\\Dolphin\\Inference.py",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\Dolphin\\Inference.py",
+    "bytes": 29057,
+    "sha256": "6fa2641bf06716f690610564a96ee280f22fc6a9e06a299227d323d3a68770b5"
+  },
+  {
+    "source": "A:\\focus\\Dolphin\\Inference_focus.py",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\Dolphin\\Inference_focus.py",
+    "bytes": 29879,
+    "sha256": "92c01a2fd495cca786f67fb5c3d059f7fbfb1b48355c6200b8f77dc7740780d2"
+  },
+  {
+    "source": "A:\\focus\\Dolphin\\Inference.orig.py",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\Dolphin\\Inference.orig.py",
+    "bytes": 27545,
+    "sha256": "7d54d1c68320bb66dbac2dd451d45f4c3dd441e131b86194d4b0aa31ef1e7d71"
+  },
+  {
+    "source": "A:\\focus\\Dolphin\\Inference_patched2.py",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\Dolphin\\Inference_patched2.py",
+    "bytes": 29057,
+    "sha256": "6fa2641bf06716f690610564a96ee280f22fc6a9e06a299227d323d3a68770b5"
+  },
+  {
+    "source": "A:\\focus\\requirements.freeze.txt",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\requirements.freeze.txt",
+    "bytes": 2412,
+    "sha256": "f99193fe5a4bebce729fc8ee0cb31c1d265976026462864ee043aba46929693c"
+  },
+  {
+    "source": "A:\\focus\\data\\gt5\\gt_build.json",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\evidence\\gt_build.json",
+    "bytes": 429,
+    "sha256": "dca59d40116a82282a65a1edc085a3a155495914e90e6fd82612472f29084cc7"
+  },
+  {
+    "source": "A:\\focus\\data\\gt5\\cross_check.json",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\evidence\\cross_check.json",
+    "bytes": 105,
+    "sha256": "52e46789b05151a5f69412f863b1236bf26fe1cd9ef35fa61bb42d5b03eb64bc"
+  },
+  {
+    "source": "A:\\focus\\data\\gt5\\runner_eval.json",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\evidence\\runner_eval.json",
+    "bytes": 469,
+    "sha256": "2bb7352e327eff6f4152d03cbc53bd41ea77280b499dea1c02b1d4c1005739e4"
+  },
+  {
+    "source": "A:\\focus\\data\\gt5\\wer_provisional.json",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\evidence\\wer_provisional.json",
+    "bytes": 1657,
+    "sha256": "b8d27b472de8bc9ea4a37fdcc11c8cf82f6c8884f5568440b5d356383359ed75"
+  },
+  {
+    "source": "A:\\focus\\data\\gt5\\v2_b_d16_l2_bench.json",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\evidence\\v2_b_d16_l2_bench.json",
+    "bytes": 1537,
+    "sha256": "2572d0b46e49b68ef5a17b80e55e11c67250968d2fb2a50404b5c2c59515b602"
+  },
+  {
+    "source": "C:\\Users\\abdua\\WorkBuddy AI\\2026-10-27-00-17-28\\FOCUS_faceprep_speed_report.html",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\reports\\FOCUS_faceprep_speed_report.html",
+    "bytes": 12846,
+    "sha256": "62b7be025e90e87392f89ad70fd9b758bf641ab39a95e6b3e110e7fc066329e0"
+  },
+  {
+    "source": "C:\\Users\\abdua\\WorkBuddy AI\\2026-10-27-00-17-28\\FOCUS_gt_pair1_report.html",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\reports\\FOCUS_gt_pair1_report.html",
+    "bytes": 11839,
+    "sha256": "c0aaa622176d63cff97119da65ed821f32e4aa57899608db94913e31acea681a"
+  },
+  {
+    "source": "C:\\Users\\abdua\\WorkBuddy AI\\2026-10-27-00-17-28\\FOCUS_P0_verification_report.html",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\reports\\FOCUS_P0_verification_report.html",
+    "bytes": 31417,
+    "sha256": "cbdf9ebe812f95c5f0285963a685f4ea8f6b516e5eca3980ce3520ec66540a0f"
+  },
+  {
+    "source": "C:\\Users\\abdua\\WorkBuddy AI\\2026-10-27-00-17-28\\FOCUS_round3_execution_report.html",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\reports\\FOCUS_round3_execution_report.html",
+    "bytes": 22297,
+    "sha256": "17aeefb08dc6705a17995d7b8637b7c57a80109055b11c8aea89cf0e67f6220e"
+  },
+  {
+    "source": "C:\\Users\\abdua\\WorkBuddy AI\\2026-10-27-00-17-28\\FOCUS_round4_execution_report.html",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\reports\\FOCUS_round4_execution_report.html",
+    "bytes": 20861,
+    "sha256": "d8541ac64ad05136a5aa0e07e2c718f4c2b15d3aa3f0c90331b4968a926c42b0"
+  },
+  {
+    "source": "C:\\Users\\abdua\\WorkBuddy AI\\2026-10-27-00-17-28\\FOCUS_round5_execution_report.html",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\reports\\FOCUS_round5_execution_report.html",
+    "bytes": 13567,
+    "sha256": "213a3eeda00b9a74b8b82ce809f89773feca6340b77e0d834a07eb49d5c09282"
+  },
+  {
+    "source": "C:\\Users\\abdua\\WorkBuddy AI\\2026-10-27-00-17-28\\FOCUS_speed_quality_report.html",
+    "snapshot": "A:\\فوكس\\legacy_snapshot\\reports\\FOCUS_speed_quality_report.html",
+    "bytes": 13033,
+    "sha256": "b17de96000d334972fb110e64cda736f26d29135bfbde33cc507672ce4d1981a"
+  }
+]

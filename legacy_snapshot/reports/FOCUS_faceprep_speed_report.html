@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOCUS — تقرير تسريع تجهيز الوجه (جولة 9)</title>
+<style>
+  :root{--bg:#0f1220;--card:#181c2f;--ink:#e9ecf5;--mut:#a7b0c8;--ok:#2ecc71;--bad:#e74c3c;--warn:#f1c40f;--acc:#5b8cff;--line:#2a3050;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:1140px;margin:0 auto;padding:28px 20px 90px}
+  h1{font-size:24px;margin:0 0 6px}
+  h2{font-size:19px;margin:30px 0 10px;border-right:4px solid var(--acc);padding-right:10px}
+  h3{font-size:15px;margin:16px 0 8px;color:#cfd7ef}
+  .sub{color:var(--mut);font-size:14px;margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+  th,td{border:1px solid var(--line);padding:7px 9px;text-align:right;vertical-align:top}
+  th{background:#20263f;color:#dfe5fb;font-weight:600}
+  tr:nth-child(even) td{background:#1b2036}
+  code,.mono{font-family:Consolas,monospace;background:#0b0e18;padding:1px 5px;border-radius:6px;font-size:12px;direction:ltr;display:inline-block}
+  pre{background:#0b0e18;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;direction:ltr;text-align:left;font-size:12px}
+  .ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}.warn{color:var(--warn);font-weight:700}.mut{color:var(--mut)}
+  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700}
+  .p-ok{background:rgba(46,204,113,.15);color:#7ee2a8;border:1px solid rgba(46,204,113,.4)}
+  .p-bad{background:rgba(231,76,60,.15);color:#ff9a8d;border:1px solid rgba(231,76,60,.4)}
+  .p-nt{background:rgba(241,196,15,.12);color:#ffe27a;border:1px solid rgba(241,196,15,.4)}
+  ul{margin:6px 0;padding-right:22px}li{margin:3px 0}
+  .kpi{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}
+  .kpi div{flex:1 1 160px;background:#12162a;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .kpi b{display:block;font-size:19px}.kpi span{color:var(--mut);font-size:12px}
+  .small{font-size:12.5px;color:var(--mut)}
+  .hr{height:1px;background:var(--line);margin:20px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>FOCUS — تسريع تجهيز الوجه والفم (جولة 9)</h1>
+<div class="sub">
+gt5 (A=Mariam، B=Linguamid) · RTX 3060 6GB · Dolphin 2s + دمج direct · عامل واحد لكل تجربة · طلب دافئ فقط (لا مقارنة cold/warm).
+</div>
+
+<div class="kpi">
+  <div><b class="ok">64.2 → 37.0s</b><span>A بـ(detect16 + landmark2)، جودة −0.02 dB</span></div>
+  <div><b class="bad">B: كل التحسينات</b><span>تفشل عتبة 0.5 dB (رأس أعلى الإطار)</span></div>
+  <div><b>~26s + ~25s</b><span>retinaface + landmarks (تقسيم متساوٍ)</span></div>
+  <div><b>1.7s</b><span>forward فقط (مش الاختناق)</span></div>
+</div>
+
+<h2>1) تفكيك detect_track (A، baseline detect8/landmark1، 3 تكرارات)</h2>
+<div class="card">
+<table>
+<tr><th>المرحلة</th><th>الزمن (متوسط دافئ)</th><th>العدد</th></tr>
+<tr><td>قراءة/فك الفيديو</td><td class="mono">~2.2 s</td><td>349 فريم</td></tr>
+<tr><td><b>RetinaFace</b></td><td class="mono"><b>~26 s</b></td><td>44 نداء (~600 ms/نداء)</td></tr>
+<tr><td><b>face_alignment</b></td><td class="mono"><b>~25 s</b></td><td>349 نداء (~73 ms/نداء)</td></tr>
+<tr><td>تتبّع + تحويل إحداثيات (زائد)</td><td class="mono">~5 s</td><td>—</td></tr>
+<tr><td>mouth ROI</td><td class="mono">~2.8 s</td><td>—</td></tr>
+<tr><td>نقل CPU↔GPU</td><td class="mono">~0.04 s</td><td>—</td></tr>
+<tr><td>forward (CUDA events)</td><td class="mono">~1.7 s</td><td>7 نوافذ</td></tr>
+<tr><td>كتابة WAV</td><td class="mono">~0.01 s</td><td>—</td></tr>
+<tr><td><b>wall (دافئ، وسيط)</b></td><td class="mono"><b>64.18 s</b></td><td>—</td></tr>
+</table>
+<p class="small"><b>retinaface وlandmarks متساويان تقريبًا (~26s مقابل ~25s)</b> ⇒ لازم تقليل الاتنين. forward 1.7s فقط (مش الاختناق). التوقيت بـperf_counter حول النداءات (ترجع numpy ⇒ تزامن ضمني)؛ الـforward بـCUDA events. القياس نفسه لا يضيف مزامنة داخل كل فريم (الفروق منفصلة). <b>ملاحظة:</b> أزمنة التشغيل متغيّرة (thermal/GPU) — استخدمت الوسيط.</p>
+</div>
+
+<h2>2) تقليل تكرار الكشف (landmarks كل فريم)</h2>
+<div class="card">
+<table>
+<tr><th>الإعداد (A)</th><th>نداءات retina</th><th>زمن retina</th><th>wall (وسيط)</th><th>SI-SDRi A</th><th>Δ A</th></tr>
+<tr><td>detect 8 (baseline)</td><td class="mono">44</td><td class="mono">~26 s</td><td class="mono">64.18</td><td class="mono">+17.67</td><td>—</td></tr>
+<tr><td>detect 16</td><td class="mono">22</td><td class="mono">~13 s</td><td class="mono">51.57</td><td class="mono">+17.69</td><td class="ok">+0.02</td></tr>
+<tr><td>detect 25</td><td class="mono">14</td><td class="mono">~10 s</td><td class="warn mono">(متغيّر)</td><td class="mono">+17.71</td><td class="ok">+0.04</td></tr>
+</table>
+<p class="small">تقليل الكشف <b>حافظ على جودة A</b>. (detect25 أزمنته متغيّرة جدًا 34.8/85/89.9 — ضجيج خارجي، مش موثوق.)</p>
+</div>
+
+<h2>3) تقليل تكرار landmarks (detect16، مع interpolation)</h2>
+<div class="card">
+<table>
+<tr><th>الإعداد (A)</th><th>نداءات landmarks</th><th>زمن fa</th><th>wall (وسيط)</th><th>SI-SDRi A</th><th>Δ A</th></tr>
+<tr><td>landmark 1</td><td class="mono">349</td><td class="mono">~25 s</td><td class="mono">51.57</td><td class="mono">+17.69</td><td>—</td></tr>
+<tr><td><b>landmark 2</b></td><td class="mono">175</td><td class="mono">~10 s</td><td class="ok mono">37.02</td><td class="mono">+17.65</td><td class="ok">−0.02</td></tr>
+<tr><td>landmark 3</td><td class="mono">117</td><td class="mono">~10 s</td><td class="mono">36.74</td><td class="mono">+17.45</td><td class="warn">−0.22</td></tr>
+</table>
+<p class="small">landmark2 يحافظ على الجودة (‎−0.02‎) ويوفّر ~10s. landmark3 أبطأ/أدنى جودة (‎−0.22‎) بلا ربح زمني ⇒ غير مفضّل. <b>تأخير interpolation:</b> ملء فريم بين نقطتين يحتاج النقطة التالية ⇒ lookahead حتى N فريمات (هنا ≤2). <b>ليس causal/live.</b> فجوات &gt;6 فريمات تُملأ بأقرب نقطة (لا interpolation طويل).</p>
+</div>
+
+<h2>4) لماذا B حسّاس؟ (تشخيص downscale)</h2>
+<div class="card">
+<p>قارنت الصناديق (full vs 0.5× مُعاد تحجيمها) على 6 فريمات من B:</p>
+<table>
+<tr><th>فريم</th><th>box كامل [x1,y1,x2,y2]</th><th>0.5× (×2)</th><th>فرق y1</th></tr>
+<tr><td>0</td><td class="mono">481,82,761,480</td><td class="mono">484,60,754,478</td><td class="bad mono">−22 px</td></tr>
+<tr><td>60</td><td class="mono">457,76,785,565</td><td class="mono">458,62,784,558</td><td class="mono">−14 px</td></tr>
+<tr><td>180</td><td class="mono">473,75,746,484</td><td class="mono">472,66,744,482</td><td class="mono">−9 px</td></tr>
+</table>
+<p><b>السبب المثبت:</b> صناديق 0.5× قريبة أفقيًا (≤5px) لكن <b>حرفها العلوي (y1) ينزاح ~10–22px</b>؛ ورأس B <b>يخرج أعلى الإطار</b> (head box y1 = <b>−17 إلى −62</b>) ⇒ قصّ الوجه مقطوع من الأعلى وحسّاس لأي إزاحة ⇒ محاذاة/قص مختلف ⇒ عزل أسوأ. <b>ليس تبديل هوية</b> (المخرجات ليست صامتة: RMS 0.064–0.070).</p>
+<p class="small">نفس الحساسية تفسّر فشل تقليل الكشف/الـlandmarks على B (رأس مقطوع من الأعلى).</p>
+</div>
+
+<h2>5) الجدول الكامل: baseline مقابل كل تعديل (لكل هدف)</h2>
+<div class="card">
+<table>
+<tr><th>النسخة</th><th>retina calls</th><th>lm calls</th><th>wall A / B (وسيط)</th><th>SI-SDR A (est)</th><th>Δ A</th><th>SI-SDR B (est)</th><th>Δ B</th><th>الحكم</th></tr>
+<tr><td>baseline d8_l1</td><td class="mono">44</td><td class="mono">349</td><td class="mono">64.2 / 64.2</td><td class="mono">+17.67 (14.81)</td><td>—</td><td class="mono">+8.38 (11.23)</td><td>—</td><td class="pill p-ok">آمن</td></tr>
+<tr><td>d16_l1</td><td class="mono">22</td><td class="mono">349</td><td class="mono">51.6 / 47.0</td><td class="mono">+17.69</td><td class="ok">+0.02</td><td class="mono">+7.82</td><td class="bad">−0.56</td><td class="pill p-bad">B يرفض (عتبة)</td></tr>
+<tr><td><b>d16_l2</b></td><td class="mono">22</td><td class="mono">175</td><td class="ok mono">37.0 / 38.8</td><td class="mono">+17.65 (14.78)</td><td class="ok">−0.02</td><td class="bad mono">+2.32 (5.17)</td><td class="bad">−6.06</td><td class="pill p-bad">A فقط</td></tr>
+<tr><td>d16_l3</td><td class="mono">22</td><td class="mono">117</td><td class="mono">36.7 / —</td><td class="mono">+17.45 (14.59)</td><td class="warn">−0.22</td><td class="mut">—</td><td>—</td><td class="pill p-nt">غير مفضّل</td></tr>
+<tr><td>d8_l2</td><td class="mono">44</td><td class="mono">175</td><td class="mono">— / 55.0</td><td class="mut">—</td><td>—</td><td class="bad mono">−2.31 (0.54)</td><td class="bad">−10.69</td><td class="pill p-bad">B يرفض</td></tr>
+</table>
+<p class="small">العتبة الهندسية المبدئية: ≤0.5 dB لكل هدف. كل الفروق محسوبة على نفس gt5/المراجع/المكاسب/المحاذاة/الجزء الزمني (lag=0). NaN/Inf=0، الأطوال 223232، بلا clipping. <b>B: أي تحسين تخطى العتبة ⇒ مرفوض.</b></p>
+</div>
+
+<h2>6) الاختيار + fallback</h2>
+<div class="card">
+<ul>
+<li><b>للأهداف المؤطّرة جيدًا (A):</b> <span class="mono">detect_every=16، landmark_every=2</span> — wall <b>37.0s</b> (من 64.2s، <b>1.74×</b>)، SI-SDRi <b>+17.65</b> (Δ <b>−0.02</b>).</li>
+<li><b>للأهداف ذات الرأس المقطوع/غير المؤطّر (B):</b> <b>fallback = baseline</b> (detect8/landmark1) — <b>+8.38</b>، 64s. كل التحسينات كسرت B.</li>
+<li><b>الحارس المقترح (غير مُثبت على حركة):</b> لو head box <span class="mono">y1 ≥ 0</span> بهامش ⇒ استخدم d16_l2؛ وإلا baseline. B عنده y1 سالب ⇒ baseline.</li>
+<li><b>افتراضي آمن للجميع:</b> baseline. (لا يوجد إعداد واحد اجتاز العتبة للهدفين.)</li>
+</ul>
+<p class="small">التحسين لا يُعمّم على الحركة: اللقطتان شبه ثابتتين، وB (رأس مقطوع) أثبت هشاشة التحسين. <b>مطلوب مقطع بحركة رأس حقيقية</b> (غير متوفر في المشروع) لاختبار المتانة قبل اعتماد d16_l2 افتراضيًا.</p>
+</div>
+
+<h2>7) غير محسوم / حدود</h2>
+<div class="card">
+<ul>
+<li><b>سبب دقيق لهشاشة B:</b> مثبت جزئيًا (y1 سالب ⇒ قص أعلى مقطوع + إزاحة y1). لم أُثبت أن كل التدهور من القص وحده.</li>
+<li><b>detect25:</b> أزمنته متغيّرة جدًا (ضجيج) ⇒ لم أعتمده.</li>
+<li><b>الحركة:</b> لم تُختبر (لا مقطع). التحويلات الرقمية/الفيديو المكرر اختبارات تشخيصية فقط.</li>
+<li>زوج واحد، لقطتان شبه ثابتتين ⇒ مقارنة هندسية أولية، لا تعميم.</li>
+<li>لا استماع فعلي ⇒ لا أدّعي تحسنًا سمعيًا. WER غير مستخدم.</li>
+</ul>
+</div>
+
+<div class="hr"></div>
+<p class="small">
+الرَنر الجديد: <span class="mono">A:\focus\tools\focus_runner2.py</span> (القديم <span class="mono">focus_runner.py</span> محفوظ).<br>
+الأوامر: <span class="mono">python focus_runner2.py --video data/gt5/p1_a_in.mov --out data/gt5/v2_a_d16_l2 --detect-every 16 --landmark-every 2 --reps 3</span>.<br>
+المخرجات/اللوجات: <span class="mono">data/gt5/v2_{a,b}_*_w*.wav</span> + <span class="mono">*_bench.json</span> · <span class="mono">logs/v2_*.log</span> · <span class="mono">logs/downscale_diag.json</span> · <span class="mono">eval_v2.py</span> · <span class="mono">downscale_diag.py</span>.
+</p>
+
+</div>
+</body>
+</html>

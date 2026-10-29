@@ -1,0 +1,13 @@
+# Codex-approved Round 2 integration decisions
+
+These decisions extend docs/02_CONTRACTS.md for this milestone. They do not imply implementation is complete.
+
+1. Canonical wire bbox is {x,y,width,height}; frame_size is {width,height}. Coordinates refer to the orientation-corrected, normalized video used by the model and displayed by the frontend. Preserve full duration/timeline, and send metadata identifying that canonical video. Internal ML xywh tuples are converted at the API boundary.
+2. Approve GET /videos/{video_id}/original, authorized with the owning session Bearer token, for canonical normalized video playback and original audio comparison after refresh. It must be timeline-equivalent to separation input. No unapproved clipping or offsets. Content-Type reflects actual bytes. Range support is desirable for media playback; fetch/blob is acceptable for capped short clips.
+3. Approve GET /videos/{video_id}/faces/{face_id}/thumbnail as protected media. thumbnail_url may be a relative path or trusted API-origin URL only. No credentials in URLs or browser caches. Every media endpoint verifies ownership.
+4. Worker initiates QUEUED->PROCESSING. API-owned SQLite repository must persist that transition atomically with a queued-state precondition, reporting a conflict rather than duplicate execution. API requests enqueue only. One process owns dispatch with an OS lock and serializes face detection and extraction. Crash recovery must respect the lock so a second startup does not fail live jobs.
+5. Face candidates and extraction reuse the same canonical video and persisted target coordinates/timestamp. Pass the real API video UUID into ML; no basename identity fallback. Stable face IDs do not depend on detector ordering.
+6. Default local UI origin http://localhost:5173. API default http://127.0.0.1:8000. Configure exact CORS allowlist incl Authorization and required methods, not unrestricted production origins. Session token uses Authorization: Bearer only. These are defaults, not proof of running services.
+7. Missing ASR provider means transcript failed/unavailable, audio remains usable. Do not fabricate text. Transcript segment IDs serialize as strings to match the web types; times are milliseconds on canonical-video timeline.
+8. External DeepSeek has no verified active handoff. API write ownership is now assigned to OpenCode-managed focus-api DeepSeek. External DeepSeek is review-only until reconciled. WorkBuddy retains web ownership and its local config/dependencies.
+9. No frontend rebuilding. Preserve original handoffs. No public deployment or medical-efficacy claims. Do not erase history or modify original media/weights.

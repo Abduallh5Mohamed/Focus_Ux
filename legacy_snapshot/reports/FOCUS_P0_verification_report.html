@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<title>فحص بنود P0 — FOCUS / Dolphin</title>
+<style>
+  :root{
+    --ink:#14181d; --muted:#5b6572; --line:#e3e7ec; --bg:#ffffff;
+    --pass:#0f7b4f; --passbg:#e8f6ef;
+    --warn:#9a6200; --warnbg:#fdf4e3;
+    --fail:#a52a1f; --failbg:#fdecea;
+    --code:#f6f8fa;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:#f2f4f7;color:var(--ink);
+       font-family:"Segoe UI","Tahoma",system-ui,sans-serif;line-height:1.85;font-size:16px}
+  .page{max-width:980px;margin:0 auto;background:var(--bg);padding:52px 56px 72px;
+        box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:-.3px}
+  .sub{color:var(--muted);font-size:15px;margin-bottom:28px}
+  h2{font-size:21px;margin:44px 0 12px;padding-bottom:8px;border-bottom:2px solid var(--line)}
+  h3{font-size:17px;margin:26px 0 8px}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0;padding-inline-start:24px}
+  li{margin:6px 0}
+  code{background:var(--code);padding:1px 5px;border-radius:4px;
+       font-family:Consolas,"Courier New",monospace;font-size:13.5px;direction:ltr;display:inline-block}
+  pre{background:var(--code);border:1px solid var(--line);border-radius:8px;padding:14px 16px;
+      overflow-x:auto;direction:ltr;text-align:left;font-size:13px;line-height:1.6;margin:12px 0}
+  pre code{background:none;padding:0;font-size:13px}
+  table{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px}
+  th,td{border:1px solid var(--line);padding:9px 12px;text-align:start;vertical-align:top}
+  th{background:#f7f9fb;font-weight:600}
+  .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:13px;
+         font-weight:700;white-space:nowrap}
+  .p{background:var(--passbg);color:var(--pass)}
+  .w{background:var(--warnbg);color:var(--warn)}
+  .f{background:var(--failbg);color:var(--fail)}
+  .box{border-inline-start:4px solid;padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0}
+  .box.f{border-color:var(--fail);background:var(--failbg)}
+  .box.w{border-color:var(--warn);background:var(--warnbg)}
+  .box.p{border-color:var(--pass);background:var(--passbg)}
+  .box b{display:block;margin-bottom:4px}
+  .ev{font-size:13.5px;color:var(--muted);border-inline-start:2px solid var(--line);
+      padding-inline-start:12px;margin:8px 0}
+  .ev code{font-size:12.5px}
+  .kv{display:grid;grid-template-columns:190px 1fr;gap:6px 16px;font-size:14.5px;margin:14px 0}
+  .kv div:nth-child(odd){color:var(--muted)}
+  hr{border:none;border-top:1px solid var(--line);margin:36px 0}
+  .small{font-size:13.5px;color:var(--muted)}
+  .tag{font-size:12px;background:#eef1f5;color:#48525f;padding:2px 8px;border-radius:4px;margin-inline-start:6px}
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>فحص بنود P0 في بلان FOCUS</h1>
+<div class="sub">قراءة الكود الفعلي من Hugging Face Space + تشغيل حقيقي للسكريبتات + قياسات · 27 أكتوبر 2026</div>
+
+<div class="box w">
+<b>المنهج — ومحدش ياخد الأرقام دي كأنها تشغيل كامل</b>
+مفيش نسخة من Dolphin على جهازك (اللي لقيته <code>C:\Users\abdua\OneDrive\...\Dolphin Emulator</code> — ده محاكي ألعاب مش الموديل). فحصت الـSpace الأصلي <code>JusperLee/Dolphin</code> مباشرة: نزّلت <code>Inference.py</code> و<code>requirements.txt</code> و<code>face_detection_utils.py</code> و<code>app.py</code> و<code>look2hear/</code> و<code>config.json</code>، وشغّلت كل سكريبت في البلان على داتا تركيبية أو ملفات اختبار حقيقية. اللي <b>ما اشتغلش</b> عندي: التشغيل الكامل من أول الفيديو لآخر الصوت (تفاصيله في البند 1).
+</div>
+
+<h2>الحكم السريع</h2>
+
+<table>
+<tr><th style="width:36px">#</th><th style="width:150px">البند</th><th style="width:100px">الحالة</th><th>أهم حاجة</th></tr>
+<tr>
+  <td>1</td><td>تثبيت وتشغيل الـdemo</td><td><span class="badge f">فيه مشاكل</span></td>
+  <td><code>requirements.txt</code> مش مثبَّت النسخ خالص → تعليمة «ثبتوا نفس النسخ» مستحيلة. والـ<code>Inference.py</code> بيشتغل على CPU بـ hardcode، فسطر «أنهي GPU اشتغل» مش هيطلع.</td>
+</tr>
+<tr>
+  <td>3</td><td>صيغة الإدخال</td><td><span class="badge w">اتحلّت + تحذير</span></td>
+  <td>الجدول اتfill بالكامل من الكود. لكن <code>preprocess.sh</code> مش شرط فعلي (الكود بيعمل normalize بنفسه)، والشرط الحقيقي اللي البلان مذكورهوش: كل الوشوش لازم تكون في <b>أول فريم</b>.</td>
+</tr>
+<tr>
+  <td>4</td><td>3 أزواج Ground Truth</td><td><span class="badge f">ناقصة خطوة</span></td>
+  <td>خطوة حرجة ناقصة: لازم تركّبوا <code>p1_mix.wav</code> جوّه الفيديو، وإلا الموديل بيقرأ صوت الفيديو الأصلي مش الخلطة. وكمان «شغّلوا مرتين على وش A و B» مش بيشتغل زي ما هو مكتوب.</td>
+</tr>
+<tr>
+  <td>5</td><td>Wild بالاستماع الأعمى</td><td><span class="badge w">بيشتغل، لكن العتبة غلط</span></td>
+  <td>السكريبت سليم (جربته). بس مفيش معايرة مستوى صوت → المستمع بيختار الأعلى. وعتبة «3 من 5» = 50% بالظبط، يعني العملة المعدنية بتعدّي.</td>
+</tr>
+<tr>
+  <td>6</td><td>WER بعد الفصل</td><td><span class="badge w">فيه باج + سبب الـartifacts</span></td>
+  <td><code>norm()</code> بتفشل في الأرقام العربية والتطويل. والـartifacts ليها سبب مقاس: نافذة 4 ثواني بدون أي overlap + 15 عينة صفر عند كل وصلة.</td>
+</tr>
+</table>
+
+<hr>
+
+<h2>1) تثبيت وتشغيل الـdemo</h2>
+
+<h3>اللي تمام</h3>
+<ul>
+<li>الـSpace موجود وشغّال: <code>Inference.py</code> و<code>Inference_with_status.py</code> و<code>requirements.txt</code> و<code>face_detection_utils.py</code> و<code>app.py</code> و<code>demo1/mix.mp4</code>. الأمر <code>git clone https://huggingface.co/spaces/JusperLee/Dolphin</code> صحيح.</li>
+<li>الـargs اللي البلان ما قدرش يقراها — دي كلها:</li>
+</ul>
+<pre><code>python Inference.py --input demo1/mix.mp4 --output out/ --speakers 2
+# -i/--input (مطلوب) | -o/--output | -s/--speakers (default 2)
+# --detect-every-n (default 8) | --face-scale (default 1.5) | --config (بيتقرا وبيتجاهل)</code></pre>
+<div class="ev"><code>--config</code> متعرّف عليه في <code>argparse</code> وبيتمرّر لـ<code>process_video</code>، لكن الدالة بتستقبله و<b>مش بتستخدمه</b>. متضيّعوش وقت وراه: مسار <code>checkpoints/vox2/conf.yml</code> ده مش موجود ومش محتاجينه.</div>
+
+<h3>المشاكل</h3>
+
+<div class="box f">
+<b>أ) <code>requirements.txt</code> كله بدون نسخ — 15 سطر، ولا نسخة واحدة</b>
+<pre><code>torch
+torchaudio
+torchvision
+torchcodec
+moviepy
+face_alignment
+...</code></pre>
+جدول «لو ظهرت مشكلة» بيقول «ثبتوا النسخ اللي في <code>requirements.txt</code> بالظبط». ده مستحيل — مفيش نسخ أصلاً. جربت الحل الفعلي: <code>pip install --dry-run -r requirements.txt</code> طلّع <b>120 حزمة</b>، منهم:
+<table style="margin-top:10px">
+<tr><th>الحزمة</th><th>النسخة اللي هتتركب</th><th>ليه مهمة</th></tr>
+<tr><td>tensorflow</td><td>2.21.0</td><td>بيدخل بالتبعية من <code>retina-face</code> — مئات الميجابايت ومصدر تعارضات مع torch</td></tr>
+<tr><td>keras / tf-keras</td><td>3.15.1 / 2.21.0</td><td><code>face_alignment</code> محتاج tf-keras كـbackend</td></tr>
+<tr><td>torch / torchaudio</td><td>2.14.1 / 2.11.0</td><td>أحدث نسخة وقتها</td></tr>
+<tr><td>numpy</td><td>2.5.4</td><td>numpy 2 مع كود قديم = أخطاء وقت التشغيل</td></tr>
+</table>
+</div>
+
+<div class="box f">
+<b>ب) <code>torchaudio</code> الجديد محتاج <code>torchcodec</code> + مكتبات FFmpeg المشتركة — طلع خطأ حقيقي</b>
+<pre><code>ImportError: TorchCodec is required for save_with_torchcodec.
+OSError: Could not load this library: ...\torchcodec\libtorchcodec_core4.dll</code></pre>
+<code>Inference.py</code> بينادي <code>torchaudio.load()</code> و<code>torchaudio.save()</code> (سطور 514 و562). مع torchaudio ≥ 2.9 الاتنين بيمرّوا على torchcodec، والـtorchcodec محتاج DLLs مشتركة من FFmpeg. نفس الحاجة بتضرب سكريبت SI-SDR في البلان (بيستخدم <code>torchaudio.load</code>). الحل: يا إما تثبّتوا <code>torchaudio&lt;2.9</code>، يا إما تثبّتوا FFmpeg كامل (shared build) على الجهاز.
+</div>
+
+<div class="box f">
+<b>ج) السكريبت بيشتغل على CPU بـ hardcode — فمفيش «سطر بيقول أنهي GPU اشتغل»</b>
+<pre><code># Inference.py
+سطر 127:  device = torch.device("cpu")        # جوّه detectface
+سطر 476:  device = torch.device("cpu")        # جوّه process_video
+سطر 611:  print("Running in CPU mode")</code></pre>
+ده كمان سبب إن الـSpace نفسه شغّال على <code>cpu-basic</code>. يعني أوتبوت البند 1 اللي مكتوب في البلان («سطر في <code>results.csv</code> فيه الـGPU») <b>مش هيحصل</b> من غير تعديل. عشان تحصلوا على GPU: غيّروا السطرين لـ<code>torch.device("cuda" if torch.cuda.is_available() else "cpu")</code>، وبعدها سجّلوا <code>torch.cuda.get_device_name(0)</code> بنفسكم.
+</div>
+
+<div class="box f">
+<b>د) الموديل بيتحمّل تمام… لكن الـforward بيعمل crash على نسخة torch الحديثة</b>
+<pre><code>model loaded, params = 7.00M          ✓
+forward 4s / 100 frame  ->  Windows fatal exception: access violation
+  File "look2hear/models/dolphin.py", line 238, in forward   (Heat1D / F.conv1d)</code></pre>
+جربت كمان بـ<code>OMP_NUM_THREADS=1</code> ونفس الكراش. الـSpace بيشغّل نفس الكود على <code>cpu-basic</code> وبيشتغل، يعني المشكلة في تركيبة النسخ (torch 2.14.1+cpu / Python 3.13 / ويندوز) مش في الكود. <b>الدرس العملي:</b> ما تخلّوش pip يختار النسخ. استخدموا نسخة torch اللي جوه Colab زي ما هي، أو شغّلوا على الـSpace نفسه.
+</div>
+
+<div class="box p">
+<b>هـ) أوتبوت البند 1 — إيه اللي بيطلع فعلاً</b>
+<code>process_video</code> بيرجّع لكل متحدث: <code>s1.mp4</code> / <code>s2.mp4</code> (فيديو + الصوت المعزول)، وجنبهم <code>speaker1_est.wav</code> و<code>speaker2_est.wav</code> — والاتنين الاتنين بيطلعوا في نفس الـrun. يعني مش محتاجين تشغلوا مرتين أصلاً (وده مربوطة بالبند 4 تحت).
+</div>
+
+<h3>خطوات التثبيت المعدّلة</h3>
+<pre><code>git lfs install
+git clone https://huggingface.co/spaces/JusperLee/Dolphin
+cd Dolphin
+
+python -m venv .venv && source .venv/bin/activate   # على ويندوز: .venv\Scripts\activate
+
+# 1) torch/torchaudio/vision الأول وبنسخة محددة (مش من requirements.txt)
+pip install torch==2.8.0 torchaudio==2.8.0 torchvision==0.23.0 \
+  --index-url https://download.pytorch.org/whl/cu121
+
+# 2) بعدها الباقي، وبعد إزالة torch من الملف
+grep -v -E '^(torch|torchaudio|torchvision|torchcodec)$' requirements.txt > req.lock
+pip install -r req.lock
+
+python -c "import torch;print(torch.__version__, torch.cuda.is_available())"
+python Inference.py -i demo1/mix.mp4 -o out1 --speakers 2</code></pre>
+
+<hr>
+
+<h2>3) صيغة الإدخال — الجدول مليان من الكود</h2>
+
+<table>
+<tr><th style="width:34%">المواصفة</th><th>القيمة الفعلية من الكود</th><th style="width:26%">المصدر</th></tr>
+<tr><td>sample rate للصوت</td><td><b>16000 Hz</b> مونو</td><td><code>Inference.py:494</code> + <code>config.json</code></td></tr>
+<tr><td>fps للفيديو</td><td><b>أي fps تدخله، بيتحوّل 25 تلقائياً</b> — والـmouth ROI بيتقص من نسخة الـ25fps</td><td><code>convert_video_fps(..., 25)</code></td></tr>
+<tr><td>يقص الوش كله ولا الفم بس؟ والحجم؟</td><td><b>الفم بس.</b> إطار الوش 224×224 ← warp لـ256×256 بمحاذاة على قالب <code>20words_mean_face.npy</code> ← قص 96×96 حول نقط الفم (48:68) ← center-crop <b>88×88</b></td><td><code>crop_patch(..., 96, 96)</code> + <code>transform.py</code></td></tr>
+<tr><td>ألوان ولا رمادي؟</td><td><b>رمادي</b>، قناة واحدة، مطبَّع بـ<code>(x/255 - 0.421)/0.165</code></td><td><code>convert_gray=True</code> + <code>Normalize(0.421,0.165)</code></td></tr>
+<tr><td>أقصى طول مقطع / طريقة التقسيم</td><td><b>4 ثواني لكل forward</b>، تقسيم متتالي بدون تداخل (window=hop=4s). مقطع 30 ثانية = 8 مرات forward</td><td><code>Inference.py:517-518</code> + <code>maxlen:2000</code></td></tr>
+<tr><td>عدد المتحدثين المتوقع</td><td><b>2</b> افتراضي، و<code>--speakers N</code> بيوسّعها — بشرط N وش في أول فريم بالظبط</td><td><code>Inference.py:177</code></td></tr>
+</table>
+
+<div class="box w">
+<b>ليه 4 ثواني بالتحديد؟ (مش رقم عشوائي)</b>
+الـ<code>config.json</code> فيه <code>relative_positional_encoding.maxlen = 2000</code>، والكود بيعمل <code>pos_seq.clamp_(-maxlen, maxlen-1)</code>. الـ2000 frame دي = 4 ثواني عند 16kHz بعد التصغير ×8. أي نافذة أطول من كده <b>مش هتكراش</b> — هتتقص بصمت وهتقل الجودة. فمتخلّوش حد «يجرّب 10 ثواني في مرة واحدة» عشان «أسرع».
+</div>
+
+<div class="box f">
+<b>الشرط الحقيقي اللي البلان مذكورهوش — وهو أخطر من fps و sample rate</b>
+<pre><code># Inference.py:177
+if len(detected_boxes) &lt; number_of_speakers:
+    raise ValueError(f"First frame must detect at least {number_of_speakers} faces,
+                      but only found {len(detected_boxes)}")</code></pre>
+و<code>app.py</code> بيحدد عدد المتحدثين من <b>أول فريم بس</b> (<code>clip.get_frame(0)</code>). يعني:
+<ul style="margin-top:6px">
+<li>لو واحد من الاتنين مش باين أو وشه ملفوف في أول فريم → الـrun كله بيفشل بـ<code>ValueError</code>، مش بيتعامل معاه.</li>
+<li>لو مش باين في الـdemo (app.py) → بيتحسب متحدث واحد بس، وبيرجع مخرج واحد، من غير أي تحذير.</li>
+</ul>
+<b>اللي لازم يتحوّل لقاعدة تصوير:</b> «أول ثانية من التسجيل لازم يكون فيها كل الوشوش مواجهة للكاميرا وواضحة».
+</div>
+
+<div class="box w">
+<b>عن <code>preprocess.sh</code> — مفيد لكن مش هو اللي بيمنع الأخطاء</b>
+جربت الأمر بالحرف على فيديو 30fps / 48kHz: الناتج 300 فريم @25fps و16kHz مونو، والمدة 12.01s مقابل 12.00s — سليم. بس <code>Inference.py</code> بيعمل نفس الحاجة جوّه (<code>convert_video_fps</code> + <code>extract_audio</code>)، فالسكريبت <b>مش شرط</b>. استخدموه لحاجة واحدة بس: توحيد الـVFR وتقليل إعادة الترميز. وكل مرة تعيدوا ترميز الصوت بتزيد إزاحة صغيرة — والإزاحة دي بتضرب SI-SDR (شوف البند 4).
+</div>
+
+<hr>
+
+<h2>4) الأزواج الثلاثة و SI-SDRi</h2>
+
+<div class="box f">
+<b>أخطر مشكلة في البلان كله: خطوة ناقصة بتلغي القياس من غير ما حد ياخد باله</b>
+<code>Inference.py</code> بيسحب الصوت <b>من الفيديو</b> (<code>extract_audio(temp_25fps_file, ...)</code>). البلان بيقول:
+<ol style="margin-top:6px">
+<li>سجّلوا كل واحد لوحده (فيديو A، فيديو B).</li>
+<li>اعملوا <code>p1_mix.wav</code> بـ<code>amix</code>.</li>
+<li>شغّلوا Dolphin على وش A و وش B.</li>
+</ol>
+الخطوة 3 مالهاش فيديو! لو شغّلتم على فيديو A، الموديل هيقرأ <b>صوت A النضيف</b> (اللي جوه الفيديو) ويعزل منه، وتقارنوه بـ<code>p1_a_n.wav</code> — والنتيجة رقم مضلّل تماماً، لأنه ما سمعش الخلطة أصلاً.
+<b>الخطوة المفقودة:</b>
+</div>
+<pre><code># ركّبوا نفس الخلطة جوّه كل فيديو، قبل أي تشغيل
+ffmpeg -y -i p1_a_video.mp4 -i p1_mix.wav -map 0:v -map 1:a -c:v copy -shortest p1_a_in.mp4
+ffmpeg -y -i p1_b_video.mp4 -i p1_mix.wav -map 0:v -map 1:a -c:v copy -shortest p1_b_in.mp4
+
+python Inference.py -i p1_a_in.mp4 -o out_a --speakers 1   # -> speaker1_est.wav = تقدير A
+python Inference.py -i p1_b_in.mp4 -o out_b --speakers 1   # -> speaker1_est.wav = تقدير B</code></pre>
+
+<div class="box w">
+<b>«شغّلوا مرتين على نفس الفيديو، مرة لكل وش» — مش هينفع</b>
+مع <code>--speakers 1</code> الكود بياخد <code>detected_boxes[:1]</code>، يعني <b>أول كشف</b> — والكشف deterministic. تشغّلوا مرتين على نفس الفيديو = <b>نفس الوش مرتين</b>، ومش فيه أي arg لاختيار الوش. عشان كده الطريقة الصح هي اللي فوق: فيديو لكل شخص + نفس الخلطة جوّاه.
+ولو هتستخدموا <code>--speakers 2</code> على فيديو فيه الاتنين: ترتيب المخرجين هو ترتيب كشف RetinaFace في أول فريم، <b>مش</b> ترتيب الـgallery في <code>app.py</code> (ده بيترتب حسب المساحة). يعني ما تفترضوش إن <code>speaker1</code> = اللي على اليمين. حدّدوا الهوية بالقياس:
+</div>
+<pre><code># تحديد مين مين: المخرج اللي SI-SDR بتاعه أعلى مع المرجع الفلاني يبقى هو
+for who in ["a", "b"]:
+    print(who, sisdr(load(f"out/speaker1_est.wav"), load(f"p1_{who}_n.wav")).item(),
+                sisdr(load(f"out/speaker2_est.wav"), load(f"p1_{who}_n.wav")).item())</code></pre>
+
+<h3>اللي تمام: معايرة المستوى</h3>
+<p>خطوة <code>loudnorm</code> في البلان شغالة فعلاً — جربتها على ملفين مستوى واحد منهم أعلى من التاني بـ20 dB:</p>
+<table>
+<tr><th>الملف</th><th>قبل</th><th>بعد <code>loudnorm=I=-23</code></th></tr>
+<tr><td><code>p1_a_n.wav</code></td><td>0 dBFS</td><td><b>-22.9 LUFS</b></td></tr>
+<tr><td><code>p1_b_n.wav</code></td><td>-20 dBFS</td><td><b>-22.9 LUFS</b></td></tr>
+<tr><td><code>p1_mix.wav</code> (amix normalize=0)</td><td>—</td><td>-19.9 LUFS</td></tr>
+</table>
+
+<h3>اللي محتاج تعديل: الـSI-SDR حساس للإزاحة أكتر بكتير مما البلان متوقع</h3>
+<p>شغّلت سكريبت البلان بالحرف على خلطة تركيبية (SI-SDR الحقيقي للخلطة = 0 dB، وده صح):</p>
+<table>
+<tr><th>حالة المخرج</th><th>SI-SDR mix</th><th>SI-SDR est</th><th>SI-SDRi</th></tr>
+<tr><td>فصل كويس (SIR=20dB)</td><td>-0.0</td><td>20.0</td><td><b>+20.0</b></td></tr>
+<tr><td>فصل ضعيف (SIR=3dB)</td><td>-0.0</td><td>3.0</td><td>+3.0</td></tr>
+<tr><td>نفس المخرج الكويس بس متأخر <b>5 ms</b></td><td>-0.0</td><td>-5.7</td><td><b>-5.7</b></td></tr>
+<tr><td>متأخر <b>20 ms</b></td><td>-0.0</td><td>-6.3</td><td>-6.3</td></tr>
+</table>
+<div class="box f">
+<b>تأخير 5 ملّي ثانية بس بيحوّل +20 dB لـ -5.7 dB</b>
+والسكريبت بيقص من الأول بس (<code>n = min(len(ref), len(mix), len(est))</code>)، يعني أي تأخير في مخرج الموديل بيتحوّل خطأ كامل. والموديل فعلاً بيأخّر: إعادة ترميز الصوت + نافذة 4 ثواني. <b>قبل أي رقم، لازم تعملوا محاذاة (alignment) بالـcross-correlation، وتسجّلوا الإزاحة في الجدول.</b> والبلان بيقول «اسمعوا المقطع قبل ما تثقوا في الرقم» — ده مش كفاية؛ الإزاحة مش مسموعة، هي 5 ملّي.
+</div>
+<pre><code># محاذاة قبل القياس (زوّدوا ده في أول السكريبت)
+import torch, torch.nn.functional as F
+def align(est, ref, max_lag=4000):          # ±250 ms
+    x = F.conv1d(ref[None,None,:], est[None,None,:], padding=max_lag)[0,0]
+    lag = int(x.argmax()) - max_lag
+    if lag > 0:   est = est[lag:]
+    elif lag < 0: ref = ref[-lag:]
+    n = min(len(est), len(ref))
+    return est[:n], ref[:n], lag / 16000.0</code></pre>
+
+<hr>
+
+<h2>5) الـWild بالاستماع الأعمى</h2>
+
+<div class="box p">
+<b>السكريبت سليم — جربته فعلياً</b>
+طلع 10 ملفات و<code>blind_key.json</code> صحيح (الخريطة مطابقة للأسماء). الـshuffle بيشتغل صح، والـkey بيفضل مخفي.
+</div>
+
+<div class="box f">
+<b>أ) مفيش معايرة مستوى صوت → المستمع بيقيس الأعلى مش الأوضح</b>
+ده أشهر تحيّز في اختبارات الـAB، والبلان نفسه حاطط «Biased blind listening» في سجل المخاطر، لكن الحل اللي حاطه (ترتيب عشوائي + 3 مستمعين) <b>مش بيعالج المستوى</b>. الفرق 3 dB بين النسختين كفاية إن المستمع يختار الأعلى باستمرار.
+</div>
+<pre><code># قبل التوزيع، وحّدوا المستوى للنسختين
+for c in clips; do for k in orig iso; do
+  ffmpeg -y -i ${c}_${k}.wav -af loudnorm=I=-23:TP=-2 -ar 16000 ${c}_${k}_n.wav
+done; done
+# وبعدها وزّعوا الـ_n على الملفات</code></pre>
+
+<div class="box f">
+<b>ب) عتبة «3 من 5» = 50% بالظبط</b>
+<table style="margin-top:8px">
+<tr><th>القرار</th><th>احتمال إنه يعدّي بالصدفة</th></tr>
+<tr><td>3 من 5 (اللي في البلان)</td><td><b>50.0%</b></td></tr>
+<tr><td>4 من 5</td><td>18.8%</td></tr>
+<tr><td>5 من 5</td><td>3.1%</td></tr>
+</table>
+يعني نص فرص إن فريق ما لقاش أي فرق يعلن «نجحنا». <b>التعديل:</b> العتبة تبقى 4 من 5 على الأقل، أو زوّدوا لـ8 مقاطع وخلّوا العتبة 7.
+</div>
+
+<div class="box w">
+<b>ج) ملاحظة على العدد</b>
+3 مستمعين × 5 مقاطع = 15 إجابة. في تجربتي، الـshuffle حط نسخة «iso» في المكان A مرة واحدة من 5 — ده طبيعي إحصائياً لكنه بيوضح إن n=5 صغير جداً للحكم. والبلان كاتب «at least 3 listeners» — خلوها 3 على الأقل <b>و</b>5 مقاطع على الأقل، وسجّلوا كل مستمع لوحده عشان تشوفوا الاتفاق بينهم (لو 3 مستمعين متفقين على نفس المقطع ده إشارة قوية أكتر من مجموع 15 إجابة).
+</div>
+
+<hr>
+
+<h2>6) WER — الفصل بيحسّن الرقم والفهم لأ</h2>
+
+<h3>أ) <code>norm()</code> بتفشل في حالتين مهمين</h3>
+<p>شغّلت الدالة بالحرف على حالات مصرية:</p>
+<table>
+<tr><th>المدخل</th><th>المتوقع</th><th>اللي طلع</th><th>WER</th></tr>
+<tr><td>السَّلامُ عَلَيكُم</td><td>السلام عليكم</td><td>السلام عليكم</td><td>0.00 ✓</td></tr>
+<tr><td>إحنا رايحين</td><td>احنا رايحين</td><td>احنا رايحين</td><td>0.00 ✓</td></tr>
+<tr><td>مستشفى / جامعة</td><td>مستشفي / جامعه</td><td>مستشفي / جامعه</td><td>0.00 ✓</td></tr>
+<tr><td>الفكرة كويسة، بس غالية!</td><td>الفكره كويسه بس غاليه</td><td>نفسه</td><td>0.00 ✓</td></tr>
+<tr><td>رقم ١٢٣</td><td>رقم 123</td><td><b>رقم ١٢٣</b></td><td><b>0.50 ✗</b></td></tr>
+<tr><td>مـحـمـد</td><td>محمد</td><td><b>مـحـمـد</b></td><td><b>1.00 ✗</b></td></tr>
+</table>
+<p class="small">Whisper مع العربي بيرجّع أرقام عربية أو لاتينية بشكل غير ثابت، والتطويل (ـ) منتشر في الكتابة المصرية. الاتنين بيضخّموا WER بشكل مش حقيقي.</p>
+<pre><code>def norm(t):
+    t = re.sub(r"[\u064B-\u0652\u0670\u0653-\u0655]", "", t)   # تشكيل كامل
+    t = re.sub(r"[إأآٱ]", "ا", t).replace("ى", "ي").replace("ة", "ه")
+    t = t.replace("\u0640", "")                                # تطويل
+    t = t.translate(str.maketrans("٠١٢٣٤٥٦٧٨٩", "0123456789"))   # أرقام عربية
+    t = re.sub(r"[^\w\s]", " ", t)
+    return re.sub(r"\s+", " ", t).strip()</code></pre>
+
+<h3>ب) ترتيب الـ<code>wer()</code> صح</h3>
+<p><code>wer(ref, asr(...))</code> — المرجع الأول والفرضية التانية. ده صح، ما تغيّروهاش.</p>
+
+<div class="box f">
+<b>ج) <code>ref.txt</code> واحد للاتنين = رقم غلط</b>
+السكريبت بيقارن <code>asr("focus.wav")</code> (صوت شخص واحد معزول) بنص <code>ref.txt</code>. لو ده نص الاتنين مع بعض، WER هيطلع عالي جداً لأسباب مش متعلقة بالفصل. لازم <code>p1_a.txt</code> و<code>p1_b.txt</code> منفصلين.
+</div>
+
+<div class="box w">
+<b>د) سقف Whisper ناقص</b>
+البلان (في رسالتك) بيطلب 3 حالات: الخلطة / المعزول / الأصل النضيف. الكود في الـPDF بيقيس حالتين بس. الحالة التالتة أهم واحدة: لو WER على الأصل النضيف عالي، المشكلة في Whisper مع اللهجة مش في الفصل — وده هيغيّر القرار بالكامل.
+</div>
+
+<h3>هـ) سبب الـArtifacts — لقيت واحد مقاس</h3>
+<p>الكود بيقسّم الصوت نوافذ 4 ثواني، والـ<code>hop</code> = الـ<code>window</code> بالظبط (بدون تداخل)، وبعدين بيلزقهم بـ<code>hann_window</code>:</p>
+<pre><code># Inference.py:517-518
+window_size = 4 * sr
+hop_size    = 4 * sr        # &lt;-- نفس القيمة: مفيش أي تداخل</code></pre>
+<p>أعدت تشغيل حلقة اللزق دي بالحرف على إشارة ثابتة، والمخرج المفروض يبقى 1.0 في كل عينة:</p>
+<table>
+<tr><th>المقطع</th><th>عدد النوافذ</th><th>عيّنات طلعت صفر بالظبط</th><th>مكانها</th></tr>
+<tr><td>12 ثانية</td><td>3</td><td><b>15 عينة</b></td><td>عند 4s و 8s (وصلات النوافذ)</td></tr>
+</table>
+<p>15 عينة عند 16kHz ≈ <b>1 ملّي ثانية صمت فاصل عند كل وصلة</b> — ده طقطقة مسموعة كل 4 ثواني (مقطع 30 ثانية فيه 7 وصلات). مش السبب الوحيد للـartifacts (الـforward مستقل لكل نافذة من غير سياق، وده بيقطع الاستمرارية الطيفية)، بس ده اللي أقدر أقيسه وأثبته.</p>
+
+<div class="box p">
+<b>و) أوامر البلند والـmux شغالة</b>
+<code>blend</code> بـ0.8/0.2 طلّع ملف سليم (-22.7 LUFS)، و<code>-map 0:v -map 1:a -c:v copy -shortest</code> رجّع الصوت على الفيديو صح (12.00s). مفيش مشكلة هنا.
+</div>
+
+<hr>
+
+<h2>اللي مقدرتش أتأكده</h2>
+<table>
+<tr><th style="width:38%">الحاجة</th><th>ليه</th></tr>
+<tr><td>تشغيل كامل من الفيديو للصوت المعزول</td><td>الـforward بيكراش على تركيبة النسخ عندي (torch 2.14.1+cpu / ويندوز). محتاج Colab أو نسخة torch محددة.</td></tr>
+<tr><td>جودة الفصل على عربي مصري</td><td>محتاج مقاطعكم الحقيقية — ده أصلاً سبب الاختبار كله.</td></tr>
+<tr><td>وقت المعالجة الحقيقي</td><td>بس تقدير من الكود: كشف الوش على CPU لكل 8 فريم + <code>face_alignment</code> على <b>كل</b> فريم لكل متحدث. مقطع 30 ثانية 1080p = ~750 فريم → 1500 نداء landmarks على CPU. متوقع دقايق مش ثواني، فمعيار «30 ثانية ≤ دقيقة» في البلان هيفشل على CPU.</td></tr>
+<tr><td>الذاكرة</td><td><code>Inference.py:143</code> بيحمّل <b>كل</b> الفريمات في الرام قبل أي معالجة. 1080p×30s ≈ 750×5.9MB ≈ <b>4.4 GB رام</b>؛ 60s ≈ 8.8 GB. يعني الـOOM اللي في جدول البلان سببه الرام مش كرت الشاشة — والحل الصح تصغير الدقة مش بس تقصير المقطع.</td></tr>
+</table>
+
+<hr>
+
+<h2>الخطوات الجاية بالترتيب</h2>
+<ol>
+<li><b>ثبّتوا torch بنسخة محددة</b> قبل أي حاجة تانية، وبعدها شيلوا torch من <code>requirements.txt</code>. لو الـforward كراش برضه، اقفلوا الموضوع واشتغلوا على الـSpace نفسه.</li>
+<li><b>عدّلوا قاعدة التصوير:</b> كل الوشوش واضحة ومواجهة في أول ثانية. من غير ده أي run بيفشل.</li>
+<li><b>ضيفوا خطوة الـmux</b> (خلطة → جوّه الفيديو) قبل تشغيل Dolphin. من غيرها كل أرقام البند 4 باطلة.</li>
+<li><b>ضيفوا المحاذاة</b> قبل SI-SDR، وسجّلوا الإزاحة بالملّي ثانية في نفس الجدول.</li>
+<li><b>عدّلوا <code>norm()</code></b> وافصلوا <code>ref.txt</code> لكل متحدث، وضيفوا حالة الأصل النضيف كسقف.</li>
+<li><b>ارفعوا عتبة الاستماع الأعمى</b> لـ4 من 5، وعايِروا المستوى قبل التوزيع.</li>
+</ol>
+
+<p class="small" style="margin-top:40px">كل السكريبتات واللوجات اللي استخدمتها في الفحص موجودة في مجلد <code>verify/</code>: <code>tests/test_sisdr2.py</code>، <code>tests/test_merge.py</code>، <code>tests/test_wer.py</code>، <code>tests/blind_test.py</code>، <code>tests/test_model_shapes.py</code>، <code>model_probe.log</code>، <code>req_report.json</code>.</p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOCUS — تقرير الجولة 4 (تحقق من الفرضيات)</title>
+<style>
+  :root{--bg:#0f1220;--card:#181c2f;--ink:#e9ecf5;--mut:#a7b0c8;--ok:#2ecc71;--bad:#e74c3c;--warn:#f1c40f;--acc:#5b8cff;--line:#2a3050;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 20px 90px}
+  h1{font-size:25px;margin:0 0 6px}
+  h2{font-size:19px;margin:32px 0 10px;border-right:4px solid var(--acc);padding-right:10px}
+  h3{font-size:15px;margin:18px 0 8px;color:#cfd7ef}
+  .sub{color:var(--mut);font-size:14px;margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:right;vertical-align:top}
+  th{background:#20263f;color:#dfe5fb;font-weight:600}
+  tr:nth-child(even) td{background:#1b2036}
+  code,.mono{font-family:Consolas,monospace;background:#0b0e18;padding:1px 6px;border-radius:6px;font-size:12.5px;direction:ltr;display:inline-block}
+  pre{background:#0b0e18;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;direction:ltr;text-align:left;font-size:12.5px}
+  .ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}.warn{color:var(--warn);font-weight:700}.mut{color:var(--mut)}
+  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700}
+  .p-ok{background:rgba(46,204,113,.15);color:#7ee2a8;border:1px solid rgba(46,204,113,.4)}
+  .p-bad{background:rgba(231,76,60,.15);color:#ff9a8d;border:1px solid rgba(231,76,60,.4)}
+  .p-nt{background:rgba(241,196,15,.12);color:#ffe27a;border:1px solid rgba(241,196,15,.4)}
+  ul{margin:6px 0;padding-right:22px}li{margin:3px 0}
+  .kpi{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}
+  .kpi div{flex:1 1 170px;background:#12162a;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .kpi b{display:block;font-size:19px}.kpi span{color:var(--mut);font-size:12px}
+  .small{font-size:12.5px;color:var(--mut)}
+  .hr{height:1px;background:var(--line);margin:20px 0}
+  .quote{border-right:3px solid var(--acc);padding-right:10px;color:#c9d2ea;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>FOCUS — تقرير الجولة 4: تحقق من فرضيات الجولة 3</h1>
+<div class="sub">
+Health &amp; Well-being · هذه الجولة مخصّصة لاختبار أسباب فشل Falcon والـOOM وقياس الزمن الحقيقي، لا لخطة جديدة.
+كل استنتاج من الجولة 3 اتُعومل كفرضية. الأرقام أدناه من تشغيل فعلي على RTX 3060 Laptop (6GB)، <span class="mono">A:\focus</span>.
+</div>
+
+<div class="kpi">
+  <div><b class="bad">0.99</b><span>تشابه ناتج Falcon مع فم صفري (الفم شبه مُهمَل)</span></div>
+  <div><b class="ok">173ms</b><span>forward بعد التسخين (1 متكلم، 1.43s)</span></div>
+  <div><b class="bad">11.8GB</b><span>ذروة forward نافذة 4s (oversubscription) و55s</span></div>
+  <div><b class="warn">27</b><span>عيّنة صفر عند وصلات النوافذ</span></div>
+</div>
+
+<h2>الأولوية 1 — السبب الجذري لفشل Falcon</h2>
+<div class="card">
+<p>اختبرنا كل الفرضيات بالقياس، مع تثبيت الصوت وتبديل الفم فقط:</p>
+<table>
+<tr><th>الفحص</th><th>النتيجة</th><th>الحكم</th></tr>
+<tr><td>تحميل الأوزان (state_dict)</td><td>audio: 525 مفتاح، video: 137 مفتاح، <b>missing=0 / unexpected=0</b></td><td class="ok">سليم — مش مشكلة مفاتيح</td></tr>
+<tr><td>عدد المعاملات</td><td class="mono">11,724,385</td><td class="ok">مطابق للـREADME</td></tr>
+<tr><td>تطبيع مزدوج؟</td><td>preprocess يطبّق /255 ثم (x−0.421)/0.165 مرة واحدة فقط؛ الـmodel لا يطبّق تطبيعًا داخليًا</td><td class="ok">مش تطبيع مزدوج</td></tr>
+<tr><td>أبعاد الفم</td><td>(T,96,96) uint8 → (1,1,T,88,88) float، مطابق لـFRCNN</td><td class="ok">سليم</td></tr>
+<tr><td>هل الفمّان مختلفان فعلًا؟</td><td>mean|m1−m2| = <b>57.5</b> (مقياس 0–255) + صورة مرئية: فمّان حقيقيان مختلفان</td><td class="ok">مختلفان</td></tr>
+<tr><td>embeddings الفيديو</td><td>corr(e1,e2) = <b>+0.29</b>، rel_l2 = 0.70</td><td class="ok">الفيديو يفرّق بين الوجهين</td></tr>
+<tr><td>بعد video_bottleneck</td><td>corr = +0.29 (بدون تغيير — identity)</td><td class="mut">لا فقد</td></tr>
+<tr><td><b>بعد video_net (LSTM)</b></td><td><b>corr = +0.73</b> (ارتفع من 0.29)</td><td class="bad">هنا يُفقد التمييز</td></tr>
+<tr><td>بعد الدمج (audio+video)</td><td>corr = +0.957، مساهمة الفيديو 67% من مقدار الصوت</td><td class="bad">الصوت يطغى</td></tr>
+</table>
+<h3>اختبار الفم (الصوت ثابت، الفم متغيّر)</h3>
+<table>
+<tr><th>المدخل</th><th>1.4s: corr مع m1_real</th><th>2.0s: corr مع m1_real</th></tr>
+<tr><td>m2_real (الشخص الآخر)</td><td class="mono">+0.9778</td><td class="mono">+0.9838</td></tr>
+<tr><td><b>zeros (فم صفري)</b></td><td class="mono"><b>+0.9905</b></td><td class="mono"><b>+0.9938</b></td></tr>
+<tr><td>random</td><td class="mono">+0.9404</td><td class="mono">+0.9484</td></tr>
+<tr><td>corr(الناتج, الخلطة)</td><td class="mono">+0.8701</td><td class="mono">+0.8533</td></tr>
+</table>
+<p><b>النتيجة المثبتة:</b> الناتج شبه مستقل عن الفم — حتى الفم الصفري يعطي نفس الناتج تقريبًا (0.99). و<b>فرضية «قِصر المقطع» مرفوضة</b>: عند نافذة 2s الكاملة (50 فريم) الناتج ما زال شبه مستقل عن الفم (0.994).</p>
+<p><b>السبب المثبّت:</b> الضعف في <span class="mono">VideoBlock</span> داخل الـseparator (يقلّل تمييز الوجهين 0.29→0.73) ثم دمج يغلب عليه الصوت ⇒ الموديل لا يستخدم الفم بفعالية على هذا المدخل. <b>ليس</b> خطأ في التطبيع/الأبعاد/المفاتيح/طول المقطع.</p>
+<p class="small"><b>فرضية غير مثبتة:</b> الفيديو هنا مقابلة تلفزيونية (لقطة واسعة، وجوه صغيرة) بعيدة عن بيانات تدريب Falcon (لقطات قريبة LRS/VoxCeleb) ⇒ الفيديو خارج التوزيع. اختبارها يحتاج لقطات قريبة حقيقية (غير متوفرة الآن).</p>
+</div>
+
+<h2>الأولوية 2 — تفسير الزمن والقياس بعد التسخين</h2>
+<div class="card">
+<p>الجولة 3 سجّلت wall=106.48s ومجموع المراحل ≈56.33s. الفرق كان <b>مراحل غير مُوقّتة</b>. قياس كامل داخل العملية (شخصان):</p>
+<table>
+<tr><th>المرحلة</th><th>ثانية</th></tr>
+<tr><td>imports (torch + TF + face_alignment + moviepy)</td><td class="mono">14.48</td></tr>
+<tr><td>cuda_init</td><td class="mono">1.36</td></tr>
+<tr><td>convert_fps (moviepy)</td><td class="mono">2.82</td></tr>
+<tr><td>detectface (retina + landmarks + تتبّع + كتابة فيديوهات)</td><td class="mono">43.88</td></tr>
+<tr><td>extract_audio (ffmpeg)</td><td class="mono">1.27</td></tr>
+<tr><td>crop_mouth</td><td class="mono">1.44</td></tr>
+<tr><td>model_load</td><td class="mono">1.15</td></tr>
+<tr><td>infer_total (forward 15.13 + merge/save)</td><td class="mono">15.19</td></tr>
+<tr><td><b>total_inprocess</b></td><td class="mono"><b>81.58</b></td></tr>
+<tr><td><b>unaccounted</b></td><td class="mono"><b>0.00</b></td></tr>
+</table>
+<h3>الاكتشاف الحاسم: أول forward بارد، والبقية سريعة</h3>
+<table>
+<tr><th>النافذة</th><th>زمن forward (CUDA event)</th></tr>
+<tr><td>النافذة الأولى (باردة: تهيئة CUDA/cuDNN + بناء cos map)</td><td class="mono">14,919.6 ms</td></tr>
+<tr><td>النافذة الثانية (دافئة)</td><td class="mono">207.4 ms</td></tr>
+</table>
+<table>
+<tr><th>قياس بعد التسخين (3 تكرارات)</th><th>كل تكرار (ms)</th><th>المتوسط</th></tr>
+<tr><td>متكلم واحد (1.43s)</td><td class="mono">180.4 / 183.3 / 155.4</td><td class="mono">173.0 ms</td></tr>
+<tr><td>متكلمان (1.43s)</td><td class="mono">319.8 / 315.1 / 302.3</td><td class="mono">312.4 ms</td></tr>
+</table>
+<p><b>تصحيح:</b> «forward 10.3s / RTF ≈74×» في الجولة 3 كان <b>متضخّمًا بسبب البرودة</b>. الـforward الدافئ ≈ <b>173ms</b> لمقطع 1.43s ⇒ RTF ≈ <b>0.12 (أسرع ~8× من الزمن الحقيقي)</b>. البرودة (cold start) ≈ 14.5 (imports) + 1.4 + 1.15 + 14.9 (أول forward) ≈ <b>32s مرة واحدة لكل عملية</b>.</p>
+<p class="small"><b>الاختناق الحقيقي في خط الإنتاج</b> هو <span class="mono">detectface</span> (43.9s: face_alignment 30.7 + retinaface 10.8) — معالجة الوجه/اللاند-ماركس، وليست الموديل. هذه أرقام مقطع 1.43s؛ لا تُعمّم RTF على مقاطع أطول، وزمن forward ≠ زمن انتظار المستخدم.</p>
+</div>
+
+<h2>الأولوية 3 — التحقق من الذاكرة (بدل افتراض fragmentation)</h2>
+<div class="card">
+<p>تشغيل في عملية نظيفة، مع تحرير نماذج الوجه قبل تحميل/تشغيل الـseparator (البيانات محفوظة)، على مقطع 4s (loop على demo1 — <b>اختبار موارد فقط، ليس دليل جودة على مقطع أطول</b>):</p>
+<table>
+<tr><th>المرحلة</th><th>VRAM allocated / reserved (MiB)</th></tr>
+<tr><td>بعد مرحلة الوجه (retinaface + face_alignment)</td><td class="mono">184.8 / 238.0</td></tr>
+<tr><td>بعد gc + empty_cache</td><td class="mono">0.0 / 0.0</td></tr>
+<tr><td>بعد تحميل Dolphin</td><td class="mono">27.0 / 46.0</td></tr>
+<tr><td><b>ذروة forward نافذة 4s</b></td><td class="mono"><b>11,788.6 / 12,590.0</b></td></tr>
+</table>
+<table>
+<tr><th>البند</th><th>القيمة</th></tr>
+<tr><td>نجح forward 4s بعد التحرير؟</td><td class="ok">أيوه — لكن بزمن <b>55.45s</b></td></tr>
+<tr><td>سبب النجاح رغم 6GB</td><td>Windows WDDM <b>oversubscription</b> (ترحيل VRAM إلى RAM النظام)</td></tr>
+</table>
+<p><b>تشخيص دقيق:</b></p>
+<ul>
+<li>نماذج الوجه تستهلك <b>185 MiB فقط</b> (retinaface يعمل على CPU/TF) ⇒ تحريرها ليس الرافعة الكبرى.</li>
+<li>الـforward نفسه لنافذة 4s يحتاج ≈ <b>11.8GB</b> ذاكرة عمل (T=16000، cos map 1GB + activations). على 6GB لا يعمل إلا بالترحيل (oversubscription) وبسرعة <b>55s</b> (thrashing).</li>
+<li><b>OOM الجولة 3 كان fragmentation</b>: في <span class="mono">measure_mem</span> شغّلنا 1s ثم 2s ثم 3s ثم 4s في نفس العملية، فتجزّأت الذاكرة وفشل تخصيص cos map (978 MiB متصل). في عملية نظيفة بنافذة واحدة ينجح — لكن ببطء 55s.</li>
+<li><b>الحد العملي على 6GB الفعلي: نافذة 2s</b> (T=8000، ذروة ≈3.0GB، 173ms دافئ). نافذة 4s غير عملية إمّا OOM (fragmentation) أو 55s (ترحيل).</li>
+</ul>
+<p class="small">لم نغيّر أكثر من عامل في آن واحد: (أ) تحرير النماذج، (ب) نافذة 4s، (ج) عملية نظيفة — كل منها مُقاس منفصلًا في اللوجات.</p>
+</div>
+
+<h2>الأولوية 4 — المقاطع الأطول ووصلات النوافذ</h2>
+<div class="card">
+<p><b>لا يوجد مقطع بشري حقيقي أطول من ثانيتين</b> في المشروع (demo1 = 1.43s فقط؛ t7/src30 شاشات اختبار). لذلك شغّلنا نسخة النافذة 2s (<span class="mono">Inference_w2s.py</span>) على مقطع 4.04s (loop على demo1 — تكرار محتوى حقيقي، <b>اختبار مسار/دمج فقط</b>):</p>
+<table>
+<tr><th>البند</th><th>النتيجة</th></tr>
+<tr><td>اكتمل التشغيل؟</td><td class="ok">أيوه (exit 0) — بلا OOM (نوافذ 2s)</td></tr>
+<tr><td>طول الناتج = طول الخلطة؟</td><td class="ok">64,640 = 64,640 عيّنة (4.04s)</td></tr>
+<tr><td>NaN</td><td class="ok">0</td></tr>
+<tr><td>عيّنات صفر تامة</td><td class="bad">27</td></tr>
+<tr><td>عيّنات قريبة من الصفر (&lt;1e-4)</td><td class="bad">131</td></tr>
+<tr><td>عند حدّ 2s: min|amp| / max|amp|</td><td class="bad">0.0 / 0.0088 (انهيار سعة)</td></tr>
+<tr><td>عند حدّ 4s: min|amp| / max|amp|</td><td class="bad">0.0 / 0.0112 (انهيار سعة)</td></tr>
+</table>
+<p><b>خلاصة الدمج:</b> الدمج الحالي (hop = window، نافذة Hann) يُنتج <b>انخفاض سعة حاد إلى ~0 عند كل وصلة نافذة</b> (2s، 4s) ⇒ طقطقة/انقطاع مسموع كل ثانيتين. المشكلة في تصميم الدمج (حافة Hann = 0 مع عدم وجود overlap)، موجودة في نسختَي 4s و2s. <b>لم نغيّر الـoverlap</b> في هذه الجولة (كانت مقارنة قبل/بعد تحتاج مدخلًا نظيفًا متساويًا، غير متوفر).</p>
+</div>
+
+<h2>مقارنة عادلة: Dolphin vs Falcon على نفس المدخل (demo1)</h2>
+<div class="card">
+<table>
+<tr><th>المعيار</th><th>Dolphin</th><th>Falcon</th></tr>
+<tr><td>السرعة (forward دافئ)</td><td class="ok">173ms (1 متكلم) / 312ms (2) لمقطع 1.43s</td><td class="ok">99.8ms لنافذة 2s</td></tr>
+<tr><td>البرودة (cold)</td><td>أول forward 14.9s + imports 14.5s</td><td>تحميل 22.7s + warmup 2.6s</td></tr>
+<tr><td>ناتجان مختلفان للشخصين؟</td><td class="ok">corr = 0.013 (مختلفان)</td><td class="bad">corr = 0.978 (متشابهان؛ الفم شبه مُهمَل)</td></tr>
+<tr><td>اختيار الشخص بالوش</td><td class="ok">يعمل (corr(left,s1)=1.0، corr(right,s2)=1.0)</td><td class="mut">غير مُختبر كاختيار (target extraction أحادي)</td></tr>
+<tr><td>نافذة 4s على 6GB</td><td class="bad">OOM/55s (ترحيل)</td><td class="mut">غير مُختبر عند 4s (نافذته 2s أصلًا)</td></tr>
+<tr><td><b>جودة العزل (SI-SDRi)</b></td><td class="pill p-nt">لم تُقس</td><td class="pill p-nt">لم تُقس</td></tr>
+</table>
+<p class="small"><b>فصل الجودة عن السرعة:</b> الاثنان سريعان دافئين. Dolphin يُنتج ناتجين مختلفين فعلًا؛ Falcon لا (على هذا المدخل). لكن <b>«مختلفان» ≠ «كل ناتج يخص الشخص الصحيح»</b> — إثبات الجودة يحتاج مراجع نظيفة (غير متوفرة). لذلك لا حكم على الجودة لأي منهما.</p>
+</div>
+
+<h2>جدول الحالة: التجربة / الإعداد / النتيجة / الدليل / غير محسوم</h2>
+<div class="card">
+<table>
+<tr><th>التجربة</th><th>النتيجة</th><th>الدليل</th><th>غير محسوم</th></tr>
+<tr><td>تحميل أوزان Falcon</td><td class="pill p-ok">نجح</td><td>525/137 مفتاح، 0 missing/unexpected</td><td>—</td></tr>
+<tr><td>تطبيع/أبعاد الفم</td><td class="pill p-ok">سليم</td><td>تطبيع مرة واحدة، (1,1,T,88,88)</td><td>—</td></tr>
+<tr><td>حساسية الناتج للفم</td><td class="pill p-bad">فشل (فم شبه مُهمَل)</td><td>zeros≈real 0.99، m1≈m2 0.98 (1.4s و2s)</td><td>سبب الضعف خارج التوزيع؟</td></tr>
+<tr><td>فرضية «قِصر المقطع»</td><td class="pill p-bad">مرفوضة</td><td>2s كاملة: 0.994</td><td>—</td></tr>
+<tr><td>تفسير فجوة الزمن</td><td class="pill p-ok">نجح</td><td>unaccounted=0، imports 14.5s</td><td>—</td></tr>
+<tr><td>زمن forward بعد التسخين</td><td class="pill p-ok">نجح</td><td>173/312ms، 3 تكرارات</td><td>—</td></tr>
+<tr><td>ذاكرة 4s (نظيفة)</td><td class="pill p-ok">نجح لكن 55s</td><td>11.8GB oversubscription</td><td>—</td></tr>
+<tr><td>OOM الجولة 3</td><td class="pill p-bad">fragmentation (مُفسَّر)</td><td>عملية نظيفة تنجح، متسلسلة تفشل</td><td>—</td></tr>
+<tr><td>نافذة 2s على مقطع &gt;2s</td><td class="pill p-ok">نجح (مسار)</td><td>طول محفوظ، بلا NaN</td><td>جودة العزل</td></tr>
+<tr><td>وصلات النوافذ</td><td class="pill p-bad">عيب مؤكد</td><td>27 صفر، انهيار سعة عند 2s/4s</td><td>حجم الأثر السمعي</td></tr>
+<tr><td>SI-SDRi / WER</td><td class="pill p-nt">لم يُختبر</td><td>مفيش مراجع نظيفة حقيقية</td><td>يحتاج بيانات</td></tr>
+<tr><td>استماع أعمى</td><td class="pill p-nt">لم يُختبر</td><td>مفيش مستمعين</td><td>—</td></tr>
+</table>
+</div>
+
+<h2>التوصية المبنية على الأدلة</h2>
+<div class="card">
+<ul>
+<li><b>أي موديل نكمل به؟</b> حاليًا <b>Dolphin</b> هو الوحيد اللي بيثبت سلوكًا مفيدًا على مادة حقيقية: ناتجان مختلفان (corr 0.013) واختيار بالوش دقيق (corr 1.0)، وforward دافئ سريع (173ms). Falcon أسرع لحظيًا (99.8ms) لكنه على هذا المدخل <b>لا يستخدم الفم</b> (0.99 مع فم صفري) ⇒ لا يثبت أنه target extraction بعد. <b>لا نستبعد Falcon</b>، لكنه يحتاج لقطات قريبة (in-domain) لإثباته.</li>
+<li><b>ما يمكن عرضه الآن بأمانة:</b> عرض <b>async قصير</b>: تختار وشًا في مقطع قصير (≤2s، أو حتى ~4s مع بطء/مخاطرة) فتسمع صوتًا مختلفًا. <b>لا</b> نقول «جودة أفضل» (مفيش مراجع)، و<b>لا</b> «live/Replay سريع» (لأن preprocessing الوجه 43.9s هو الاختناق)، و<b>لا</b> «Falcon بيعزل».</li>
+<li><b>القيود المثبتة:</b> نافذة 4s غير عملية على 6GB (OOM أو 55s ترحيل) ⇒ نافذة 2s عملية. وصلات النوافذ فيها انهيار سعة (27 صفر) ⇒ لازم إصلاح دمج (overlap) قبل أي مقطع &gt;2s.</li>
+<li><b>قبل أي ادعاء جودة:</b> لازم SI-SDRi/WER على مراجع نظيفة حقيقية.</li>
+</ul>
+</div>
+
+<h2>المطلوب منك: زوج واحد للبداية</h2>
+<div class="card">
+<p class="quote">الشخص A يسجّل فيديو منفصلًا 10–15 ثانية يتكلم بالمصري، وشه وفمه واضحان، وصوته الأصلي متزامن مع الصورة. الشخص B يعمل نفس الشيء بجُمل مختلفة. غرفة هادئة، بدون موسيقى أو clipping. مش مطلوب يتكلموا مع بعض أثناء التسجيل.</p>
+<p class="small">بعد كده: نخلط الصوتين مع الاحتفاظ بالمراجع النظيفة ونفس مكاسب الخلط، ونركّب نفس الخلطة في فيديو كل شخص، ونتأكد (باستخراج الصوت من الإدخال) إن الموديل بياخد الخلطة مش الصوت النظيف. الزوج الأول يكفي للتحقق من المسار، وبعدها نوسّع العينة.</p>
+</div>
+
+<div class="hr"></div>
+<p class="small">
+السكريبتات: <span class="mono">A:\focus\tools\{falcon_diag,falcon_diag2,falcon_stage_diag,timing_breakdown,forward_latency,memory_phased,merge_check}.py</span><br>
+اللوجات: <span class="mono">A:\focus\logs\{timing_breakdown_2spk,forward_latency,mem_phased,merge_check}.json</span> + <span class="mono">w2s_5s.log</span><br>
+الصوت: <span class="mono">A:\focus\Dolphin\out1\speaker{1,2}_est.wav</span> (Dolphin)، <span class="mono">falcon_s{1,2}.wav</span> (Falcon)، <span class="mono">out_w2s_5s\speaker{1,2}_est.wav</span> (نافذة 2s).<br>
+اعتماديات: <span class="mono">A:\focus\requirements.freeze.txt</span>.
+</p>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOCUS — تقرير التنفيذ الفعلي (الجولة 3)</title>
+<style>
+  :root{--bg:#0f1220;--card:#181c2f;--ink:#e9ecf5;--mut:#a7b0c8;--ok:#2ecc71;--bad:#e74c3c;--warn:#f1c40f;--acc:#5b8cff;--line:#2a3050;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:1080px;margin:0 auto;padding:28px 20px 80px}
+  h1{font-size:26px;margin:0 0 6px}
+  h2{font-size:20px;margin:34px 0 10px;border-right:4px solid var(--acc);padding-right:10px}
+  h3{font-size:16px;margin:20px 0 8px;color:#cfd7ef}
+  .sub{color:var(--mut);font-size:14px;margin-bottom:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:14px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:right;vertical-align:top}
+  th{background:#20263f;color:#dfe5fb;font-weight:600}
+  tr:nth-child(even) td{background:#1b2036}
+  code,.mono{font-family:Consolas,monospace;background:#0b0e18;padding:1px 6px;border-radius:6px;font-size:13px;direction:ltr;display:inline-block}
+  pre{background:#0b0e18;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;direction:ltr;text-align:left;font-size:12.5px}
+  .ok{color:var(--ok);font-weight:700}
+  .bad{color:var(--bad);font-weight:700}
+  .warn{color:var(--warn);font-weight:700}
+  .mut{color:var(--mut)}
+  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700}
+  .p-ok{background:rgba(46,204,113,.15);color:#7ee2a8;border:1px solid rgba(46,204,113,.4)}
+  .p-bad{background:rgba(231,76,60,.15);color:#ff9a8d;border:1px solid rgba(231,76,60,.4)}
+  .p-nt{background:rgba(241,196,15,.12);color:#ffe27a;border:1px solid rgba(241,196,15,.4)}
+  ul{margin:6px 0 6px 0;padding-right:22px}
+  li{margin:3px 0}
+  .kpi{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}
+  .kpi div{flex:1 1 180px;background:#12162a;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .kpi b{display:block;font-size:20px}
+  .kpi span{color:var(--mut);font-size:12px}
+  .small{font-size:12.5px;color:var(--mut)}
+  .hr{height:1px;background:var(--line);margin:22px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>FOCUS — تقرير التنفيذ الفعلي والقياس (الجولة 3)</h1>
+<div class="sub">
+مسار Health &amp; Well-being · الهدف: إثبات الجدوى التقنية لاستخراج صوت شخص مختار من فيديو فيه كلام متداخل.<br>
+هذا التقرير يسرد ما <b>اتنفّذ فعلًا</b> على جهاز محلي (RTX 3060 Laptop 6GB)، ويفصل: نجح / فشل / لم يُختبر. لا خطة جديدة.
+</div>
+
+<div class="kpi">
+  <div><b>1.43s</b><span>مقطع حقيقي وحيد متاح (demo1، شخصان)</span></div>
+  <div><b class="ok">✓</b><span>Dolphin end-to-end على demo1</span></div>
+  <div><b class="ok">✓</b><span>اختيار الشخص (يسار/يمين) اتأكّد</span></div>
+  <div><b class="bad">6GB</b><span>الكارت بيفشل (OOM) على نافذة 4s</span></div>
+</div>
+
+<h2>1) البيئة الحالية (اتفحصت الآن، مش من لوج قديم)</h2>
+<div class="card">
+<table>
+<tr><th>العنصر</th><th>القيمة الفعلية</th><th>الحالة</th></tr>
+<tr><td>Python</td><td class="mono">3.12.15</td><td class="ok">سليم</td></tr>
+<tr><td>PyTorch</td><td class="mono">2.8.0+cu126</td><td class="ok">سليم</td></tr>
+<tr><td>CUDA متاح</td><td class="mono">True</td><td class="ok">سليم</td></tr>
+<tr><td>GPU</td><td class="mono">NVIDIA GeForce RTX 3060 Laptop GPU (cap 8.6)</td><td class="ok">سليم</td></tr>
+<tr><td>VRAM</td><td class="mono">5130 / 6143.5 MiB free</td><td class="ok">سليم</td></tr>
+<tr><td>مساحة A:</td><td class="mono">36.1 GB free</td><td class="ok">سليم</td></tr>
+<tr><td>مساحة C:</td><td class="mono">4.0 GB free</td><td class="warn">شبه ممتلئ — الشغل كله على A:</td></tr>
+</table>
+<p class="small">البيئة معزولة في <span class="mono">A:\focus\.venv</span>، ولم تُلمس بيئة WorkBuddy الافتراضية. نسخة الاعتماديات: <span class="mono">A:\focus\requirements.freeze.txt</span> (128 سطر؛ torch 2.8.0+cu126, faster-whisper 1.2.1, jiwer 4.0.0, soundfile 0.14.0 ...).</p>
+</div>
+
+<h2>2) المادة الحقيقية المتاحة (فحص فعلي)</h2>
+<div class="card">
+<p>بحثت في مجلد المشروع عن مقاطع حقيقية ومراجع نظيفة. النتيجة الحاسمة:</p>
+<table>
+<tr><th>المقطع</th><th>النوع</th><th>صالح لإثبات جودة العزل؟</th></tr>
+<tr><td class="mono">verify2/demo1_mix.mp4</td><td>فيديو حقيقي: مقابلة Piers Morgan، شخصان يتكلمان فعلًا (كلام متداخل)، 1080p، 1.43s</td><td class="ok">حقيقي — لكن بدون مراجع نظيفة لكل شخص</td></tr>
+<tr><td class="mono">verify2/t7/a_video.mp4, b_video.mp4</td><td><b>SMPTE color bars</b> (شاشة اختبار تلفزيون) — مش وشوش</td><td class="bad">لا — صوت مركّب على فيديو غير متوافق (ممنوع)</td></tr>
+<tr><td class="mono">verify/tests/src30.mp4</td><td><b>SMPTE color bars</b> أيضًا</td><td class="bad">لا</td></tr>
+<tr><td class="mono">verify/tests/blind_src/wild*_orig/iso.wav</td><td>صوت فقط، 0.5s لكل ملف، بدون فيديو</td><td class="bad">لا (مش AV ومدة غير كافية)</td></tr>
+</table>
+<p class="small">بالتالي: المقطع الحقيقي الوحيد هو <b>demo1</b> (1.43s). لا توجد تسجيلات منفصلة متزامنة صوتًا وصورة لكل شخص + مراجع نظيفة ⇒ قياس SI-SDRi/WER الحقيقي <span class="pill p-nt">لم يُختبر</span> (التفاصيل في القسم 6).</p>
+</div>
+
+<h2>3) Dolphin end-to-end على المقطع الحقيقي</h2>
+<div class="card">
+<p>الأمر (على نسخة عمل داخل <span class="mono">A:\focus\Dolphin</span>، الأصل محفوظ في <span class="mono">Inference.orig.py</span>):</p>
+<pre>python Inference.py -i demo1/mix.mp4 -o out1 --speakers 2</pre>
+<p>الباتشات المطبّقة (اتّراجعت قبل التطبيق): الجهاز cuda + soundfile بدل torchaudio + <span class="mono">compile=False</span> لـface_alignment (كان بيحتاج Triton مش متوفر على ويندوز) + إصلاح مسار ويندوز في <span class="mono">detectface</span> (<span class="mono">split('/')</span> كان بيطلّع مجلد متداخل) + <span class="mono">--face-boxes</span>.</p>
+<table>
+<tr><th>البند</th><th>النتيجة</th></tr>
+<tr><td>exit code</td><td class="ok">0</td></tr>
+<tr><td>الملفات الناتجة</td><td><span class="mono">s1.mp4, s2.mp4, speaker1_est.wav, speaker2_est.wav, audio.wav, mouthroi/*.npz</span></td></tr>
+<tr><td>الناتج من الموديل فعلًا؟ (مش نسخة من الإدخال)</td><td class="ok">أيوه — التفاصيل تحت</td></tr>
+</table>
+<h3>إثبات إن الناتج مش نسخة من الإدخال</h3>
+<table>
+<tr><th>القياس</th><th>القيمة</th><th>الدلالة</th></tr>
+<tr><td>corr(est1, est2)</td><td class="mono">+0.0134</td><td class="ok">الصوتان مختلفان تمامًا (متكلمَين)</td></tr>
+<tr><td>corr(est1, mix)</td><td class="mono">+0.8606</td><td>مكوّن من الخلطة</td></tr>
+<tr><td>corr(est2, mix)</td><td class="mono">+0.5178</td><td>مكوّن آخر بدرجة أقل</td></tr>
+<tr><td>max |est1 − mix|</td><td class="mono">0.2598</td><td class="ok">مش نسخة (فرق كبير)</td></tr>
+<tr><td>RMS est1/est2/mix</td><td class="mono">0.0625 / 0.0372 / 0.0725</td><td>الاثنان مش صامتين</td></tr>
+</table>
+</div>
+
+<h2>4) اختيار الشخص (face_boxes) — اختبار وقت التشغيل</h2>
+<div class="card">
+<p>الوششان اتكشفوا على فريم 0: <span class="mono">left [365,161,573,453] conf 1.0</span> و<span class="mono">right [1198,200,1441,561] conf 0.999</span> — واتأكّد بصريًا إن الإحداثيات على الوشين فعلًا (صورة معلّمة). بعدين استخرجنا كل شخص لوحده:</p>
+<pre>python Inference.py -i demo1/mix.mp4 -o out_sel_left  --face-boxes "365,161,573,453"
+python Inference.py -i demo1/mix.mp4 -o out_sel_right --face-boxes "1198,200,1441,561"</pre>
+<table>
+<tr><th>القياس</th><th>القيمة</th><th>الدلالة</th></tr>
+<tr><td>corr(left, right)</td><td class="mono">+0.0133</td><td class="ok">اختيار الوشين بيدّي صوتين مختلفين</td></tr>
+<tr><td>corr(left, auto_speaker1)</td><td class="mono">+1.0000</td><td class="ok">الوش الأيسر = speaker1 بالظبط</td></tr>
+<tr><td>corr(right, auto_speaker2)</td><td class="mono">+1.0000</td><td class="ok">الوش الأيمن = speaker2 بالظبط</td></tr>
+</table>
+<p class="small">الخلاصة: <b>«دوس على وش → اسمع صوته»</b> بيشتغل فعليًا (مش py_compile بس). الاختيار بالإحداثيات متوافق مع الفيديو، والتتبّع بعد الفريم الأول ثابت على مقطع 1.43s. (ما اتختبرش سلوك السكوت/الاختفاء لأن المقطع قصير جدًا.)</p>
+</div>
+
+<h2>5) السرعة والموارد (على demo1 الحقيقي، شخصان، 1080p)</h2>
+<div class="card">
+<p>قياس داخلي بـ<span class="mono">perf_counter</span> لكل مرحلة (ملف <span class="mono">timers.json</span>):</p>
+<table>
+<tr><th>المرحلة</th><th>الزمن (ث)</th></tr>
+<tr><td>load_frames</td><td class="mono">0.306</td></tr>
+<tr><td>retinaface (كشف الوش)</td><td class="mono">10.804</td></tr>
+<tr><td><b>face_alignment (لاند ماركس)</b></td><td class="mono"><b>30.682</b></td></tr>
+<tr><td>mouth_roi (تجهيز الفم)</td><td class="mono">2.849</td></tr>
+<tr><td>model_load</td><td class="mono">1.352</td></tr>
+<tr><td><b>forward (العزل)</b></td><td class="mono"><b>10.323</b></td></tr>
+<tr><td>merge + save_wav</td><td class="mono">0.014</td></tr>
+<tr><td>إجمالي الجدار (wall)</td><td class="mono">106.48</td></tr>
+</table>
+<div class="kpi">
+  <div><b class="warn">41.5s</b><span>معالجة الوش/اللاند ماركس (73% من الزمن المقيس)</span></div>
+  <div><b>10.3s</b><span>الـforward نفسه فقط</span></div>
+  <div><b class="bad">4646.6 MiB</b><span>أقصى VRAM (torch، سلطة)</span></div>
+  <div><b>3640.1 MiB</b><span>أقصى RAM</span></div>
+</div>
+<p class="small"><b>RTF:</b> الـforward وحده ≈ 7.2× الزمن الحقيقي للمقطع (10.3s لـ1.43s، شخصان)؛ خط الإنتاج كامل ≈ 74×. الخلاصة: <b>الدولفين مش real-time على الكارت ده</b>؛ الاختناق في face_alignment/retinaface مش في الموديل. (الأرقام دي على مقطع 1.43s؛ مش latency حقيقي للحوار.)</p>
+</div>
+
+<h2>6) عائق الـVRAM (OOM) — قياس فعلي</h2>
+<div class="card">
+<p>Dolphin بيعالج نافذة 4 ثواني، وبيبني خريطة cosine (T×T) في بلوك CLA، حيث <b>T = طول النافذة الصوتية ÷ 4</b>. يعني الذاكرة بتتحدد بـ<b>طول النافذة</b> مش بطول المقطع: أي مقطع فيه نافذة 4 ثواني كاملة (أي صوت ≥4s) بيفشل على 6GB.</p>
+<h3>منحنى الذاكرة (1/2/3/4s، من مادة demo1 الحقيقية)</h3>
+<table>
+<tr><th>طول النافذة</th><th>T</th><th>cos map (MiB)</th><th>peak_alloc</th><th>peak_reserved</th><th>النتيجة</th></tr>
+<tr><td>1s</td><td class="mono">4000</td><td class="mono">61.0</td><td class="mono">803.0</td><td class="mono">872.0</td><td class="ok">نجح</td></tr>
+<tr><td>2s</td><td class="mono">8000</td><td class="mono">244.1</td><td class="mono">3062.2</td><td class="mono">3452.0</td><td class="ok">نجح</td></tr>
+<tr><td>3s</td><td class="mono">12000</td><td class="mono">549.3</td><td class="mono">4890.0</td><td class="mono">5746.0</td><td class="bad">OOM</td></tr>
+<tr><td>4s</td><td class="mono">16000</td><td class="mono">976.6</td><td class="mono">4891.6</td><td class="mono">5674.0</td><td class="bad">OOM</td></tr>
+</table>
+<h3>رسالة الخطأ الكاملة (إعادة إنتاج فعلية على مقطع 4s)</h3>
+<pre>torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 978.00 MiB.
+GPU 0 has a total capacity of 6.00 GiB of which 2.65 GiB is free.
+Of the allocated memory 1.36 GiB is allocated by PyTorch, and 998.66 MiB is
+reserved by PyTorch but unallocated.</pre>
+<p><b>تشخيص بالأرقام:</b> فيه 2.65 GiB فاضي &gt; 978 MiB المطلوبة ⇒ مش نقص حقيقي، لكن <b>تجزئة (fragmentation)</b>: الذاكرة المحجوزة-غير-المستعملة (998.66 MiB) متفرقة، فمفيش بلوك متصل 978 MiB.</p>
+<h3>المعالجات (بالترتيب)</h3>
+<table>
+<tr><th>المعالجة</th><th>النتيجة</th></tr>
+<tr><td>(أ) <span class="mono">PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True</span></td><td class="bad">فشل — ويندوز طبع: <span class="mono">expandable_segments not supported on [Windows]</span> ⇒ المتغير بيتجاهَل والـOOM زي ما هو</td></tr>
+<tr><td>(ب) <span class="mono">torch.cuda.empty_cache()</span> بين النوافذ</td><td class="bad">لا يحل — الـOOM جوّه النافذة الأولى (4s) نفسها، مش تراكم بين نوافذ</td></tr>
+<tr><td>(ج) نافذة 2s (<span class="mono">window_size=hop_size=2*sr</span>، نسخة <span class="mono">Inference_w2s.py</span>)</td><td class="ok">الذاكرة بتفيت: 2s ⇒ peak 3062 MiB (تحت 6GB). اتجهّزت النسخة واتأكّد اتساق 50 فريم/نافذة (25fps×2s)، لكن ما اتشغّلتش على مقطع حقيقي أطول من 2s (مفيش مقطع حقيقي &gt;2s)</td></tr>
+</table>
+<p class="small">ملاحظة: خط الإنتاج الحقيقي أقصى VRAM فيه 4646 MiB لمقطع 1.43s (لأن face_alignment + retinaface + Dolphin شغالين مع بعض)، فلما تضيف cos map بحجم 1GB لنافذة 4s بيعدّي 6GB.</p>
+</div>
+
+<h2>7) Falcon — مقارنة محدودة</h2>
+<div class="card">
+<p>المصدر الرسمي <span class="mono">github.com/JusperLee/Falcon</span> (NeurIPS 2026)، أوزان <span class="mono">JusperLee/Falcon</span>، Apache-2.0. طريقة التشغيل الفعلية: <span class="mono">studio/infer_file.py</span> + <span class="mono">FalconRuntime</span>.</p>
+<table>
+<tr><th>البند</th><th>النتيجة</th></tr>
+<tr><td>يشتغل على torch 2.8.0؟</td><td class="ok">أيوه (رغم إن requirements بتقول torch≥2.14.1 — شرط متشدد زيادة)</td></tr>
+<tr><td>عدد المعاملات</td><td class="mono">11,724,385</td></tr>
+<tr><td>تحميل + warmup</td><td class="mono">22.7s (warmup 2579ms)</td></tr>
+<tr><td>forward نافذة 2s (أصفار)</td><td class="ok"><span class="mono">99.8 ms</span> — أسرع بكتير من الدولفين</td></tr>
+<tr><td>على demo1 الحقيقي (speaker1/2)</td><td>كتب <span class="mono">falcon_s1.wav, falcon_s2.wav</span> (1.40s، RMS 0.057/0.061)</td></tr>
+<tr><td>corr(falcon_s1, falcon_s2)</td><td class="bad">+0.9778 ⇒ الناتجان شبه متطابقين</td></tr>
+<tr><td>corr(falcon_s1, dol_speaker1) / corr(falcon_s2, dol_speaker1)</td><td class="mono">+0.9695 / +0.9482</td></tr>
+</table>
+<p class="small"><b>تفسير أمين:</b> Falcon اشتغل end-to-end وأنتج ملفات، لكن على مقطع 1.43s (أقصر من نافذته 2s) <b>ما فرّقش بين الشخصين</b> (الناتجان متطابقان تقريبًا). ده مش حكم على جودة Falcon — محتاج مقاطع حقيقية أطول + مراجع نظيفة لمقارنة عادلة. سرعته (99.8ms/2s) وبناءه (target extraction) لسه مؤشرات إيجابية، لكن غير مثبتة جودةً هنا.</p>
+</div>
+
+<h2>8) جدول الحالة النهائي</h2>
+<div class="card">
+<table>
+<tr><th>التجربة</th><th>الحالة</th><th>الدليل / الملف</th></tr>
+<tr><td>فحص البيئة (torch/CUDA/GPU/disk)</td><td class="pill p-ok">اتنفّذ ونجح</td><td>torch 2.8.0+cu126, CUDA True, 6GB</td></tr>
+<tr><td>Dolphin end-to-end على demo1</td><td class="pill p-ok">اتنفّذ ونجح</td><td class="mono">out1/speaker1_est.wav, speaker2_est.wav</td></tr>
+<tr><td>إثبات إن الناتج مش نسخة</td><td class="pill p-ok">اتنفّذ ونجح</td><td>corr(est1,est2)=0.013، max|est1−mix|=0.26</td></tr>
+<tr><td>اختيار الشخص (face_boxes A/B)</td><td class="pill p-ok">اتنفّذ ونجح</td><td class="mono">out_sel_left/, out_sel_right/</td></tr>
+<tr><td>قياس السرعة/الموارد</td><td class="pill p-ok">اتنفّذ ونجح</td><td class="mono">out_timed_demo1/timers.json</td></tr>
+<tr><td>منحنى VRAM (1–4s) + OOM</td><td class="pill p-ok">اتنفّذ ونجح</td><td class="mono">logs/mem_curve.json</td></tr>
+<tr><td>expandable_segments على ويندوز</td><td class="pill p-bad">اتنفّذ وفشل</td><td>not supported on [Windows]</td></tr>
+<tr><td>نافذة 4s على 6GB</td><td class="pill p-bad">اتنفّذ وفشل</td><td>OOM (fragmentation)</td></tr>
+<tr><td>Falcon end-to-end</td><td class="pill p-ok">اتنفّذ (جزئي)</td><td class="mono">falcon_s1.wav, falcon_s2.wav</td></tr>
+<tr><td>Falcon يفصل الشخصين على 1.43s</td><td class="pill p-bad">فشل (corr 0.98)</td><td>يحتاج مقاطع أطول</td></tr>
+<tr><td>SI-SDRi حقيقي</td><td class="pill p-nt">لم يُختبر</td><td>مفيش مراجع نظيفة حقيقية</td></tr>
+<tr><td>WER (نظيف/خلطة/مستخرج)</td><td class="pill p-nt">لم يُختبر</td><td>مفيش نص مرجعي مستقل لكل شخص</td></tr>
+<tr><td>استماع أعمى (مستمعون)</td><td class="pill p-nt">لم يُختبر</td><td>مفيش مستمعين شاركوا</td></tr>
+</table>
+</div>
+
+<h2>9) التوصية المدعومة بالنتائج</h2>
+<div class="card">
+<ul>
+<li><b>الدولفين:</b> يشتغل ويستخرج صوتين مختلفين على مقطع حقيقي قصير، واختيار الشخص بالوش يشتغل بدقة (corr 1.0). <b>لكن</b> على 6GB بيفشل على أي نافذة 4s (تجزئة، وexpandable_segments مش مدعوم على ويندوز)، والـforward ~3.6× الزمن الحقيقي/شخص، وخط الإنتاج كامل ~74×. ⇒ <b>مناسب لمعالجة تسجيلات قصيرة async (Replay قصير)، مش للحوار المباشر.</b></li>
+<li><b>Falcon:</b> أسرع بكتير (99.8ms/2s)، وبنيته (target extraction بالوش) أقرب لمنتج FOCUS، ورخيص (0.5M قابل للتدريب، 11.7M إجمالي). <b>لكن</b> جودة الفصل على 1.43s غير مثبتة (الناتجان متطابقان). ⇒ <b>مرشّح أقوى، محتاج بيانات حقيقية أطول لإثباته.</b></li>
+<li><b>هل فيه دليل كافٍ لتجربة الاستخدام أثناء الحوار؟</b> <b>لأ.</b> مفيش قياس latency حقيقي على مقاطع حقيقية كافية، وخط الإنتاج الحالي بطيء (74×)، والدولفين بيفشل على نوافذ 4s. التجربة المناسبة الآن: <b>Replay قصير</b> (مقطع صغير → انتظار → استماع)، مش حوار مباشر.</li>
+</ul>
+</div>
+
+<h2>10) المطلوب منك: الحد الأدنى من التسجيلات</h2>
+<div class="card">
+<p>عشان نقيس الجودة الحقيقية (SI-SDRi + WER) بشكل أمين، محتاجين <b>تسجيلات حقيقية متزامنة</b> (صوت + صورة) لكل شخص منفصل:</p>
+<ul>
+<li><b>شخصان</b>، كل واحد متسجّل <b>منفصل</b> بكاميرا (الوش ظاهر، الفم داخل الكادر، ≥25fps) + مايك نظيف (16k+، مونو).</li>
+<li><b>≥5 أزواج</b>، كل زوج <b>≥10 ثواني</b>، عربي مصري طبيعي، بكلام متداخل حقيقي.</li>
+<li>بديل: فيديو واحد فيه شخصان بيتكلمان + <b>تسجيل نظيف منفصل لكل شخص</b> (نفس المحتوى) عشان نعمل مرجع.</li>
+<li>غرفة هادية، بدون موسيقى، والصوت النظيف من غير clipping.</li>
+</ul>
+<p class="small">بمجرد ما التوفر، هنعمل: خلطة معروفة (loudnorm −23 ثم amix normalize=0) → نركّب نفس الخلطة في فيديو كل شخص → inference → SI-SDRi بعد المحاذاة + WER بنفس ASR. ده اللي هيحوّل «بيشتغل» إلى «بيحسّن فعلًا».</p>
+</div>
+
+<div class="hr"></div>
+<p class="small">
+ملفات الصوت/الفيديو الفعلية على <span class="mono">A:\focus\Dolphin\</span>:
+<span class="mono">out1/audio.wav</span> (الخلطة)،
+<span class="mono">out1/speaker1_est.wav</span>، <span class="mono">out1/speaker2_est.wav</span> (الدولفين)،
+<span class="mono">out_sel_left/speaker1_est.wav</span>، <span class="mono">out_sel_right/speaker1_est.wav</span> (اختيار الوش)،
+<span class="mono">falcon_s1.wav</span>، <span class="mono">falcon_s2.wav</span> (Falcon).<br>
+اللوجات: <span class="mono">A:\focus\logs\</span> — <span class="mono">run_demo3.log</span>، <span class="mono">oom_t04.log</span>، <span class="mono">mem_curve.json</span>، <span class="mono">mem_expandable.log</span>، <span class="mono">sel_left.log</span>، <span class="mono">sel_right.log</span>.
+</p>
+
+</div>
+</body>
+</html>

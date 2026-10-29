@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOCUS — تقرير الجولة 5 (تثبيت Dolphin + إصلاح الدمج + تسريع الوجه)</title>
+<style>
+  :root{--bg:#0f1220;--card:#181c2f;--ink:#e9ecf5;--mut:#a7b0c8;--ok:#2ecc71;--bad:#e74c3c;--warn:#f1c40f;--acc:#5b8cff;--line:#2a3050;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:"Segoe UI",Tahoma,Arial,sans-serif;line-height:1.7}
+  .wrap{max-width:1120px;margin:0 auto;padding:28px 20px 90px}
+  h1{font-size:25px;margin:0 0 6px}
+  h2{font-size:19px;margin:30px 0 10px;border-right:4px solid var(--acc);padding-right:10px}
+  h3{font-size:15px;margin:16px 0 8px;color:#cfd7ef}
+  .sub{color:var(--mut);font-size:14px;margin-bottom:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:14px 0}
+  table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:right;vertical-align:top}
+  th{background:#20263f;color:#dfe5fb;font-weight:600}
+  tr:nth-child(even) td{background:#1b2036}
+  code,.mono{font-family:Consolas,monospace;background:#0b0e18;padding:1px 6px;border-radius:6px;font-size:12.5px;direction:ltr;display:inline-block}
+  pre{background:#0b0e18;border:1px solid var(--line);border-radius:10px;padding:12px;overflow:auto;direction:ltr;text-align:left;font-size:12.5px}
+  .ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}.warn{color:var(--warn);font-weight:700}.mut{color:var(--mut)}
+  .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700}
+  .p-ok{background:rgba(46,204,113,.15);color:#7ee2a8;border:1px solid rgba(46,204,113,.4)}
+  .p-bad{background:rgba(231,76,60,.15);color:#ff9a8d;border:1px solid rgba(231,76,60,.4)}
+  .p-nt{background:rgba(241,196,15,.12);color:#ffe27a;border:1px solid rgba(241,196,15,.4)}
+  ul{margin:6px 0;padding-right:22px}li{margin:3px 0}
+  .kpi{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0}
+  .kpi div{flex:1 1 170px;background:#12162a;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .kpi b{display:block;font-size:19px}.kpi span{color:var(--mut);font-size:12px}
+  .small{font-size:12.5px;color:var(--mut)}
+  .hr{height:1px;background:var(--line);margin:20px 0}
+  .quote{border-right:3px solid var(--acc);padding-right:10px;color:#c9d2ea;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>FOCUS — الجولة 5: تثبيت Dolphin، إصلاح دمج النوافذ، تسريع تجهيز الوجه</h1>
+<div class="sub">
+تنفيذ على <span class="mono">A:\focus</span> · RTX 3060 Laptop 6GB · torch 2.8.0+cu126 · نافذة 2s · Falcon مؤجّل.
+كل رقم أدناه من تشغيل فعلي؛ لم أستخدم فيديو مكررًا كدليل جودة.
+</div>
+
+<div class="kpi">
+  <div><b class="ok">7→0</b><span>عينات صفر عند وصلات النوافذ (إصلاح الدمج)</span></div>
+  <div><b class="ok">58.9→29.4s</b><span>تجهيز الوجه (~2× أسرع، نفس mouth crops)</span></div>
+  <div><b class="ok">108.96s</b><span>خط الإنتاج الكامل لمقطع 4.04s (بارد)</span></div>
+  <div><b class="warn">غير مقيس</b><span>جودة العزل (SI-SDRi/WER) — تنتظر تسجيلات</span></div>
+</div>
+
+<h2>1) إصلاح دمج النوافذ (قبل/بعد)</h2>
+<div class="card">
+<h3>السبب الجذري (مُثبت)</h3>
+<p>الدمج القديم: <span class="mono">merged += est*hann; weights += hann; merged[weights>0] /= weights[weights>0]</span>. عند <b>hop = window</b> (بلا overlap)، الضرب في Hann ثم القسمة على نفس الوزن يلغي تأثير النافذة حيث الوزن ≠ 0 (تأكيدك صح). لكن <span class="mono">torch.hann_window(32000)</span> بـfloat32 فيه <b>3 أصفار تامة</b> (المواقع 0، 1، 31999) لأن <span class="mono">0.5−0.5·cos</span> يُقرَّب إلى 0 في float32 (في float64 فيه صفر واحد فقط). عندها <span class="mono">weights=0</span> → القسمة تُتخطّى → الناتج يبقى 0.</p>
+<table>
+<tr><th>الفحص</th><th>النتيجة</th></tr>
+<tr><td>عدد أصفار hann (float32 / float64)</td><td class="mono">3 / 1</td></tr>
+</table>
+<h3>اختبار إعادة البناء (identity estimates + إشارات معلومة)</h3>
+<table>
+<tr><th>الدمج</th><th>max error</th><th>مواقع الخطأ</th></tr>
+<tr><td>القديم (hop=window)</td><td class="mono">0.13–0.5</td><td>عند الوصلات فقط: [0,1,31999,32000,32001,63999]</td></tr>
+<tr><td><b>direct (بلا overlap)</b></td><td class="ok mono">0.0</td><td>لا يوجد (إعادة بناء تامة)</td></tr>
+<tr><td>ola50 (50% overlap)</td><td class="mono">0.0 داخليًا</td><td>حافة البداية/النهاية فقط</td></tr>
+</table>
+<h3>قبل/بعد على نفس مخرجات Dolphin (مقطع 4.04s، نافذة 2s)</h3>
+<table>
+<tr><th>المقياس</th><th>القديم (Hann/divide)</th><th>الجديد (direct)</th></tr>
+<tr><td>عينات صفر (speaker1 / speaker2)</td><td class="bad">27 / 26</td><td class="ok">20 / 12 (متناثرة، مش عند الوصلات)</td></tr>
+<tr><td>سعة عند وصلة 2s</td><td class="bad">0.0 (انقطاع)</td><td class="ok">0.0094 / 0.0087 (إشارة حقيقية)</td></tr>
+<tr><td>سعة عند وصلة 4s</td><td class="bad">0.0</td><td class="ok">0.0031 / 0.0030</td></tr>
+<tr><td>NaN / Inf</td><td class="ok">0 / 0</td><td class="ok">0 / 0</td></tr>
+<tr><td>الطول</td><td class="mono">64640</td><td class="mono">64640 (لا فقد/تكرار)</td></tr>
+</table>
+<p class="small">الأصفار الـ20/12 المتبقية <b>متناثرة</b> (مثال: 545، 2004، 2792… 43856) وليست عند الوصلات (0 عند 2s/4s) — أصلها مخرجات الموديل/تكميم PCM_16، وليست عيب دمج. (لا أعتبر كل zero crossing عيبًا، ولا أدّعي طقطقة سمعية لم أسمعها.)</p>
+<h3>مقارنة direct vs overlap-add (50%)</h3>
+<table>
+<tr><th>الدمج</th><th>عدد النوافذ (تكلفة)</th><th>خطوة الوصلة @2s</th><th>@4s</th></tr>
+<tr><td>direct (بلا overlap)</td><td class="mono">3</td><td class="mono">0.00936</td><td class="mono">0.0031</td></tr>
+<tr><td>ola50 (overlap 50%)</td><td class="mono">5 (×1.67)</td><td class="ok mono">0.00033</td><td class="ok mono">0.00015</td></tr>
+</table>
+<p class="small"><b>القرار:</b> direct يزيل الانقطاع بأقل تكلفة؛ ola50 يجعل الوصلات أنعم ~20–28× مقابل ~1.67× من الـforward. نوصي بـ<b>ola50</b> لو الوصلات مهمة سمعيًا (المقطع أطول)، و<b>direct</b> لو الأولوية للسرعة.</p>
+</div>
+
+<h2>2) تسريع تجهيز الوجه والفم</h2>
+<div class="card">
+<h3>تفكيك التكلفة (5s / 720p / 101 فريم / وشّان)</h3>
+<table>
+<tr><th>البند</th><th>القيمة</th></tr>
+<tr><td>تهيئة face_alignment (cold)</td><td class="mono">1.49 s</td></tr>
+<tr><td>أول كشف retinaface (تهيئة TF)</td><td class="mono">4.87 s</td></tr>
+<tr><td>retinaface لكل فريم (دافئ)</td><td class="mono">638 ms</td></tr>
+<tr><td>landmarks لكل نداء (دافئ)</td><td class="mono">60 ms</td></tr>
+<tr><td>عدد نداءات landmarks / detects</td><td class="mono">202 / 12</td></tr>
+<tr><td>الإجمالي الدافئ المتوقع</td><td class="mono">19.75 s (cold ≈26.1s)</td></tr>
+</table>
+<h3>قبل/بعد (نفس المقطع)</h3>
+<table>
+<tr><th>النسخة</th><th>الزمن</th><th>mouth crops</th></tr>
+<tr><td>baseline (يعيد تهيئة fa + يحفظ video_tracked)</td><td class="mono">58.93 s</td><td>—</td></tr>
+<tr><td><b>fast</b> (fa مخزّن + بلا video_tracked) — 3 تكرارات</td><td class="ok mono">28.92 / 28.63 / 30.54 s</td><td class="ok">مطابقة تمامًا (speaker1/2 = true)</td></tr>
+</table>
+<p><b>الربح ~2×</b>، وسببه الأكبر إسقاط ترميز <span class="mono">video_tracked</span> (moviepy) + إعادة استخدام fa. <b>تحذير/إصلاح:</b> إسقاط video_tracked كان يكسر إنشاء <span class="mono">s1.mp4</span> (كان يُبنى منه!) — أصلحناه ببناء mp4 من <b>الفيديو الأصلي</b> بدل الـtracked (ده كمان أفضل للمنتج: بلا مربع أحمر مرسوم).</p>
+<p class="small">تحسينات إضافية مُقاسة لكن غير مُنفّذة (تحتاج تحققًا من الـcrops): كشف على نسخة أصغر ثم تحويل الإحداثيات (retinaface 638ms/فريم هو الأغلى)، ومعالجة الشخص المختار فقط (نصف نداءات landmarks).</p>
+</div>
+
+<h2>3) النسخة النهائية + تشغيل كامل</h2>
+<div class="card">
+<p><span class="mono">Inference_focus.py</span> = نافذة 2s + دمج direct + تجهيز وجه سريع (fa مخزّن، بلا video_tracked، mp4 من الفيديو الأصلي).</p>
+<table>
+<tr><th>البند</th><th>النتيجة</th></tr>
+<tr><td>أمر التشغيل</td><td class="mono">.\run_focus.ps1 -Video clips\t05_720.mp4 -Out out_focus_5s -Speakers 2</td></tr>
+<tr><td>exit / wall (مقطع 4.04s، بارد)</td><td class="ok">0 / 108.96 s</td></tr>
+<tr><td>المخرجات</td><td class="mono">s1.mp4, s2.mp4, speaker1_est.wav, speaker2_est.wav (n=64640)</td></tr>
+<tr><td>NaN/Inf/طول</td><td class="ok">0 / 0 / 64640 (مطابق للمدخل)</td></tr>
+</table>
+<p class="small">الزمن 108.96s لمقطع 4.04s يشمل cold start (imports ~14.5s) + تجهيز وجه (~29s) + forward + mux. هذا <b>ليس</b> زمنًا لحظيًا ولا Replay سريعًا؛ الطلب المتكرر (نماذج محمّلة) أقل بكثير لكنه لم يُقس كخط إنتاج كامل هنا. لا أصف النظام بأنه live.</p>
+</div>
+
+<h2>4) جدول الحالة</h2>
+<div class="card">
+<table>
+<tr><th>التجربة</th><th>النتيجة</th><th>الدليل</th></tr>
+<tr><td>سبب أصفار الدمج (float32 Hann)</td><td class="pill p-ok">مُثبت</td><td>hann float32 = 3 أصفار</td></tr>
+<tr><td>إعادة بناء identity (direct)</td><td class="pill p-ok">خطأ 0.0</td><td>merge_recon.json</td></tr>
+<tr><td>إصلاح الدمج على مخرجات حقيقية</td><td class="pill p-ok">نجح</td><td>وصلات 0→إشارة، 27→20 (متناثرة)</td></tr>
+<tr><td>direct vs ola50</td><td class="pill p-ok">مُقاس</td><td>0.0094 vs 0.00033، ×1.67 تكلفة</td></tr>
+<tr><td>تسريع تجهيز الوجه</td><td class="pill p-ok">نجح ~2×</td><td>58.93→29.4s، crops مطابقة</td></tr>
+<tr><td>نسخة الإنتاج end-to-end</td><td class="pill p-ok">نجح</td><td>exit 0، s1/s2.mp4 + wav</td></tr>
+<tr><td>كشف على نسخة أصغر / شخص واحد</td><td class="pill p-nt">لم يُنفّذ</td><td>مُقاس كفرصة فقط</td></tr>
+<tr><td>SI-SDRi / WER</td><td class="pill p-nt">لم يُختبر</td><td>مفيش تسجيلات حقيقية بمراجع</td></tr>
+</table>
+</div>
+
+<h2>5) المطلوب منك: زوج واحد (للبدء)</h2>
+<div class="card">
+<p class="quote">
+شخص A: فيديو منفصل 10–15 ثانية بالمصري، الفم واضح، الصوت الأصلي متزامن، إضاءة جيدة، غرفة هادئة، بلا موسيقى/clipping.<br>
+شخص B: فيديو منفصل بجُمل مختلفة، نفس الشروط.<br>
+مش مطلوب يتكلموا مع بعض (التداخل نصنعه بالخلط)، ومش مطلوب نص مكتوب (نفرّغه ونراجعه بشريًا بعدين).
+</p>
+<p class="small">لما يوصلوا: نحتفظ بالأصل، نجهّز 16k mono مع تسجيل المكاسب/القص/التوقيت ومنع clipping، نعمل خلطة معروفة + مرجع لكل شخص بنفس المكاسب، نركّب نفس الخلطة في فيديو A وB مع الحفاظ على التزامن، نتحقق (باستخراج الصوت من الإدخال) إن الموديل بياخد الخلطة، نستخرج A/B، ونقيس SI-SDRi على نفس الجزء بمحاذاة موثّقة + WER بنفس ASR ونص مستقل لكل شخص. الزوج الأول تجربة أولية فقط.</p>
+</div>
+
+<div class="hr"></div>
+<p class="small">
+الملفات: <span class="mono">A:\focus\Dolphin\Inference_focus.py</span> (الإنتاج) · <span class="mono">Inference_w2s_fixed.py</span> (2s+دمج فقط) · <span class="mono">Inference_fast.py</span> (تسريع فقط) · الأصل <span class="mono">Inference.orig.py</span>.<br>
+الرَنر: <span class="mono">A:\focus\tools\run_focus.ps1</span> · السكريبتات: <span class="mono">{merge_recon_test,merge_compare_real,merge_compare_ola,faceprep_bench,faceprep_compare,verify_focus_out}.py</span>.<br>
+اللوجات: <span class="mono">A:\focus\logs\{merge_recon,merge_compare_real,merge_ola,faceprep_bench,faceprep_compare,verify_focus_out}.json</span> + <span class="mono">focus_5s.log</span>.<br>
+الصوت: <span class="mono">A:\focus\Dolphin\out_focus_5s\speaker{1,2}_est.wav</span> + <span class="mono">s{1,2}.mp4</span>.
+</p>
+
+</div>
+</body>
+</html>

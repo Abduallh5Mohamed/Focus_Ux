@@ -1,0 +1,87 @@
+/* FOCUS design tokens — single source of truth for colour, type, spacing. */
+
+:root {
+  color-scheme: dark;
+
+  /* Surfaces */
+  --bg: #0b1016;
+  --bg-elevated: #101821;
+  --surface: #121c26;
+  --surface-2: #17232f;
+  --surface-hover: #1b2937;
+  --line: #22303d;
+  --line-strong: #2d3f4f;
+
+  /* Text */
+  --text: #e8eef4;
+  --text-muted: #9db0c2;
+  --text-dim: #71889c;
+
+  /* Brand */
+  --accent: #22d3ee;
+  --accent-strong: #06b6d4;
+  --accent-ink: #04222a;
+  --accent-soft: rgba(34, 211, 238, 0.12);
+  --accent-line: rgba(34, 211, 238, 0.35);
+
+  /* Semantic */
+  --ok: #34d399;
+  --ok-soft: rgba(52, 211, 153, 0.12);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251, 191, 36, 0.12);
+  --danger: #f87171;
+  --danger-soft: rgba(248, 113, 113, 0.12);
+  --info: #93c5fd;
+  --info-soft: rgba(147, 197, 253, 0.12);
+
+  /* Typography */
+  --font-sans: "Segoe UI", "Noto Kufi Arabic", "Noto Sans Arabic", Tahoma, system-ui,
+    -apple-system, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Cascadia Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --fs-xs: 0.75rem;
+  --fs-sm: 0.8125rem;
+  --fs-base: 0.9375rem;
+  --fs-md: 1.0625rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.5rem;
+  --fs-2xl: clamp(1.6rem, 1.2rem + 2vw, 2.15rem);
+
+  --lh-tight: 1.25;
+  --lh-normal: 1.6;
+
+  /* Space scale */
+  --sp-1: 0.25rem;
+  --sp-2: 0.5rem;
+  --sp-3: 0.75rem;
+  --sp-4: 1rem;
+  --sp-5: 1.5rem;
+  --sp-6: 2rem;
+  --sp-7: 3rem;
+  --sp-8: 4rem;
+
+  /* Radii + elevation */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 26px;
+  --r-pill: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px -12px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 24px 60px -28px rgba(0, 0, 0, 0.85);
+  --ring: 0 0 0 3px rgba(34, 211, 238, 0.35);
+
+  --tap: 44px;
+  --header-h: 60px;
+  --content-max: 960px;
+
+  --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur: 160ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur: 0ms;
+  }
+}

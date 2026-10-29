@@ -1,0 +1,36 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/glm-5.3-flash-free",
+  "agent": {
+    "focus-ml": {
+      "description": "Implement FOCUS ML adapter and worker in assigned directories only.",
+      "mode": "subagent",
+      "model": "opencode/glm-5.3-flash-free",
+      "prompt": "Read AGENTS.md and BOARD.md Round2. Own product/packages/ml/**, product/tests/ml/** and product/tools/verify_gpu.py. Real local GPU validation is authorized using read-only A:/focus assets. New outputs only inside runtime/round2. Do not modify legacy venv/weights/references. No recursive agents or downloads of weights. Report actual per-target quality/timing and blockers."
+    },
+    "focus-review": {
+      "description": "Read-only review of FOCUS adapter, worker and API contract.",
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4.1-flash-free",
+      "tools": {
+        "edit": false,
+        "write": false,
+        "bash": false
+      },
+      "prompt": "Review only. Read local plans and assigned code. Return concrete findings with file:line and minimal acceptance checks. Do not change files, invoke shell or spawn agents."
+    },
+    "focus-api": {
+      "description": "Implement FOCUS FastAPI SQLite backend and backend tests within assigned ownership.",
+      "mode": "subagent",
+      "model": "opencode/deepseek-v4.1-flash-free",
+      "prompt": "Read AGENTS.md and BOARD.md, especially Round 2 updates. Own only product/services/api/** and product/tests/api/**. No frontend/ML/worker edits. Follow ROUND2_INTEGRATION_DECISIONS.md and return actual test evidence. No recursive agents, deployment or weight downloads."
+    }
+  },
+  "permission": {
+    "external_directory": {
+      "*": "ask",
+      "A:/focus/**": "allow",
+      "A:\\focus\\**": "allow"
+    }
+  }
+}

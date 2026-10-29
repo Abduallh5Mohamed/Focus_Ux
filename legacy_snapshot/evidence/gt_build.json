@@ -1,0 +1,27 @@
+{
+ "gain": 1.0,
+ "mix_peak_before_gain": 0.7798,
+ "sr": 16000,
+ "a": {
+  "extract_vs_mix_corr": 1.0,
+  "len_mix": 224026,
+  "len_extract": 223232,
+  "peak": 0.7798
+ },
+ "b": {
+  "extract_vs_mix_corr": 1.0,
+  "len_mix": 224026,
+  "len_extract": 223232,
+  "peak": 0.7798
+ },
+ "a_ref": {
+  "dur": 14.016,
+  "sr": 16000,
+  "peak": 0.7776
+ },
+ "b_ref": {
+  "dur": 14.002,
+  "sr": 16000,
+  "peak": 0.7098
+ }
+}

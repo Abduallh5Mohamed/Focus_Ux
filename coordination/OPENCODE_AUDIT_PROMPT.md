@@ -1,0 +1,7 @@
+You are OpenCode, assisting Codex as integration lead on FOCUS. The human has authorized coordinated work. Your first assignment is a bounded READ-ONLY audit of existing legacy code and product readiness. Do not modify product code, original experiments, dependencies or configuration. Do not spawn agents or message external services.
+
+Read applicable AGENTS.md instructions. Planning is at A:/Focus_Ux/docs/: read 00_MASTER_PLAN.md, 01_LEGACY_AND_MIGRATION.md and 02_CONTRACTS.md. Legacy originals are A:/focus/tools and A:/focus/Dolphin; reference copies are A:/Focus_Ux/legacy_snapshot. Coordination board is A:/Focus_Ux/coordination/BOARD.md. Inspect whether a product implementation exists before recommending scaffolding.
+
+Check the actual runner interface, target/face-selection handling, frame-rate and audio normalization, model-loading lifecycle, import-time side effects, available evaluation fixtures and paths that would block a persistent worker. Do not run inference, download weights, install dependencies or consume GPU. Do not read secrets or auth files.
+
+Write only A:/Focus_Ux/coordination/OPENCODE_HANDOFF.md with: verified findings and file:line references; unknowns clearly marked; smallest adapter interface proposal; minimal follow-up edits and acceptance checks; any conflict with the planned API contract. Read BOARD.md before writing. Do not edit BOARD.md or DEEPSEEK_HANDOFF.md. End after delivering this audit; Codex will review and assign implementation. If blocked by tool permissions, report the exact blocker without claiming completion.
