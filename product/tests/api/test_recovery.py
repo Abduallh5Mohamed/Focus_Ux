@@ -237,3 +237,101 @@ def test_competing_dispatcher_cannot_recover_or_execute_live_work(tmp_path):
             # Never let a failed assertion leave a worker running past repo.close().
             runner.resume.set()
             owner.dispatcher.stop()
+
+
+@pytest.mark.parametrize("timeout", [0, 0.01])
+def test_timed_out_stop_retains_ownership_until_worker_exits(tmp_path, timeout):
+    settings = make_settings(tmp_path)
+    runner = BlockingRunner()
+    with open_api(settings, runner=runner) as owner:
+        data = owner.setup_video()
+        job_id = enqueue_job(owner, data, "active")
+        queued_id = enqueue_job(owner, data, "waiting")
+        try:
+            assert owner.dispatcher.start()
+            assert runner.entered.wait(timeout=5)
+            thread = owner.dispatcher._thread
+            other_runner = FakeExtractionRunner()
+            with open_api(settings, runner=other_runner) as contender:
+                recover = Mock(wraps=contender.app.state.worker.recover_interrupted)
+                with pytest.MonkeyPatch.context() as patch:
+                    patch.setattr(contender.app.state.worker, "recover_interrupted", recover)
+                    # Repeated shutdown attempts must not lose the live thread
+                    # or unlock it, even when a previous attempt timed out.
+                    for _ in range(2):
+                        with pytest.raises(TimeoutError, match="ownership retained"):
+                            owner.dispatcher.stop(timeout=timeout)
+                        assert owner.dispatcher._thread is thread
+                        assert thread.is_alive()
+                        assert owner.dispatcher.lock_acquired
+                        assert owner.dispatcher.lock.held
+                        assert contender.dispatcher.start() is False
+                        recover.assert_not_called()
+                        assert contender.repo.get(job_id).status is JobStatus.PROCESSING
+                        assert other_runner.calls == []
+
+                    runner.resume.set()
+                    thread.join(timeout=5)
+                    assert not thread.is_alive()
+                    assert owner.repo.get(job_id).status is JobStatus.COMPLETED
+                    assert owner.repo.get(queued_id).status is JobStatus.QUEUED
+                    assert [call["job_id"] for call in runner.calls] == [job_id]
+                    # Ownership is retained until a successful stop retry,
+                    # not merely until the extraction callback returns.
+                    assert contender.dispatcher.start() is False
+                    recover.assert_not_called()
+                    owner.dispatcher.stop()
+                    owner.dispatcher.stop()  # Successful shutdown is idempotent.
+                    assert owner.dispatcher._thread is None
+                    assert not owner.dispatcher.lock_acquired
+                    assert not owner.dispatcher.lock.held
+                    assert contender.dispatcher.start()
+                    assert contender.dispatcher.wait_idle()
+                    recover.assert_called_once()
+                    assert contender.dispatcher.recovered == []
+                    assert [call["job_id"] for call in other_runner.calls] == [queued_id]
+        finally:
+            runner.resume.set()
+            owner.dispatcher.stop()
+
+
+def test_lifespan_timeout_keeps_live_worker_repository_open(tmp_path, monkeypatch):
+    settings = make_settings(tmp_path)
+    runner = BlockingRunner()
+    app = create_app(
+        settings=settings,
+        start_dispatcher=False,
+        candidate_provider=FakeCandidateProvider(),
+        extraction_runner=runner,
+    )
+    stop = app.state.dispatcher.stop
+    close = Mock(wraps=app.state.repo.close)
+    monkeypatch.setattr(app.state.repo, "close", close)
+    # Exercise the real lifespan shutdown without waiting its default 5 seconds.
+    monkeypatch.setattr(app.state.dispatcher, "stop", lambda: stop(timeout=0))
+    try:
+        with open_api(settings) as contender:
+            with pytest.raises(TimeoutError, match="ownership retained"):
+                with TestClient(app) as client:
+                    owner = Harness(client=client, app=app, settings=settings)
+                    data = owner.setup_video()
+                    job_id = enqueue_job(owner, data)
+                    assert owner.dispatcher.start()
+                    assert runner.entered.wait(timeout=5)
+            close.assert_not_called()
+            assert app.state.dispatcher.lock.held
+            assert contender.dispatcher.start() is False
+            assert contender.repo.get(job_id).status is JobStatus.PROCESSING
+            runner.resume.set()
+            stop()
+            # The worker must still be able to persist its result after the
+            # failed app shutdown; closing the repo earlier would lose it.
+            assert app.state.repo.get(job_id).status is JobStatus.COMPLETED
+            assert [call["job_id"] for call in runner.calls] == [job_id]
+            assert contender.dispatcher.start()
+            assert contender.dispatcher.wait_idle()
+            assert contender.dispatcher.recovered == []
+    finally:
+        runner.resume.set()
+        stop()
+        app.state.repo.close()

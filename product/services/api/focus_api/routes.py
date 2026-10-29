@@ -154,6 +154,7 @@ def create_app(
         try:
             yield
         finally:
+            # A timed-out stop raises: do not close a live worker's repository.
             dispatcher.stop()
             repo.close()
 

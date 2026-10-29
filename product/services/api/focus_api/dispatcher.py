@@ -102,10 +102,20 @@ class Dispatcher:
             raise
 
     def stop(self, timeout: float = 5.0) -> None:
+        """Stop before releasing ownership, or raise while retaining it.
+
+        A timeout does not cancel in-flight work. Callers must keep the
+        repository open and retry stop() after the worker finishes.
+        """
         self._stop.set()
         thread = self._thread
         if thread is not None and thread.is_alive():
             thread.join(timeout)
+            if thread.is_alive():
+                raise TimeoutError(
+                    "dispatcher shutdown timed out; worker is still running, "
+                    "ownership retained"
+                )
         self._thread = None
         if self.lock_acquired:
             self.lock.release()
