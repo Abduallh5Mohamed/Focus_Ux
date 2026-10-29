@@ -58,8 +58,22 @@ class ProcessingError(WorkerError):
     retryable = True
 
 
-class TranscriptUnavailableError(ProcessingError):
-    code = "PROCESSING_FAILED"
+class TranscriptError(ProcessingError):
+    """Transcript-only failure. ``reason`` is a short stable label (not_configured,
+    model_unavailable, out_of_memory, timeout, worker_offline, failed) that the API
+    surfaces so the UI can tell the user what happened; audio is unaffected."""
+
+    reason = "failed"
+
+    def __init__(self, message: str | None = None, *, reason: str | None = None,
+                 retryable: bool | None = None):
+        super().__init__(message, retryable=retryable)
+        if reason is not None:
+            self.reason = reason
+
+
+class TranscriptUnavailableError(TranscriptError):
+    reason = "not_configured"
 
     def __init__(self):
         super().__init__("transcript provider not configured", retryable=True)

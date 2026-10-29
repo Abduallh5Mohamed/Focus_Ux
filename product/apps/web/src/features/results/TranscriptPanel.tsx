@@ -22,6 +22,14 @@ interface TranscriptPanelProps {
   onDownload: () => void;
 }
 
+const FAILURE_TEXT: Record<string, { title: string; body: string; retry: boolean }> = {
+  not_configured: { title: 'التفريغ النصي مش متاح', body: 'السيرفر مش مربوط بخدمة تفريغ.', retry: false },
+  model_unavailable: { title: 'نموذج التفريغ مش متاح', body: 'النموذج مش متسطّب على جهاز المعالجة.', retry: false },
+  out_of_memory: { title: 'ذاكرة كارت الشاشة خلصت', body: 'التفريغ وقف لأن الذاكرة مش كفاية.', retry: true },
+  timeout: { title: 'التفريغ أخد وقت أطول من المسموح', body: 'التفريغ اتوقف بعد المهلة.', retry: true },
+  worker_offline: { title: 'جهاز المعالجة كان مقفول', body: 'شغّل الـ worker وجرّب تاني.', retry: true },
+};
+
 export function TranscriptPanel({
   status,
   transcript,
@@ -40,6 +48,8 @@ export function TranscriptPanel({
   }, [segments, currentTime]);
 
   const failure = error ?? transcript?.error ?? null;
+  const reason = (transcript?.error as { reason?: string } | null | undefined)?.reason;
+  const known = reason ? FAILURE_TEXT[reason] : undefined;
 
   return (
     <Card>
@@ -77,15 +87,15 @@ export function TranscriptPanel({
         <div className="stack stack--tight">
           <Notice
             tone="warn"
-            title="التفريغ النصي فشل"
+            title={known?.title ?? 'التفريغ النصي فشل'}
             code={failure ? describeError(failure).code : undefined}
             action={
               <Button size="sm" variant="secondary" icon="restart" onClick={onRetry}>
-                جرّب تاني
+                حدّث الحالة
               </Button>
             }
           >
-            الصوت المعزول شغال عادي. المشكلة في النص بس.
+            {known ? known.body + ' ' : ''}الصوت المعزول شغال عادي. المشكلة في النص بس. الزر بيحدّث الحالة بس؛ لإعادة التفريغ لازم تعمل مهمة جديدة.
           </Notice>
         </div>
       ) : null}

@@ -96,9 +96,21 @@ def test_upload_normalize_second_face_and_protected_playable_audio(tmp_path):
                 content=data.getvalue(), headers=auth,
             )
             assert result.status_code == 200, result.text
+            asr = wait_task(client, auth)
+            assert asr["kind"] == "transcribe"
+            audio_dl = client.get("/worker/tasks/" + asr["task_id"] + "/media", headers=auth)
+            assert audio_dl.content == data.getvalue()
+            assert audio_dl.headers["content-type"].startswith("audio/wav")
+            assert client.post(
+                "/worker/tasks/" + asr["task_id"] + "/error",
+                json={"code": "MODEL_UNAVAILABLE"}, headers=auth,
+            ).status_code == 200
             future.result(timeout=3)
             state = client.get(f"/jobs/{job_id}", headers=session).json()
             assert state["status"] == "completed", state
+            tr = client.get(f"/jobs/{job_id}/transcript", headers=session).json()
+            assert tr["status"] == "failed" and tr["segments"] == []
+            assert tr["error"]["reason"] == "model_unavailable"
             assert state["audio_status"] == "ready"
             assert state["transcript_status"] == "failed"  # no invented transcript
             assert state["result"]["source_offset_ms"] == 0
@@ -113,3 +125,55 @@ def test_upload_normalize_second_face_and_protected_playable_audio(tmp_path):
             assert client.get(f"/jobs/{job_id}/audio", headers=auth).status_code == 401
         finally:
             app.state.inference_bridge.close()
+
+
+def test_transcript_validation_rejects_invented_or_off_timeline_segments():
+    from services.api.focus_api.remote_inference import validate_transcript
+
+    ok = validate_transcript({"segments": [{"start_ms": 0, "end_ms": 900, "text": " اهلا "}]}, 1000)
+    assert ok == [{"id": 0, "start_ms": 0, "end_ms": 900, "text": "اهلا"}]
+    assert validate_transcript({"segments": []}, 1000) == []
+    for bad in (
+        {"segments": [{"start_ms": 0, "end_ms": 5000, "text": "x"}]},
+        {"segments": [{"start_ms": 500, "end_ms": 100, "text": "x"}]},
+        {"segments": [{"start_ms": 0, "end_ms": 100, "text": "  "}]},
+        {"segments": [{"start_ms": 0.5, "end_ms": 100, "text": "x"}]},
+        {"nope": 1},
+    ):
+        with pytest.raises(ValueError):
+            validate_transcript(bad, 1000)
+
+
+def test_remote_transcriber_maps_failures_to_reasons():
+    from types import SimpleNamespace
+
+    from services.api.focus_api.interfaces import ProviderError
+    from services.api.focus_api.transcription import RemoteTranscriber
+    from services.worker.errors import TranscriptError
+
+    repo = SimpleNamespace(find_job=lambda job_id: SimpleNamespace(video_id="v1"))
+
+    class Bridge:
+        def __init__(self, result):
+            self.result = result
+
+        def call(self, **kwargs):
+            assert kwargs["kind"] == "transcribe" and kwargs["video_id"] == "v1"
+            if isinstance(self.result, Exception):
+                raise self.result
+            return self.result
+
+    path = "/jobs/abc123/isolated.wav"
+    seg = [{"id": 0, "start_ms": 0, "end_ms": 10, "text": "x"}]
+    assert RemoteTranscriber(Bridge(seg), repo).transcribe(path) == seg
+    cases = {
+        ProviderError("m", code="MODEL_UNAVAILABLE", retryable=False): "model_unavailable",
+        ProviderError("m", code="OUT_OF_MEMORY"): "out_of_memory",
+        ProviderError("m", code="TIMEOUT"): "timeout",
+        ProviderError("the inference computer is offline; start"): "worker_offline",
+        ProviderError("boom"): "failed",
+    }
+    for exc, reason in cases.items():
+        with pytest.raises(TranscriptError) as caught:
+            RemoteTranscriber(Bridge(exc), repo).transcribe(path)
+        assert caught.value.reason == reason

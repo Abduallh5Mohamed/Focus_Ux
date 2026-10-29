@@ -20,6 +20,8 @@ def worker_kit() -> Response:
         ):
             archive.write(tools / name, name)
         archive.write(tools / "windows_worker.py", "product/tools/windows_worker.py")
+        archive.write(tools / "asr_engine.py", "product/tools/asr_engine.py")
+        archive.writestr("product/tools/__init__.py", "")
         for path in sorted((PRODUCT_ROOT / "packages/ml/focus_ml").glob("*.py")):
             archive.write(path, str(path.relative_to(PRODUCT_ROOT.parent)))
         archive.writestr(
@@ -52,7 +54,7 @@ def worker_kit() -> Response:
             "remove abandoned focus-inference-* folders from Windows TEMP.\n"
             "Timeout/restart fails the current task; it is not silently replayed.\n"
             "The worker cannot access browser sessions or enumerate stored uploads.\n"
-            "First-frame faces only. No voice-only tracking or transcription is added.\n"
+            "First-frame faces only. No voice-only tracking. Transcription uses faster-whisper from FOCUS_ASR_MODEL\n(local/cached model only; nothing is downloaded). Without it, text is reported unavailable.\n"
             "A successful connection is NOT proof of isolation quality; verify on real clips.\n"
             "Do not send private worker keys or original personal videos in chat.\n",
         )

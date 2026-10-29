@@ -31,7 +31,13 @@ ERROR_MESSAGES = {
     "FACE_NOT_FOUND": "the selected face could not be found",
     "TARGET_LOST": "the selected face could not be tracked reliably",
     "GPU_BUSY": "the connected computer's GPU is unavailable",
+    "MODEL_UNAVAILABLE": "the transcription model is not installed on the connected computer",
+    "OUT_OF_MEMORY": "the connected computer ran out of GPU memory",
+    "TIMEOUT": "the connected computer timed out",
 }
+NON_RETRYABLE = ("INVALID_MEDIA", "NO_AUDIO", "LIMIT_EXCEEDED", "MODEL_UNAVAILABLE")
+MAX_TRANSCRIPT_SEGMENTS = 500
+MAX_SEGMENT_CHARS = 2000
 MAX_AUDIO_BYTES = 2 * 1024 * 1024  # 15 s, mono PCM16 @ 16k is < 0.5 MB
 
 
@@ -88,13 +94,13 @@ class RemoteBridge:
                 retryable=True,
             )
 
-    def call(self, *, kind, video_id, video_path, face_id=None):
+    def call(self, *, kind, video_id, video_path, face_id=None, timeout_s=None):
         self.ensure_ready()
         video = self.repo.get_video(video_id)
         if video is None or video.deleted:
             raise ProviderError("media was deleted", retryable=False)
         task = RemoteTask(video_id, video_path, kind, video.duration_ms, face_id)
-        deadline = time.monotonic() + self.timeout_s
+        deadline = time.monotonic() + (timeout_s or self.timeout_s)
         with self._condition:
             if self._closed or self._task is not None:
                 raise ProviderError("inference worker is busy or stopping", code="GPU_BUSY")
@@ -107,7 +113,8 @@ class RemoteBridge:
                     remaining = deadline - time.monotonic()
                     if self._closed or remaining <= 0:
                         raise ProviderError(
-                            "the inference computer disconnected or timed out; no result was accepted"
+                            "the inference computer disconnected or timed out; no result was accepted",
+                            code="TIMEOUT" if kind == "transcribe" else "PROCESSING_FAILED",
                         )
                     self._condition.wait(min(remaining, 0.5))
                 if task.error:
@@ -148,7 +155,8 @@ class RemoteBridge:
 
     def media(self, task_id):
         with self._condition:
-            return self._current(task_id).path
+            task = self._current(task_id)
+            return task.path, ("audio/wav" if task.kind == "transcribe" else "video/mp4")
 
     def complete(self, task_id, result, *, kind):
         with self._condition:
@@ -163,7 +171,7 @@ class RemoteBridge:
             code = code if code in ERROR_MESSAGES else "PROCESSING_FAILED"
             task.error = ProviderError(
                 ERROR_MESSAGES[code], code=code,
-                retryable=code not in ("INVALID_MEDIA", "NO_AUDIO", "LIMIT_EXCEEDED"),
+                retryable=code not in NON_RETRYABLE,
             )
             task.finished = True
             self._last_poll = time.monotonic()
@@ -205,6 +213,28 @@ def validate_wav(data: bytes, expected_ms: int) -> int:
         ) from None
 
 
+def validate_transcript(body, expected_ms: int) -> list[dict]:
+    """Segments must be real text on the clip timeline; nothing is invented or repaired."""
+    if not isinstance(body, dict) or not isinstance(body.get("segments"), list):
+        raise ValueError("segments missing")
+    items = body["segments"]
+    if len(items) > MAX_TRANSCRIPT_SEGMENTS:
+        raise ValueError("too many segments")
+    out, last_end = [], 0
+    for index, item in enumerate(items):
+        start, end, text = item["start_ms"], item["end_ms"], item["text"]
+        if type(start) is not int or type(end) is not int or not isinstance(text, str):
+            raise ValueError("bad segment types")
+        text = text.strip()
+        if not text or len(text) > MAX_SEGMENT_CHARS:
+            raise ValueError("bad segment text")
+        if start < last_end - 80 or end < start or end > expected_ms + 200:
+            raise ValueError("segment is off the clip timeline")
+        last_end = max(last_end, end)
+        out.append({"id": index, "start_ms": start, "end_ms": end, "text": text})
+    return out
+
+
 def add_remote_routes(app, bridge: RemoteBridge):
     """No CORS additions; token is only for the operator's native worker."""
     @app.get("/worker/check")
@@ -221,8 +251,9 @@ def add_remote_routes(app, bridge: RemoteBridge):
     @app.get("/worker/tasks/{task_id}/media")
     def media(task_id: str, request: Request):
         bridge.authorize(request)
+        path, media_type = bridge.media(task_id)
         return FileResponse(
-            bridge.media(task_id), media_type="video/mp4",
+            path, media_type=media_type,
             headers={"Cache-Control": "private, no-store"},
         )
 
@@ -251,6 +282,22 @@ def add_remote_routes(app, bridge: RemoteBridge):
         data = await bounded_body(request, MAX_AUDIO_BYTES)
         duration = validate_wav(data, expected)
         bridge.complete(task_id, (data, duration), kind="extract")
+        return {"accepted": True}
+
+    @app.post("/worker/tasks/{task_id}/transcript")
+    async def transcript(task_id: str, request: Request):
+        bridge.authorize(request)
+        with bridge._condition:
+            expected = bridge._current(task_id, kind="transcribe").duration_ms
+        import json
+        try:
+            body = json.loads(await bounded_body(request, 1024 * 1024))
+            segments = validate_transcript(body, expected)
+        except (ValueError, TypeError, KeyError):
+            raise ApiError(
+                "INVALID_REQUEST", "invalid worker transcript", status_code=400
+            ) from None
+        bridge.complete(task_id, segments, kind="transcribe")
         return {"accepted": True}
 
     @app.post("/worker/tasks/{task_id}/error")

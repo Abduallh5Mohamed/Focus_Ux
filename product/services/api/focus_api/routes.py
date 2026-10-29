@@ -130,6 +130,9 @@ def create_app(
     )
     provider = candidate_provider or real_provider or UnavailableCandidateProvider()
     runner = extraction_runner or real_provider or UnavailableExtractionRunner()
+    if transcriber is None and bridge:
+        from .transcription import RemoteTranscriber
+        transcriber = RemoteTranscriber(bridge, repo)
     worker = SingleWorker(
         repo=repo,
         targeting=runner,

@@ -19,7 +19,7 @@ No torch objects are ever stored on Job.
 from __future__ import annotations
 
 import os
-from typing import Optional
+from typing import Callable, Optional
 
 from .errors import (
     FaceNotFoundError,
@@ -97,7 +97,7 @@ class SingleWorker:
             except _Cancelled:
                 raise
             except WorkerError as werr:
-                self._fail_transcript(job, werr.payload())
+                self._fail_transcript(job, werr.payload(), getattr(werr, "reason", None))
             except Exception:
                 self._fail_transcript(
                     job, ProcessingError("transcription failed", retryable=False).payload()
@@ -260,10 +260,13 @@ class SingleWorker:
             self._persist(job)
         self._emit(job)
 
-    def _fail_transcript(self, job: Job, payload: tuple[str, str, bool]) -> None:
+    def _fail_transcript(
+        self, job: Job, payload: tuple[str, str, bool], reason: Optional[str] = None
+    ) -> None:
         code, _message, _retryable = payload
         job.transcript_status = TranscriptStatus.FAILED
-        job.audio_warnings.append(f"transcript failed: {code}")
+        job.transcript_segments = []
+        job.audio_warnings.append(f"transcript failed: {reason or code}")
         self._persist(job)
         self._emit(job)
 

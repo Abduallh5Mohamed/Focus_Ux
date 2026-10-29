@@ -23,6 +23,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "product" / "packages" / "ml"))
+sys.path.insert(0, str(ROOT / "product"))
 TOKEN_FILE = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "FocusWorker" / "worker-token"
 PREVIEW_TOKEN_FILE = TOKEN_FILE.parent / "preview-access-token"
 
@@ -126,7 +127,9 @@ class WorkerClient:
         prefix = "/worker/tasks/" + task_id
         try:
             with tempfile.TemporaryDirectory(prefix="focus-inference-") as directory:
-                video = Path(directory) / "canonical.mp4"
+                video = Path(directory) / (
+                    "isolated.wav" if task["kind"] == "transcribe" else "canonical.mp4"
+                )
                 digest, total = hashlib.sha256(), 0
                 with self.request(prefix + "/media") as response, video.open("wb") as output:
                     while chunk := response.read(64 * 1024):
@@ -153,6 +156,9 @@ class WorkerClient:
                         prefix + "/audio", wav.read_bytes(), "audio/wav"
                     ) as response:
                         response.read(1024)
+                elif task["kind"] == "transcribe":
+                    segments = engine.transcribe_audio(str(video))
+                    self.json(prefix + "/transcript", {"segments": segments})
                 else:
                     raise ValueError("unsupported task")
                 print("Task complete. Temporary media removed.", flush=True)
@@ -252,6 +258,10 @@ def run(url, focus):
     engine = LocalEngine(AdapterConfig.from_env())
     print("Loading original local models (downloads disabled)...", flush=True)
     engine.initialize()
+    from tools.asr_engine import AsrEngine
+
+    asr = AsrEngine()
+    engine.transcribe_audio = asr.transcribe  # model loads once, on first use
     print("Models loaded. Connecting to the website...", flush=True)
     while True:
         try:

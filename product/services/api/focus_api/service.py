@@ -37,6 +37,15 @@ from .storage import VIDEO_EXTENSIONS, Storage
 logger = logging.getLogger("focus_api.service")
 
 _CHUNK = 1024 * 1024
+_TRANSCRIPT_WARNING = "transcript failed:"
+_TRANSCRIPT_REASONS = {
+    "not_configured": "transcription is not configured on this server",
+    "model_unavailable": "the transcription model is not available",
+    "out_of_memory": "transcription ran out of GPU memory",
+    "timeout": "transcription timed out",
+    "worker_offline": "the inference computer was offline during transcription",
+    "failed": "transcript is unavailable for this job",
+}
 
 
 def _hash_token(token: str) -> str:
@@ -316,10 +325,17 @@ class ApiService:
         elif job.transcript_status is TranscriptStatus.FAILED:
             # Missing ASR is an honest failure; audio stays usable and no text
             # is fabricated (decision #7).
+            reason = "failed"
+            for warning in reversed(job.audio_warnings):
+                if warning.startswith(_TRANSCRIPT_WARNING):
+                    found = warning[len(_TRANSCRIPT_WARNING):].strip()
+                    reason = found if found in _TRANSCRIPT_REASONS else "failed"
+                    break
             error = {
                 "code": "PROCESSING_FAILED",
-                "message": "transcript is unavailable for this job",
-                "retryable": True,
+                "message": _TRANSCRIPT_REASONS[reason],
+                "retryable": reason != "model_unavailable",
+                "reason": reason,
             }
         return {"status": status, "segments": segments, "error": error}
 
