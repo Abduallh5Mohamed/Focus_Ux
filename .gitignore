@@ -30,3 +30,7 @@ product/datasets/*/clips/**/*.wav
 product/datasets/*/clips/**/*.mp4
 product/datasets/*/clips/**/*.mov
 product/datasets/*/clips/**/*.m4a
+
+product/datasets/egyptian_voice/audio/
+product/datasets/egyptian_voice/annotations/
+product/datasets/egyptian_voice/manifest.json
