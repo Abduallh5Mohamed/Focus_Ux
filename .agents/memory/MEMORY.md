@@ -8,3 +8,4 @@
 - [Isolation engines](isolation-engines.md) — extra engines need separate site dir appended last on sys.path; gate needs user's listening pass; ExtractionResult contract is pinned.
 - [Evaluation policy changes](evaluation-policy.md) — stricter acceptance rules require fresh reports, not reuse of previously green evaluation artifacts.
 - [Continuous live stream](live-stream-continuous.md) — HTTP batches not WebSocket; single worker; gate needs browser latency + SI-SDRi.
+- [Voice pipeline POC](voice-pipeline.md) — audio-only pipeline quirks: SpeechBrain needs pretrained_path override, HF secret not in forked shell, numbers are non-Egyptian only.

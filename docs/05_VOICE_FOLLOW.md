@@ -19,3 +19,6 @@
 | عزل بالبصمة | SpeakerBeam / VoiceFilter-style | تراخيص الأوزان المتاحة محتاجة مراجعة؛ ممكن تدريب داخلي (خارج النطاق) |
 | بديل بدون عزل جديد | إعادة ترتيب مخرجات Dolphin بأقرب بصمة | لا يغطي غياب الشفايف كليًا |
 راجع الترخيص والحجم والسرعة قبل اختيار أي منها.
+
+## Audio-only voice pipeline (proof of concept)
+See `docs/VOICE_PIPELINE.md` and `docs/VOICE_PIPELINE_LOG.md`. Windows: `product\tools\Setup-Voice.cmd` (approval first, own environment `%LOCALAPPDATA%\FocusVoice`), then `product\tools\Voice-Readiness.cmd`. The original Dolphin environment is not changed.

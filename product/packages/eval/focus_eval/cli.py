@@ -130,6 +130,19 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--rtf-target", type=float, default=DEFAULT_RTF_TARGET)
     p.add_argument("--out")
 
+    p = sub.add_parser("voice-eval", help="score a voice-pipeline run on ground-truth audio mixes")
+    p.add_argument("--mixes", required=True)
+    p.add_argument("--run", required=True)
+    p.add_argument("--out")
+
+    p = sub.add_parser("voice-calibrate", help="EER and two thresholds from verification scores JSON")
+    p.add_argument("--scores", help='JSON {"target": [...], "other": [...]}')
+    p.add_argument("--mixes", help="alternatively: score regions of --run on these ground-truth mixes")
+    p.add_argument("--run")
+    p.add_argument("--only", help="comma-separated mix ids to calibrate on")
+    p.add_argument("--max-far", type=float, default=0.01)
+    p.add_argument("--out")
+
     p = sub.add_parser("init-template", help="write a 10-clip template manifest")
     p.add_argument("--out", required=True, help="dataset directory to create")
 
@@ -144,6 +157,26 @@ def main(argv: list[str] | None = None) -> int:
             (out / "manifest.json").write_text(
                 json.dumps(make_template(), ensure_ascii=False, indent=1), encoding="utf-8")
             print(f"wrote {out / 'manifest.json'}")
+            return 0
+        if a.cmd == "voice-eval":
+            from .voice_eval import evaluate_voice_run
+            rep = evaluate_voice_run(a.mixes, a.run)
+            _write_json(a.out, rep)
+            print(json.dumps(rep["summary"], indent=1))
+            return 0
+        if a.cmd == "voice-calibrate":
+            from .voice_metrics import calibrate_thresholds, eer
+            if a.mixes and a.run:
+                from .voice_eval import region_scores
+                s = region_scores(a.mixes, a.run, a.only.split(",") if a.only else None)
+            elif a.scores:
+                s = json.loads(Path(a.scores).read_text(encoding="utf-8"))
+            else:
+                raise FileNotFoundError("give --scores or --mixes with --run")
+            e = eer(s["target"], s["other"])
+            rep = {"eer": e, "thresholds": calibrate_thresholds(s["target"], s["other"], a.max_far)}
+            _write_json(a.out, rep)
+            print(json.dumps(rep, indent=1))
             return 0
         if a.cmd == "validate":
             problems = validate_dataset(load_dataset(a.dataset))

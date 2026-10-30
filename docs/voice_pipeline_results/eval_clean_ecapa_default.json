@@ -1,0 +1,915 @@
+{
+ "n_targets": 30,
+ "summary": {
+  "diarization_error_rate": 0.575,
+  "wrong_person_rate": 0.0076,
+  "target_retention": 0.5242,
+  "wrong_share_of_output": 0.0164,
+  "si_sdri_db_gated_baseline": 3.2444,
+  "real_time_factor": 0.3934,
+  "peak_vram_mib": null,
+  "oracle_diarization": false
+ },
+ "rows": [
+  {
+   "target": "S1993",
+   "diarization": {
+    "der": 0.6034934497816594,
+    "miss": 0.18384279475982532,
+    "false_alarm": 0.05152838427947598,
+    "confusion": 0.3681222707423581,
+    "ref_speech_s": 22.900000000000002
+   },
+   "gate": {
+    "target_solo_s": 3.5,
+    "other_solo_s": 8.44,
+    "overlap_s": 4.5,
+    "target_retention": 0.2857142857142857,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.0
+   },
+   "labels_s": {
+    "target": 1.0,
+    "other": 10.33,
+    "uncertain": 4.89
+   },
+   "rtf": 1.169,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 12.596,
+   "length_ok": true,
+   "mix": "mix01"
+  },
+  {
+   "target": "S2035",
+   "diarization": {
+    "der": 0.6034934497816594,
+    "miss": 0.18384279475982532,
+    "false_alarm": 0.05152838427947598,
+    "confusion": 0.3681222707423581,
+    "ref_speech_s": 22.900000000000002
+   },
+   "gate": {
+    "target_solo_s": 4.54,
+    "other_solo_s": 8.44,
+    "overlap_s": 3.46,
+    "target_retention": 0.7334801762114538,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.21965317919075145
+   },
+   "labels_s": {
+    "target": 4.56,
+    "other": 4.86,
+    "uncertain": 6.79
+   },
+   "rtf": 0.351,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 5.61,
+   "length_ok": true,
+   "mix": "mix01"
+  },
+  {
+   "target": "S2086",
+   "diarization": {
+    "der": 0.6034934497816594,
+    "miss": 0.18384279475982532,
+    "false_alarm": 0.05152838427947598,
+    "confusion": 0.3681222707423581,
+    "ref_speech_s": 22.900000000000002
+   },
+   "gate": {
+    "target_solo_s": 1.94,
+    "other_solo_s": 9.540000000000001,
+    "overlap_s": 4.96,
+    "target_retention": 0.5154639175257731,
+    "wrong_person_rate": 0.04821802935010482,
+    "wrong_share_of_output": 0.13569321533923304,
+    "target_speech_kept_in_overlap": 0.38911290322580644
+   },
+   "labels_s": {
+    "target": 3.39,
+    "other": 8.02,
+    "uncertain": 4.81
+   },
+   "rtf": 0.145,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": -5.217,
+   "length_ok": true,
+   "mix": "mix01"
+  },
+  {
+   "target": "S2035",
+   "diarization": {
+    "der": 0.6148837209302326,
+    "miss": 0.08976744186046512,
+    "false_alarm": 0.14465116279069767,
+    "confusion": 0.38046511627906976,
+    "ref_speech_s": 21.5
+   },
+   "gate": {
+    "target_solo_s": 3.92,
+    "other_solo_s": 8.02,
+    "overlap_s": 3.64,
+    "target_retention": 0.5178571428571429,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.054945054945054944
+   },
+   "labels_s": {
+    "target": 2.67,
+    "other": 4.24,
+    "uncertain": 8.52
+   },
+   "rtf": 0.665,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": -2.813,
+   "length_ok": true,
+   "mix": "mix02"
+  },
+  {
+   "target": "S2078",
+   "diarization": {
+    "der": 0.6148837209302326,
+    "miss": 0.08976744186046512,
+    "false_alarm": 0.14465116279069767,
+    "confusion": 0.38046511627906976,
+    "ref_speech_s": 21.5
+   },
+   "gate": {
+    "target_solo_s": 4.22,
+    "other_solo_s": 7.58,
+    "overlap_s": 3.7800000000000002,
+    "target_retention": 0.36729857819905215,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.0
+   },
+   "labels_s": {
+    "target": 1.67,
+    "other": 4.52,
+    "uncertain": 9.23
+   },
+   "rtf": 0.284,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 2.079,
+   "length_ok": true,
+   "mix": "mix02"
+  },
+  {
+   "target": "S2086",
+   "diarization": {
+    "der": 0.6148837209302326,
+    "miss": 0.08976744186046512,
+    "false_alarm": 0.14465116279069767,
+    "confusion": 0.38046511627906976,
+    "ref_speech_s": 21.5
+   },
+   "gate": {
+    "target_solo_s": 1.52,
+    "other_solo_s": 9.64,
+    "overlap_s": 4.42,
+    "target_retention": 0.0,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": null,
+    "target_speech_kept_in_overlap": 0.0
+   },
+   "labels_s": {
+    "target": 0,
+    "other": 5.05,
+    "uncertain": 10.38
+   },
+   "rtf": 0.23,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": -3.234,
+   "length_ok": true,
+   "mix": "mix02"
+  },
+  {
+   "target": "S1993",
+   "diarization": {
+    "der": 0.5643100511073254,
+    "miss": 0.23594548551959113,
+    "false_alarm": 0.009369676320272573,
+    "confusion": 0.31899488926746167,
+    "ref_speech_s": 23.48
+   },
+   "gate": {
+    "target_solo_s": 4.0200000000000005,
+    "other_solo_s": 8.5,
+    "overlap_s": 3.98,
+    "target_retention": 0.5970149253731343,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.0
+   },
+   "labels_s": {
+    "target": 2.53,
+    "other": 7.68,
+    "uncertain": 4.98
+   },
+   "rtf": 0.903,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 24.83,
+   "length_ok": true,
+   "mix": "mix03"
+  },
+  {
+   "target": "S2035",
+   "diarization": {
+    "der": 0.5643100511073254,
+    "miss": 0.23594548551959113,
+    "false_alarm": 0.009369676320272573,
+    "confusion": 0.31899488926746167,
+    "ref_speech_s": 23.48
+   },
+   "gate": {
+    "target_solo_s": 3.5,
+    "other_solo_s": 9.02,
+    "overlap_s": 3.98,
+    "target_retention": 0.6942857142857143,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.0
+   },
+   "labels_s": {
+    "target": 2.43,
+    "other": 6.97,
+    "uncertain": 5.79
+   },
+   "rtf": 0.208,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 2.818,
+   "length_ok": true,
+   "mix": "mix03"
+  },
+  {
+   "target": "S2078",
+   "diarization": {
+    "der": 0.5643100511073254,
+    "miss": 0.23594548551959113,
+    "false_alarm": 0.009369676320272573,
+    "confusion": 0.31899488926746167,
+    "ref_speech_s": 23.48
+   },
+   "gate": {
+    "target_solo_s": 2.0,
+    "other_solo_s": 8.5,
+    "overlap_s": 6.0,
+    "target_retention": 0.625,
+    "wrong_person_rate": 0.021176470588235293,
+    "wrong_share_of_output": 0.040632054176072234,
+    "target_speech_kept_in_overlap": 0.5
+   },
+   "labels_s": {
+    "target": 4.44,
+    "other": 7.41,
+    "uncertain": 3.34
+   },
+   "rtf": 0.127,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 0.469,
+   "length_ok": true,
+   "mix": "mix03"
+  },
+  {
+   "target": "S1272",
+   "diarization": {
+    "der": 0.5542778288868445,
+    "miss": 0.08325666973321068,
+    "false_alarm": 0.04461821527138914,
+    "confusion": 0.4264029438822447,
+    "ref_speech_s": 21.740000000000002
+   },
+   "gate": {
+    "target_solo_s": 3.68,
+    "other_solo_s": 8.88,
+    "overlap_s": 3.46,
+    "target_retention": 0.0,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": null,
+    "target_speech_kept_in_overlap": 0.0
+   },
+   "labels_s": {
+    "target": 0,
+    "other": 9.3,
+    "uncertain": 7.04
+   },
+   "rtf": 0.724,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 8.054,
+   "length_ok": true,
+   "mix": "mix04"
+  },
+  {
+   "target": "S2078",
+   "diarization": {
+    "der": 0.5542778288868445,
+    "miss": 0.08325666973321068,
+    "false_alarm": 0.04461821527138914,
+    "confusion": 0.4264029438822447,
+    "ref_speech_s": 21.740000000000002
+   },
+   "gate": {
+    "target_solo_s": 3.34,
+    "other_solo_s": 8.02,
+    "overlap_s": 4.66,
+    "target_retention": 0.2904191616766467,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.0
+   },
+   "labels_s": {
+    "target": 0.96,
+    "other": 6.65,
+    "uncertain": 8.72
+   },
+   "rtf": 0.546,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": -1.489,
+   "length_ok": true,
+   "mix": "mix04"
+  },
+  {
+   "target": "S2086",
+   "diarization": {
+    "der": 0.5542778288868445,
+    "miss": 0.08325666973321068,
+    "false_alarm": 0.04461821527138914,
+    "confusion": 0.4264029438822447,
+    "ref_speech_s": 21.740000000000002
+   },
+   "gate": {
+    "target_solo_s": 3.2800000000000002,
+    "other_solo_s": 9.42,
+    "overlap_s": 3.3200000000000003,
+    "target_retention": 0.0,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": null,
+    "target_speech_kept_in_overlap": 0.0
+   },
+   "labels_s": {
+    "target": 0,
+    "other": 6.67,
+    "uncertain": 9.67
+   },
+   "rtf": 0.527,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": -0.423,
+   "length_ok": true,
+   "mix": "mix04"
+  },
+  {
+   "target": "S174",
+   "diarization": {
+    "der": 0.6474543707973103,
+    "miss": 0.15081652257444764,
+    "false_alarm": 0.14217098943323728,
+    "confusion": 0.35446685878962536,
+    "ref_speech_s": 20.82
+   },
+   "gate": {
+    "target_solo_s": 3.18,
+    "other_solo_s": 7.54,
+    "overlap_s": 3.66,
+    "target_retention": 0.6352201257861635,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.0
+   },
+   "labels_s": {
+    "target": 2.11,
+    "other": 6.09,
+    "uncertain": 7.79
+   },
+   "rtf": 1.503,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 2.048,
+   "length_ok": true,
+   "mix": "mix05"
+  },
+  {
+   "target": "S1993",
+   "diarization": {
+    "der": 0.6474543707973103,
+    "miss": 0.15081652257444764,
+    "false_alarm": 0.14217098943323728,
+    "confusion": 0.35446685878962536,
+    "ref_speech_s": 20.82
+   },
+   "gate": {
+    "target_solo_s": 3.72,
+    "other_solo_s": 6.38,
+    "overlap_s": 4.28,
+    "target_retention": 0.6317204301075269,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.0
+   },
+   "labels_s": {
+    "target": 2.35,
+    "other": 6.6,
+    "uncertain": 7.05
+   },
+   "rtf": 0.27,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 16.91,
+   "length_ok": true,
+   "mix": "mix05"
+  },
+  {
+   "target": "S2086",
+   "diarization": {
+    "der": 0.6474543707973103,
+    "miss": 0.15081652257444764,
+    "false_alarm": 0.14217098943323728,
+    "confusion": 0.35446685878962536,
+    "ref_speech_s": 20.82
+   },
+   "gate": {
+    "target_solo_s": 1.04,
+    "other_solo_s": 8.4,
+    "overlap_s": 4.94,
+    "target_retention": 0.0,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": null,
+    "target_speech_kept_in_overlap": 0.0
+   },
+   "labels_s": {
+    "target": 0,
+    "other": 7.98,
+    "uncertain": 8.01
+   },
+   "rtf": 0.154,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": -10.438,
+   "length_ok": true,
+   "mix": "mix05"
+  },
+  {
+   "target": "S174",
+   "diarization": {
+    "der": 0.5356188780053428,
+    "miss": 0.07479964381121995,
+    "false_alarm": 0.06277827248441674,
+    "confusion": 0.39804096170970615,
+    "ref_speech_s": 22.46
+   },
+   "gate": {
+    "target_solo_s": 3.36,
+    "other_solo_s": 9.9,
+    "overlap_s": 3.1,
+    "target_retention": 0.7351190476190477,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.08064516129032258
+   },
+   "labels_s": {
+    "target": 2.72,
+    "other": 8.13,
+    "uncertain": 5.92
+   },
+   "rtf": 0.48,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 5.981,
+   "length_ok": true,
+   "mix": "mix06"
+  },
+  {
+   "target": "S1988",
+   "diarization": {
+    "der": 0.5356188780053428,
+    "miss": 0.07479964381121995,
+    "false_alarm": 0.06277827248441674,
+    "confusion": 0.39804096170970615,
+    "ref_speech_s": 22.46
+   },
+   "gate": {
+    "target_solo_s": 2.42,
+    "other_solo_s": 8.36,
+    "overlap_s": 5.58,
+    "target_retention": 0.5867768595041323,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.11469534050179211
+   },
+   "labels_s": {
+    "target": 2.06,
+    "other": 8.79,
+    "uncertain": 5.92
+   },
+   "rtf": 0.3,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": -1.834,
+   "length_ok": true,
+   "mix": "mix06"
+  },
+  {
+   "target": "S2078",
+   "diarization": {
+    "der": 0.5356188780053428,
+    "miss": 0.07479964381121995,
+    "false_alarm": 0.06277827248441674,
+    "confusion": 0.39804096170970615,
+    "ref_speech_s": 22.46
+   },
+   "gate": {
+    "target_solo_s": 4.48,
+    "other_solo_s": 8.36,
+    "overlap_s": 3.52,
+    "target_retention": 0.49107142857142855,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.125
+   },
+   "labels_s": {
+    "target": 2.65,
+    "other": 5.37,
+    "uncertain": 8.76
+   },
+   "rtf": 0.142,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": -2.084,
+   "length_ok": true,
+   "mix": "mix06"
+  },
+  {
+   "target": "S1993",
+   "diarization": {
+    "der": 0.6205673758865248,
+    "miss": 0.2424645390070922,
+    "false_alarm": 0.05939716312056738,
+    "confusion": 0.31870567375886527,
+    "ref_speech_s": 22.56
+   },
+   "gate": {
+    "target_solo_s": 3.56,
+    "other_solo_s": 7.5600000000000005,
+    "overlap_s": 4.44,
+    "target_retention": 0.6460674157303371,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.0
+   },
+   "labels_s": {
+    "target": 2.29,
+    "other": 12.28,
+    "uncertain": 2.16
+   },
+   "rtf": 0.5,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 21.622,
+   "length_ok": true,
+   "mix": "mix07"
+  },
+  {
+   "target": "S2078",
+   "diarization": {
+    "der": 0.6205673758865248,
+    "miss": 0.2424645390070922,
+    "false_alarm": 0.05939716312056738,
+    "confusion": 0.31870567375886527,
+    "ref_speech_s": 22.56
+   },
+   "gate": {
+    "target_solo_s": 3.94,
+    "other_solo_s": 7.5600000000000005,
+    "overlap_s": 4.0600000000000005,
+    "target_retention": 0.5888324873096447,
+    "wrong_person_rate": 0.07407407407407407,
+    "wrong_share_of_output": 0.12698412698412698,
+    "target_speech_kept_in_overlap": 0.3768472906403941
+   },
+   "labels_s": {
+    "target": 4.41,
+    "other": 10.17,
+    "uncertain": 2.16
+   },
+   "rtf": 0.132,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 2.203,
+   "length_ok": true,
+   "mix": "mix07"
+  },
+  {
+   "target": "S2086",
+   "diarization": {
+    "der": 0.6205673758865248,
+    "miss": 0.2424645390070922,
+    "false_alarm": 0.05939716312056738,
+    "confusion": 0.31870567375886527,
+    "ref_speech_s": 22.56
+   },
+   "gate": {
+    "target_solo_s": 1.06,
+    "other_solo_s": 9.0,
+    "overlap_s": 5.5,
+    "target_retention": 1.0,
+    "wrong_person_rate": 0.07666666666666666,
+    "wrong_share_of_output": 0.10832025117739404,
+    "target_speech_kept_in_overlap": 0.6745454545454546
+   },
+   "labels_s": {
+    "target": 6.37,
+    "other": 8.21,
+    "uncertain": 2.16
+   },
+   "rtf": 0.132,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": -1.251,
+   "length_ok": true,
+   "mix": "mix07"
+  },
+  {
+   "target": "S174",
+   "diarization": {
+    "der": 0.5209821428571428,
+    "miss": 0.13616071428571427,
+    "false_alarm": 0.02544642857142857,
+    "confusion": 0.359375,
+    "ref_speech_s": 22.400000000000002
+   },
+   "gate": {
+    "target_solo_s": 1.8,
+    "other_solo_s": 9.9,
+    "overlap_s": 4.6000000000000005,
+    "target_retention": 0.5555555555555556,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.1282608695652174
+   },
+   "labels_s": {
+    "target": 1.59,
+    "other": 6.63,
+    "uncertain": 6.82
+   },
+   "rtf": 0.512,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": -2.989,
+   "length_ok": true,
+   "mix": "mix08"
+  },
+  {
+   "target": "S1988",
+   "diarization": {
+    "der": 0.5209821428571428,
+    "miss": 0.13616071428571427,
+    "false_alarm": 0.02544642857142857,
+    "confusion": 0.359375,
+    "ref_speech_s": 22.400000000000002
+   },
+   "gate": {
+    "target_solo_s": 3.5,
+    "other_solo_s": 8.3,
+    "overlap_s": 4.5,
+    "target_retention": 0.7,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.0
+   },
+   "labels_s": {
+    "target": 2.92,
+    "other": 5.97,
+    "uncertain": 6.14
+   },
+   "rtf": 0.11,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 2.388,
+   "length_ok": true,
+   "mix": "mix08"
+  },
+  {
+   "target": "S2035",
+   "diarization": {
+    "der": 0.5209821428571428,
+    "miss": 0.13616071428571427,
+    "false_alarm": 0.02544642857142857,
+    "confusion": 0.359375,
+    "ref_speech_s": 22.400000000000002
+   },
+   "gate": {
+    "target_solo_s": 4.9,
+    "other_solo_s": 8.3,
+    "overlap_s": 3.1,
+    "target_retention": 0.6938775510204082,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.05161290322580645
+   },
+   "labels_s": {
+    "target": 3.71,
+    "other": 5.18,
+    "uncertain": 6.14
+   },
+   "rtf": 0.106,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 2.533,
+   "length_ok": true,
+   "mix": "mix08"
+  },
+  {
+   "target": "S1988",
+   "diarization": {
+    "der": 0.5276801405975395,
+    "miss": 0.11862917398945519,
+    "false_alarm": 0.032952548330404216,
+    "confusion": 0.37609841827768015,
+    "ref_speech_s": 22.76
+   },
+   "gate": {
+    "target_solo_s": 3.24,
+    "other_solo_s": 8.5,
+    "overlap_s": 4.76,
+    "target_retention": 0.24074074074074073,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.06302521008403361
+   },
+   "labels_s": {
+    "target": 1.08,
+    "other": 5.4,
+    "uncertain": 9.1
+   },
+   "rtf": 0.538,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": -0.223,
+   "length_ok": true,
+   "mix": "mix09"
+  },
+  {
+   "target": "S2035",
+   "diarization": {
+    "der": 0.5276801405975395,
+    "miss": 0.11862917398945519,
+    "false_alarm": 0.032952548330404216,
+    "confusion": 0.37609841827768015,
+    "ref_speech_s": 22.76
+   },
+   "gate": {
+    "target_solo_s": 3.5,
+    "other_solo_s": 8.5,
+    "overlap_s": 4.5,
+    "target_retention": 0.4685714285714286,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.0022222222222222222
+   },
+   "labels_s": {
+    "target": 1.65,
+    "other": 7.47,
+    "uncertain": 6.45
+   },
+   "rtf": 0.112,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": -4.445,
+   "length_ok": true,
+   "mix": "mix09"
+  },
+  {
+   "target": "S2086",
+   "diarization": {
+    "der": 0.5276801405975395,
+    "miss": 0.11862917398945519,
+    "false_alarm": 0.032952548330404216,
+    "confusion": 0.37609841827768015,
+    "ref_speech_s": 22.76
+   },
+   "gate": {
+    "target_solo_s": 3.5,
+    "other_solo_s": 9.74,
+    "overlap_s": 3.2600000000000002,
+    "target_retention": 0.7028571428571428,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.0
+   },
+   "labels_s": {
+    "target": 2.94,
+    "other": 5.38,
+    "uncertain": 7.26
+   },
+   "rtf": 0.12,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": -0.13,
+   "length_ok": true,
+   "mix": "mix09"
+  },
+  {
+   "target": "S1988",
+   "diarization": {
+    "der": 0.5602836879432624,
+    "miss": 0.2854609929078014,
+    "false_alarm": 0.02171985815602837,
+    "confusion": 0.25310283687943264,
+    "ref_speech_s": 22.56
+   },
+   "gate": {
+    "target_solo_s": 3.92,
+    "other_solo_s": 8.120000000000001,
+    "overlap_s": 4.08,
+    "target_retention": 0.9923469387755102,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.06862745098039216
+   },
+   "labels_s": {
+    "target": 4.26,
+    "other": 10.07,
+    "uncertain": 1.18
+   },
+   "rtf": 0.55,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 11.391,
+   "length_ok": true,
+   "mix": "mix10"
+  },
+  {
+   "target": "S1993",
+   "diarization": {
+    "der": 0.5602836879432624,
+    "miss": 0.2854609929078014,
+    "false_alarm": 0.02171985815602837,
+    "confusion": 0.25310283687943264,
+    "ref_speech_s": 22.56
+   },
+   "gate": {
+    "target_solo_s": 2.64,
+    "other_solo_s": 8.120000000000001,
+    "overlap_s": 5.36,
+    "target_retention": 0.4659090909090909,
+    "wrong_person_rate": 0.0,
+    "wrong_share_of_output": 0.0,
+    "target_speech_kept_in_overlap": 0.2667910447761194
+   },
+   "labels_s": {
+    "target": 2.66,
+    "other": 11.67,
+    "uncertain": 1.18
+   },
+   "rtf": 0.126,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": 19.336,
+   "length_ok": true,
+   "mix": "mix10"
+  },
+  {
+   "target": "S2086",
+   "diarization": {
+    "der": 0.5602836879432624,
+    "miss": 0.2854609929078014,
+    "false_alarm": 0.02171985815602837,
+    "confusion": 0.25310283687943264,
+    "ref_speech_s": 22.56
+   },
+   "gate": {
+    "target_solo_s": 3.12,
+    "other_solo_s": 9.56,
+    "overlap_s": 3.44,
+    "target_retention": 0.9647435897435898,
+    "wrong_person_rate": 0.008368200836820083,
+    "wrong_share_of_output": 0.013793103448275862,
+    "target_speech_kept_in_overlap": 0.6773255813953488
+   },
+   "labels_s": {
+    "target": 5.81,
+    "other": 8.52,
+    "uncertain": 1.18
+   },
+   "rtf": 0.135,
+   "peak_vram_mib": null,
+   "oracle_diarization": false,
+   "si_sdri_db": -6.965,
+   "length_ok": true,
+   "mix": "mix10"
+  }
+ ]
+}

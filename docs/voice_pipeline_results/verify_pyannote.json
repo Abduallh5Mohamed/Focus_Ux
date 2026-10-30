@@ -1,0 +1,39 @@
+{
+ "embedder": "pyannote",
+ "speakers": 8,
+ "utterance_s": 4.0,
+ "utterances_per_speaker": {
+  "S1272": 21,
+  "S1673": 23,
+  "S174": 16,
+  "S1988": 24,
+  "S1993": 27,
+  "S2035": 14,
+  "S2078": 27,
+  "S2086": 12
+ },
+ "enrollment_utterances": 3,
+ "eer": {
+  "eer": 0.0,
+  "threshold": 0.6570866596287008,
+  "n_target_trials": 140,
+  "n_other_trials": 980
+ },
+ "at_eer": {
+  "threshold": 0.6570866596287008,
+  "far": 0.0,
+  "frr": 0.0
+ },
+ "calibrated": {
+  "target_threshold": 0.3347,
+  "other_threshold": 0.3347,
+  "max_far": 0.01,
+  "max_target_as_other": 0.05
+ },
+ "at_calibrated_target_threshold": {
+  "threshold": 0.3347,
+  "far": 0.00816326530612245,
+  "frr": 0.0
+ },
+ "dataset_note": "non-Egyptian LibriSpeech"
+}

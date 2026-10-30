@@ -183,3 +183,6 @@ default and the reference until the measurements below pass.
 - Speed gate (RTX 3060, 15 s clip, warm): total <= 5 s, landmarks <= 2 s. **Not yet measured; waiting for a GPU run.**
 - Quality gate: gt5 SI-SDRi at least +17.6 dB (A) and +8.4 dB (B); on the 3-speaker synthetic set the new setting must beat the current one. **Not yet measured; waiting for a GPU run.**
 - Because the quality gate is unmeasured, `face_alignment` remains the landmark default; the 4 s/overlap/levels defaults are enabled as the plan specified, and `--only old_2s` reproduces the old output for comparison. Record measured numbers here after the run.
+
+## Audio-only voice pipeline (proof of concept)
+See `docs/VOICE_PIPELINE.md` and `docs/VOICE_PIPELINE_LOG.md`. Windows: `product\tools\Setup-Voice.cmd` (approval first, own environment `%LOCALAPPDATA%\FocusVoice`), then `product\tools\Voice-Readiness.cmd`. The original Dolphin environment is not changed.

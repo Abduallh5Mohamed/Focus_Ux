@@ -1,0 +1,16 @@
+{
+  "schema": "focus-voice-recordings/1",
+  "dataset_id": "egyptian-voice-v0",
+  "language": "ar-EG",
+  "consents": [
+    {"id": "C01", "speaker_id": "S01", "signed": false, "date": ""}
+  ],
+  "recordings": [
+    {"id": "r001", "kind": "solo", "file": "audio/S01__quiet_near.wav", "speakers": ["S01"],
+     "consent_ids": ["C01"],
+     "conditions": {"volume": "normal", "distance_m": 0.3, "noise": "quiet", "room": "small"}},
+    {"id": "r050", "kind": "overlap", "file": "audio/overlap2_S01_S02.wav", "speakers": ["S01", "S02"],
+     "consent_ids": ["C01", "C02"], "annotation": "annotations/overlap2_S01_S02.json",
+     "conditions": {"volume": "normal", "distance_m": 0.5, "noise": "quiet", "room": "small"}}
+  ]
+}

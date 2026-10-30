@@ -1,0 +1,15 @@
+{
+ "eer": {
+  "eer": 0.014705882352941176,
+  "threshold": 0.3704,
+  "n_target_trials": 17,
+  "n_other_trials": 34
+ },
+ "thresholds": {
+  "target_threshold": 0.4081,
+  "other_threshold": 0.3581,
+  "max_far": 0.01,
+  "max_target_as_other": 0.05,
+  "min_band": 0.05
+ }
+}

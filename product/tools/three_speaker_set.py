@@ -20,6 +20,7 @@ import numpy as np
 SR = 16000
 FPS = 25
 MIN_MIXES = 10
+ENROLL_S = 12
 TILE_HEIGHT = 360
 
 
@@ -100,12 +101,76 @@ def build(src: Path, out: Path, count: int = MIN_MIXES, seed: int = 0) -> list[d
     return plans
 
 
+def build_from_solo(src: Path, out: Path, speakers_per_mix: int = 3, overlap_s: float = 1.5,
+                    count: int = MIN_MIXES, turn_s: float = 4.0, turns: int = 6,
+                    snr_db: float | None = None, seed: int = 0) -> list[dict]:
+    """Ground-truth audio mixes from solo recordings (``<speaker>*.wav`` in ``src``).
+
+    Writes per mix: mix.wav, ref_<speaker>.wav (full length, each speaker's exact
+    gained signal), truth.json (who spoke when) and meta.json. Overlap between
+    consecutive turns is ``overlap_s`` seconds (0 = none). Audio only.
+    """
+    root = Path(__file__).resolve().parents[2]
+    sys.path[:0] = [str(root / "product" / "packages" / "eval"), str(root / "product" / "packages" / "ml")]
+    from focus_eval.audio import load_audio
+    from focus_eval.voice_mix import build_mix, plan_conversation
+    from focus_ml.isolation_engines import write_wav
+    solo: dict[str, list] = {}
+    for f in sorted(src.glob("*.wav")):
+        solo.setdefault(f.stem.split("__")[0], []).append(f)
+    if len(solo) < speakers_per_mix:
+        raise ValueError(f"need at least {speakers_per_mix} speakers, found {len(solo)}")
+    full = {s: np.concatenate([load_audio(p) for p in fs]) for s, fs in solo.items()}
+    # The first ENROLL_S of every speaker is kept OUT of the mixes and saved as the
+    # separate enrollment recording, so enrollment never hears the mixed material.
+    enroll_dir = out / "enroll"
+    enroll_dir.mkdir(parents=True, exist_ok=True)
+    audio = {}
+    for s, x in full.items():
+        write_wav(str(enroll_dir / f"{s}.wav"), x[:SR * ENROLL_S], SR)
+        audio[s] = x[SR * ENROLL_S:]
+    rng = np.random.default_rng(seed)
+    names = sorted(audio)
+    out.mkdir(parents=True, exist_ok=True)
+    plans = []
+    for i in range(max(count, 1)):
+        chosen = [str(s) for s in rng.choice(names, speakers_per_mix, replace=False)]
+        plan = plan_conversation(chosen, turns, turn_s, overlap_s)
+        offsets = {s: int(rng.integers(0, 1 + max(0, len(audio[s]) - SR * turn_s * turns))) for s in chosen}
+        clips = {s: audio[s][offsets[s]:] for s in chosen}
+        gains = {s: float(rng.uniform(-4, 4)) for s in chosen}
+        noise = rng.standard_normal(SR * 10) * 0.05 if snr_db is not None else None
+        mix, refs, truth = build_mix(clips, plan, gains, noise, snr_db)
+        d = out / f"mix{i + 1:02d}"
+        d.mkdir(exist_ok=True)
+        write_wav(str(d / "mix.wav"), mix, SR)
+        for s, ref in refs.items():
+            write_wav(str(d / f"ref_{s}.wav"), ref, SR)
+        meta = {"id": d.name, "speakers": chosen, "overlap_s": overlap_s, "gains_db": gains,
+                "snr_db": snr_db, "seconds": len(mix) / SR, "plan": plan}
+        (d / "truth.json").write_text(json.dumps({"seconds": len(mix) / SR, "segments": truth}, indent=1))
+        (d / "meta.json").write_text(json.dumps(meta, indent=1))
+        plans.append(meta)
+    return plans
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--clips", required=True, type=Path, help="folder of clean per-person videos")
+    ap.add_argument("--solo-dir", type=Path, help="audio-only mode: folder of <speaker>*.wav solo recordings")
+    ap.add_argument("--speakers-per-mix", type=int, default=3, choices=(2, 3, 4))
+    ap.add_argument("--overlap-s", type=float, default=1.5)
+    ap.add_argument("--snr-db", type=float)
+    ap.add_argument("--clips", type=Path, help="folder of clean per-person videos")
     ap.add_argument("--out", required=True, type=Path)
     ap.add_argument("--count", type=int, default=MIN_MIXES)
     args = ap.parse_args()
+    if args.solo_dir:
+        plans = build_from_solo(args.solo_dir, args.out, args.speakers_per_mix, args.overlap_s,
+                                args.count, snr_db=args.snr_db)
+        print(f"Built {len(plans)} audio mixes with ground truth in {args.out}")
+        return
+    if not args.clips:
+        ap.error("give --clips (video mode) or --solo-dir (audio mode)")
     plans = build(args.clips, args.out, args.count)
     print(f"Built {len(plans)} mixes in {args.out}")
 
