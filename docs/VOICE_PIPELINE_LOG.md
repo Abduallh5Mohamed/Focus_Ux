@@ -165,3 +165,13 @@ reverb and no-solo-enrollment clips), recalibrate thresholds, run `Final-Evaluat
 real raters, and fill the numbers into `docs/LIMITATIONS.md`.
 
 **Review fixes (limits calculation):** (1) failed profiling runs keep their audio length and still end the supported range; unknown length or no runs give an uninstallable file. (2) The supported-length RTF is end-to-end wall-clock time, not the sum of stage times. Regression tests: `tests/final/test_profiling.py` (failed short + successful long, failure in the middle, unknown length, sleep outside stages). Re-run: final 31, voice 38, ml 105, eval 46, overlap 30, worker 35, inference 58, api 240 (+1 skipped), all passed. Upload limit unchanged at 180 s until an RTX 3050 limits file is installed.
+
+
+## Real target-speaker extraction experiment (CPU, English LibriSpeech, not Egyptian)
+All three voice-conditioned adapters (REAL-TSE WeSep BSRNN, USEF-TSE, ClearerVoice SpEx+) loaded real pretrained weights
+and ran on 12 mixes of ~10 s (6 two-speaker, 6 three-speaker, seed 83). Device: CPU only; nothing measured on the RTX 3050
+(laptop unreachable from the workspace). Pooled overlap-region hybrid SI-SDRi vs the gated baseline (about -30 dB):
+2-speaker WeSep +16.1, USEF +1.8, SpEx+ -19.8; 3-speaker WeSep +4.6, USEF -11.9, SpEx+ -9.5. By the pre-stated rule WeSep (and
+barely USEF) improve in 2-speaker overlap, none in 3-speaker overlap. Licences: WeSep weights unclear, USEF non-commercial, so
+no model is approved for deployment; production defaults unchanged. Full report, audio and repeat commands:
+`product/experiments/real_tse/`; details in `docs/OVERLAP_EXTRACTION.md`.
