@@ -15,7 +15,9 @@ def decide(base: dict, cand: dict, th: Thresholds | None = None, rtf_target: flo
 
     - quality: ``compare_reports`` must pass (SI-SDRi drop over the threshold on
       ANY target, a newly wrong person, lost/truncated/dropped-out audio, or a
-      CER increase all reject; differing datasets or nothing scored is inconclusive);
+      CER increase all reject with a scorable baseline; differing datasets,
+      outdated evaluation policies, incomplete baseline coverage or nothing
+      scored are inconclusive);
     - speed: every clip in the candidate report needs its own bench entry with
       no failed chunk and RTF <= target, and must be faster than the baseline's
       entry for that clip when the baseline has one. A clip without a bench

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from . import EVALUATION_POLICY
 from .dataset import VERIFIED
 
 DEFAULT_SI_SDRI_DROP_DB = 0.5
@@ -28,10 +29,13 @@ def compare_reports(base: dict, cand: dict, th: Thresholds | None = None) -> dic
     th = th or Thresholds()
     warnings: list[str] = []
     inconclusive: list[str] = []
+    if any(report.get("evaluation_policy") != EVALUATION_POLICY
+           or report.get("expected_targets") is None for report in (base, cand)):
+        inconclusive.append("evaluation policy is missing or outdated; regenerate both reports")
     if base["dataset_id"] != cand["dataset_id"]:
         inconclusive.append(f"dataset differs: {base['dataset_id']!r} vs {cand['dataset_id']!r}")
     fb, fc = base.get("dataset_fingerprint"), cand.get("dataset_fingerprint")
-    if fb != fc:
+    if not fb or not fc or fb != fc:
         inconclusive.append("dataset content differs (fingerprint mismatch or missing); reports score different data")
     b_rows = {_key(r): r for r in base["rows"]}
     c_rows = {_key(r): r for r in cand["rows"]}
@@ -43,16 +47,23 @@ def compare_reports(base: dict, cand: dict, th: Thresholds | None = None) -> dic
     def add(kind: str, key, **detail):
         regressions.append({"kind": kind, "clip_id": key[0], "speaker_id": key[1], **detail})
 
-    for key in only_base:
-        if _usable(b_rows[key]):
+    # New reports retain the manifest's READY targets even if rows are removed.
+    # For older reports, at least require coverage of the union of observed rows.
+    expected = set(b_rows) | set(c_rows)
+    for report in (base, cand):
+        expected.update(tuple(k) for k in report.get("expected_targets", []))
+    for key in sorted(expected):
+        b, c = b_rows.get(key), c_rows.get(key)
+        if b is None or not _usable(b):
+            inconclusive.append(f"baseline target is not scorable: {key[0]}/{key[1]}")
+        if c is None:
             add("missing_in_candidate", key)
+        elif not _usable(c):
+            add("audio_lost", key, candidate_status=c["audio_status"])
     cer_b = {"errors": 0, "total": 0}
     cer_c = {"errors": 0, "total": 0}
     for key in common:
         b, c = b_rows[key], c_rows[key]
-        if _usable(b) and not _usable(c):
-            add("audio_lost", key, candidate_status=c["audio_status"])
-            continue
         if not (_usable(b) and _usable(c)):
             continue
         drop = b["si_sdri"] - c["si_sdri"]

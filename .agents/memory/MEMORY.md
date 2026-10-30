@@ -6,3 +6,4 @@
 - [Near-live mode gate and opt-in](live-mode-gate.md) — stays opt-in/internal until measured on real GPU + camera; lock-scoped cleanup; camera must always release.
 - [Windows local handoff](local-handoff.md) — isolated trial/API, original ML environment unchanged; separate local credentials; real-device acceptance stays separate.
 - [Isolation engines](isolation-engines.md) — extra engines need separate site dir appended last on sys.path; gate needs user's listening pass; ExtractionResult contract is pinned.
+- [Evaluation policy changes](evaluation-policy.md) — stricter acceptance rules require fresh reports, not reuse of previously green evaluation artifacts.

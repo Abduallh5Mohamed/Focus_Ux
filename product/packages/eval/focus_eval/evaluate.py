@@ -12,27 +12,33 @@ import json
 from pathlib import Path
 from statistics import mean, median
 
-from . import SCHEMA_VERSION
+import numpy as np
+
+from . import EVALUATION_POLICY, SCHEMA_VERSION
 from .audio import AudioError, aligned_si_sdr, load_audio
 from .dataset import PROVISIONAL, STATUS_READY, VERIFIED, Clip, Dataset
 from .textnorm import error_counts
 
 DEFAULT_AMBIGUOUS_MARGIN_DB = 3.0
 LENGTH_TOLERANCE_S = 0.1   # output length must match the mixture within this
-FRAME_S = 0.1              # continuity check frame size
-DROPOUT_MAX_FRACTION = 0.1  # max share of reference-active frames the output may leave silent
+FRAME_S = 0.02             # continuity resolution: 20 ms, including the final partial frame
+DROPOUT_MAX_FRACTION = 0.0  # any detected silence while the reference speaks blocks adoption
 
 
 def _dropout_fraction(est, ref) -> float:
     """Share of frames where the reference speaks but the output is (near) silent."""
     n = int(FRAME_S * 16000)
-    frames = min(len(est), len(ref)) // n
-    if frames == 0:
+    length = min(len(est), len(ref))
+    if length == 0:
         return 0.0
-    e = est[: frames * n].reshape(frames, n)
-    r = ref[: frames * n].reshape(frames, n)
-    e_rms = (e ** 2).mean(axis=1) ** 0.5
-    r_rms = (r ** 2).mean(axis=1) ** 0.5
+    frames = (length + n - 1) // n
+    e = np.pad(est[:length], (0, frames * n - length)).reshape(frames, n)
+    r = np.pad(ref[:length], (0, frames * n - length)).reshape(frames, n)
+    # A partial final frame must not look quieter just because it was padded.
+    counts = np.full(frames, n)
+    counts[-1] = length - (frames - 1) * n
+    e_rms = ((e ** 2).sum(axis=1) / counts) ** 0.5
+    r_rms = ((r ** 2).sum(axis=1) / counts) ** 0.5
     active = r_rms > 0.25 * r_rms.mean()
     if not active.any():
         return 0.0
@@ -67,7 +73,7 @@ def _score_row(ds: Dataset, clip: Clip, target: str, run: Path, mix, refs, margi
             drop = _dropout_fraction(est, refs[target])
             row["dropout_fraction"] = round(drop, 4)
             if drop > DROPOUT_MAX_FRACTION:
-                problem = f"output is silent in {drop:.0%} of the frames where the target speaks"
+                problem = f"output is silent in {drop:.2%} of the frames where the target speaks"
         if problem:
             row["audio_status"] = "truncated"
             row["error"] = problem
@@ -188,9 +194,14 @@ def evaluate(ds: Dataset, run_dir: str | Path, ambiguous_margin_db: float = DEFA
         bench = json.loads(meta.read_text(encoding="utf-8")).get("bench_by_clip")
     return {
         "schema_version": SCHEMA_VERSION,
+        "evaluation_policy": EVALUATION_POLICY,
         "bench_by_clip": bench,
         "dataset_id": ds.dataset_id,
         "dataset_fingerprint": fingerprint,
+        "expected_targets": [
+            [clip.id, target] for clip in ds.clips if clip.status == STATUS_READY
+            for target in clip.targets
+        ],
         "run_label": label,
         "not_ready_clips": not_ready,
         "thresholds": {"ambiguous_margin_db": ambiguous_margin_db},

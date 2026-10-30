@@ -97,3 +97,29 @@ milestone above is preserved, not a statement of current API availability.
   permission for ongoing public access; restore private preview when testing
   ends if it was temporarily changed. Private main previews need separately
   authorized platform access; do not publish this task fork as a workaround.
+
+## Local acceptance preparation
+
+- Added `product/tools/trial_readiness.py` and focused CPU tests in
+  `product/tests/worker/test_trial_readiness.py`. It checks native Windows,
+  isolated trial Python, tool versions, existing assets and a CUDA probe using
+  the original Python without installing anything. Optional upload tests use
+  only the trial interpreter. Raw subprocess errors and environment contents
+  are not included in the JSON report.
+- Tightened evaluation coverage in `product/packages/eval/focus_eval/`:
+  all READY manifest targets are retained, an incomplete baseline blocks
+  adoption, and missing/truncated candidate audio rejects with a complete
+  baseline. Continuity checks use 20 ms frames, including partial final frames,
+  and allow no detected reference-active silent frames.
+- Older evaluation reports must be regenerated under the current policy.
+  Added regressions for jointly missing targets, missing rows, short silent
+  gaps, trailing partial frames and obsolete reports.
+- Updated `docs/LOCAL_WINDOWS_TRIAL.md` with the readiness command and the
+  distinction between the current 3-second gate and the planned 1.5-second goal.
+- Observed: evaluation suite 46 passed; worker suite 30 passed in separate
+  processes. Executing the readiness CLI here exits 2 as intended: Windows,
+  original weights, CUDA and continuous-stream source are unavailable.
+- No native Windows test, real inference benchmark, camera acceptance, weight
+  download, original-environment modification, push or public deployment.
+  Continuous-stream source remains absent from this integrated checkout;
+  completed work in a separate task environment must be merged before testing it.

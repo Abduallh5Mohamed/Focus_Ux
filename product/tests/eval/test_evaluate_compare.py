@@ -292,3 +292,84 @@ def test_gate_needs_speed_on_every_clip(env):
     assert slow["verdict"] == "reject" and any("clip c2" in r for r in slow["reasons"])
     failed = decide(base, _two_clip(good, {"c1": fast, "c2": {"rtf": None, "n_failed": 2}}))
     assert failed["verdict"] == "reject"
+
+
+@pytest.mark.parametrize("status", ["missing_audio", "truncated", "error"])
+def test_gate_never_adopts_a_target_unscorable_in_both_runs(env, status):
+    from focus_eval.gate import decide
+
+    base = _with_bench(_report(env, "base"), 1.2)
+    cand = _with_bench(_report(env, "cand"), 0.5)
+    for report in (base, cand):
+        next(r for r in report["rows"] if r["speaker_id"] == "b")["audio_status"] = status
+    result = decide(base, cand)
+    assert result["verdict"] == "inconclusive"
+    assert any("c1/b" in reason for reason in result["reasons"])
+
+
+def test_gate_retains_manifest_targets_when_both_reports_omit_a_row(env):
+    from focus_eval.gate import decide
+
+    base = _with_bench(_report(env, "base"), 1.2)
+    cand = _with_bench(_report(env, "cand"), 0.5)
+    for report in (base, cand):
+        report["rows"] = [r for r in report["rows"] if r["speaker_id"] != "b"]
+    assert decide(base, cand)["verdict"] == "inconclusive"
+
+
+def test_gate_baseline_missing_but_candidate_recovered_is_inconclusive(env):
+    from focus_eval.gate import decide
+
+    base = _with_bench(_report(env, "base", drop_b=True), 1.2)
+    cand = _with_bench(_report(env, "cand"), 0.5)
+    assert decide(base, cand)["verdict"] == "inconclusive"
+
+
+def test_gate_candidate_unscorable_with_complete_baseline_is_rejected(env):
+    from focus_eval.gate import decide
+
+    base = _with_bench(_report(env, "base"), 1.2)
+    cand = _with_bench(_report(env, "cand", drop_b=True), 0.5)
+    assert decide(base, cand)["verdict"] == "reject"
+
+
+def test_short_silent_gap_below_ten_percent_blocks_adoption(env):
+    from eval_helpers import write_wav
+    from focus_eval.gate import decide
+
+    tmp, ds_dir, sigs = env
+    run = make_run(tmp / "short_gap", sigs)
+    est = sigs["a"].copy()
+    est[16000:16320] = 0.0  # 20 ms, much less than the former 10% allowance
+    write_wav(run / "c1" / "a.wav", est)
+    report = evaluate(load_dataset(ds_dir), run)
+    row = next(r for r in report["rows"] if r["speaker_id"] == "a")
+    assert row["audio_status"] == "truncated"
+    assert 0 < row["dropout_fraction"] < 0.1
+    base = _with_bench(_report(env, "base"), 1.2)
+    assert decide(base, _with_bench(report, 0.5))["verdict"] == "reject"
+
+
+def test_partial_final_frame_is_checked_for_silence():
+    import numpy as np
+    from focus_eval.evaluate import _dropout_fraction
+
+    reference = np.ones(650)
+    output = reference.copy()
+    output[640:] = 0
+    assert _dropout_fraction(output, reference) > 0
+
+
+def test_reports_without_fingerprints_are_inconclusive(env):
+    report = _report(env, "good")
+    report.pop("dataset_fingerprint")
+    assert compare_reports(report, report)["status"] == "inconclusive"
+
+
+@pytest.mark.parametrize("field", ["evaluation_policy", "expected_targets"])
+def test_old_reports_require_regeneration_before_adoption(env, field):
+    from focus_eval.gate import decide
+
+    report = _with_bench(_report(env, "good"), 0.5)
+    report.pop(field)
+    assert decide(report, report)["verdict"] == "inconclusive"
