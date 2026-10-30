@@ -572,6 +572,8 @@ class LegacyDolphinAdapter:
             backend, mix_wav, mouth_roi, cfg, models.dolphin
         )
         timings["forward_cuda_ms"] = round(forward_ms, 1)
+        alignment_samples = getattr(self, "last_audio_alignment_samples", 0)
+        timings["audio_alignment_samples"] = float(alignment_samples)
         timings["separate_wall"] = round(time.perf_counter() - separate_start, 2)
         if on_progress is not None:
             on_progress("separating", 1.0)
@@ -580,6 +582,10 @@ class LegacyDolphinAdapter:
         result_warnings.extend(roi_warnings)
         result_warnings.extend(fps_warnings)
         result_warnings.extend([_EXPANSION_WARNING, _GPU_WARNING])
+        if alignment_samples:
+            result_warnings.append(
+                "decoded audio end padding was aligned to the canonical video timeline"
+            )
         if video_id is None:
             result_warnings.append(_VIDEO_ID_FALLBACK_WARNING)
         return ExtractionResult(
@@ -984,8 +990,24 @@ class LegacyDolphinAdapter:
             )
         prepared_roi = pipelines()["val"](mouth_roi)
         data, sr = sf.read(mix_wav, dtype="float32", always_2d=True)
+        # AAC decoding can expose a partial codec frame beyond the last video
+        # frame. Without alignment, a 6 s clip can get a fourth audio window
+        # with zero mouth frames. Keep the canonical video duration, allowing
+        # only the small frame/codec rounding margin accepted by the API.
+        video_samples = round(len(prepared_roi) * sr / cfg.fps)
+        self.last_audio_alignment_samples = video_samples - len(data)
+        if sr != cfg.sample_rate or video_samples <= 0 or abs(self.last_audio_alignment_samples) > round(sr * 0.080):
+            raise MediaError(
+                "audio and canonical video timelines do not align",
+                detail=f"audio_samples={len(data)}, video_samples={video_samples}, rate={sr}",
+            )
+        mono = np.ascontiguousarray(data.mean(axis=1))
+        if len(mono) > video_samples:
+            mono = mono[:video_samples]
+        elif len(mono) < video_samples:
+            mono = np.pad(mono, (0, video_samples - len(mono)))
         device = torch.device(_resolve_device(torch, cfg.device))
-        mix = torch.from_numpy(np.ascontiguousarray(data.mean(axis=1))).to(device)
+        mix = torch.from_numpy(mono).to(device)
         window = int(cfg.window_s * cfg.sample_rate)
         out = torch.zeros(1, len(mix), device="cpu")
         forward_ms = 0.0

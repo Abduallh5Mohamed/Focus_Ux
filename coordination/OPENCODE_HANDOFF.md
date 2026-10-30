@@ -97,3 +97,11 @@ milestone above is preserved, not a statement of current API availability.
   permission for ongoing public access; restore private preview when testing
   ends if it was temporarily changed. Private main previews need separately
   authorized platform access; do not publish this task fork as a workaround.
+
+## Codex local-machine update — 2026-10-30
+
+User authorized downloading the official model and preparing/running this checkout, then required all new downloads/caches/runtime files on D:. Real local inference and frontend integration now passed on RTX 2050. Detailed changed files, commands, source/weight hashes, results, earlier failures, remaining blockers and stop/restart instructions are in [LOCAL_RUN_STATUS.md](LOCAL_RUN_STATUS.md).
+
+Changes: ML adapter AAC end-padding alignment; four regression tests; D:-local path configuration, launcher and real GPU verification tools. New code is in `product/packages/ml/focus_ml/adapter.py`, `product/tests/ml/test_audio_codec_alignment.py`, `product/tools/local_paths.ps1`, `product/tools/run_local.ps1`, `product/tools/verify_gpu.py`. API/frontend source unchanged. CPU core tests: 95 passed/1 dependency-skipped module; four new regressions separately passed. Real GPU: two targets, different valid 6000 ms WAVs. Real API and Chrome: upload, last face selection, protected audio/original, actual WAV download, refresh and native playback passed. ASR unavailable; no GT quality/realtime acceptance claimed. Earlier API killed-upload cleanup failure remains documented, not fixed here.
+
+Services left running on loopback: UI :5173, API :8000 in local inference mode. All new assets/environments/CUDA libraries/cache/temp are on D:. Session-created C: uv/npm cache files were moved to D: after deletion commands were automatically rejected; final audit found zero session-created files remaining in those C: caches. Original shared caches/global packages were preserved. No training, deployment or push, and no external-agent message delivery claimed.
