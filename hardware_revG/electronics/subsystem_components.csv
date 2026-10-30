@@ -1,0 +1,45 @@
+Reference,Value,MPN,Footprint,Datasheet,Review
+J1,P4 PDM host OPEN GPIO map,UNSELECTED,Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical,,Bench header; production connector MPN and current rating unresolved
+R1,33R clock damping candidate,UNSELECTED,Resistor_SMD:R_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+MK1,IM69D130 4x3x1.2 mm,IM69D130V01XTSA1,Sensor_Audio:Infineon_PG-LLGA-5-1,https://www.infineon.com/assets/row/public/documents/24/49/infineon-im69d130-datasheet-en.pdf,Common clock; opposite SELECT within each data pair; bottom acoustic port MUST remain clear
+C1,100nF X7R 10V,UNSELECTED,Capacitor_SMD:C_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+MK2,IM69D130 4x3x1.2 mm,IM69D130V01XTSA1,Sensor_Audio:Infineon_PG-LLGA-5-1,https://www.infineon.com/assets/row/public/documents/24/49/infineon-im69d130-datasheet-en.pdf,Common clock; opposite SELECT within each data pair; bottom acoustic port MUST remain clear
+C2,100nF X7R 10V,UNSELECTED,Capacitor_SMD:C_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+MK3,IM69D130 4x3x1.2 mm,IM69D130V01XTSA1,Sensor_Audio:Infineon_PG-LLGA-5-1,https://www.infineon.com/assets/row/public/documents/24/49/infineon-im69d130-datasheet-en.pdf,Common clock; opposite SELECT within each data pair; bottom acoustic port MUST remain clear
+C3,100nF X7R 10V,UNSELECTED,Capacitor_SMD:C_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+MK4,IM69D130 4x3x1.2 mm,IM69D130V01XTSA1,Sensor_Audio:Infineon_PG-LLGA-5-1,https://www.infineon.com/assets/row/public/documents/24/49/infineon-im69d130-datasheet-en.pdf,Common clock; opposite SELECT within each data pair; bottom acoustic port MUST remain clear
+C4,100nF X7R 10V,UNSELECTED,Capacitor_SMD:C_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+J2,External regulated AMP rail 3.0V,UNSELECTED,Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical,,Bench header; production connector MPN and current rating unresolved
+J3,External DAC differential analog,UNSELECTED,Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical,,Bench header; production connector MPN and current rating unresolved
+J4,Host control 3V3; watchdog OPEN,UNSELECTED,Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical,,Bench header; production connector MPN and current rating unresolved
+U1,TPA2016D2RTJR REVIEW RTJ pad drawing,TPA2016D2RTJR,Package_DFN_QFN:QFN-20-1EP_4x4mm_P0.5mm_EP2.5x2.5mm,https://www.ti.com/lit/ds/symlink/tpa2016d2.pdf,Pins16/20 unresolved and intentionally OPEN. EP footprint provisional pending RTJ manufacturer land pattern; NOT RELEASED
+R10,100k 1% attenuation,UNSELECTED,Resistor_SMD:R_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+R11,1k 1% attenuation,UNSELECTED,Resistor_SMD:R_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+C10,1uF X7R 10V AC coupling,UNSELECTED,Capacitor_SMD:C_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+R12,100k 1% attenuation,UNSELECTED,Resistor_SMD:R_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+R13,1k 1% attenuation,UNSELECTED,Resistor_SMD:R_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+C11,1uF X7R 10V AC coupling,UNSELECTED,Capacitor_SMD:C_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+R14,100k 1% attenuation,UNSELECTED,Resistor_SMD:R_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+R15,1k 1% attenuation,UNSELECTED,Resistor_SMD:R_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+C12,1uF X7R 10V AC coupling,UNSELECTED,Capacitor_SMD:C_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+R16,100k 1% attenuation,UNSELECTED,Resistor_SMD:R_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+R17,1k 1% attenuation,UNSELECTED,Resistor_SMD:R_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+C13,1uF X7R 10V AC coupling,UNSELECTED,Capacitor_SMD:C_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+C20,10uF X7R 10V,UNSELECTED,Capacitor_SMD:C_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+C21,100nF X7R 10V,UNSELECTED,Capacitor_SMD:C_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+C22,100nF X7R 10V,UNSELECTED,Capacitor_SMD:C_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+R20,4k7 candidate I2C pullup,UNSELECTED,Resistor_SMD:R_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+R21,4k7 candidate I2C pullup,UNSELECTED,Resistor_SMD:R_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+R22,10k host enable isolation,UNSELECTED,Resistor_SMD:R_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+R23,47k DEFAULT MUTE pulldown,UNSELECTED,Resistor_SMD:R_0603_1608Metric,,Value specified; manufacturer MPN/tolerance procurement OPEN
+J5,HARD MUTE dry-contact switch,UNSELECTED,Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical,,Bench header; production connector MPN and current rating unresolved
+J6,EXTERNAL open drain supervisor,UNSELECTED,Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical,,Bench header; production connector MPN and current rating unresolved
+J7,Left BTL floating pair,UNSELECTED,Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical,,Bench header; production connector MPN and current rating unresolved
+J8,Right BTL floating pair,UNSELECTED,Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical,,Bench header; production connector MPN and current rating unresolved
+TP1,MIC_3V3,UNSELECTED,TestPoint:TestPoint_Pad_D1.0mm,,Probe pad; test instrument loading must be considered
+TP2,PDM_CLK,UNSELECTED,TestPoint:TestPoint_Pad_D1.0mm,,Probe pad; test instrument loading must be considered
+TP3,PDM_D01,UNSELECTED,TestPoint:TestPoint_Pad_D1.0mm,,Probe pad; test instrument loading must be considered
+TP4,PDM_D23,UNSELECTED,TestPoint:TestPoint_Pad_D1.0mm,,Probe pad; test instrument loading must be considered
+TP5,AMP_3V0,UNSELECTED,TestPoint:TestPoint_Pad_D1.0mm,,Probe pad; test instrument loading must be considered
+TP6,AMP_SDZ,UNSELECTED,TestPoint:TestPoint_Pad_D1.0mm,,Probe pad; test instrument loading must be considered
+TP7,GND,UNSELECTED,TestPoint:TestPoint_Pad_D1.0mm,,Probe pad; test instrument loading must be considered

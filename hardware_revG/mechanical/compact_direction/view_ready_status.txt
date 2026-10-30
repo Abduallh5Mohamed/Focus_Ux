@@ -1,0 +1,2 @@
+SAVED A:\Focus_Ux\hardware_revG\mechanical\compact_direction\FOCUS_RevG_Compact_VIEW_READY.FCStd
+visible=10

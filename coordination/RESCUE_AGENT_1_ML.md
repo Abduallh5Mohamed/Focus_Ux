@@ -1,0 +1,17 @@
+# Agent 1 — ML / separation quality
+
+You are developer 1 in a FOUR-developer 12-hour rescue sprint. Read `coordination/RESCUE_12H_PLAN.md`, AGENTS.md and BOARD.md first. This is an execution prompt when a human assigns it; the plan's existence is not evidence that other agents started. Coordinate milestone ownership reconciliation with developer 4 before writing. Do not independently edit shared instructions.
+
+Your exclusive code ownership: `product/packages/ml/**`, `product/tests/ml/**`, `product/tools/rescue_ml/**`. Your handoff: `coordination/rescue/handoff-1.md`. Work on `rescue/ml` in a separate worktree from the agreed base SHA. Legacy A:/focus is read-only; no environment mutation or training. Use a new isolated project-local environment/cache for new official dependencies/weights. Confirm available hardware rather than assuming every developer has the same GPU. No paid services.
+
+Goal: identify whether target-speaker separation can achieve acceptable QUALITY and actual streaming latency. Do not spend the sprint optimizing an unintelligible output. Developer 4 owns the shared contract; agree adapter signatures/capabilities with developers 2 and 4 within 30 minutes. Own the GPU for the first three hours; communicate reservations.
+
+Hour 1: verify official-example inference and preprocessing, checkpoint, AV alignment, mouth ROI frame count, target identity, sample rate/scaling and full-clip versus windowed output. Existing sparse Dolphin warm benchmark took 17.34 s for 8 s, while neural forward was only 1.07 s. Falcon was fast but failed the local quality test. Read actual JSON evidence, do not extrapolate model quality universally. Timebox repairs to one hour.
+
+Hours 1–3: if baseline remains unsuitable, evaluate ONE candidate: official SpeechBrain sepformer-wsj03mix (8 kHz, three outputs) plus ECAPA speaker embeddings (16 kHz) for independent enrollment matching. Stop candidate bring-up after 45 minutes if unusable. This is a quality baseline, NOT assumed causal streaming. Use official documentation and pin versions. No third model unless a pre-ready alternative explicitly replaces this candidate before work begins.
+
+Never select channel 0 arbitrarily. Handle permutation across windows, silence/target absence, confidence, hysteresis, reset and generation changes. Enrollment must be a different utterance; clean test references must never enter inference. Compare full-clip and rolling-window quality. Include overlap recomputation and preprocessing in throughput. Declare window/hop/lookahead, required video rate and cold/warm timings explicitly.
+
+At H+3 deliver real outputs, metric JSON, measured hardware, reproducible command and PASS/FAIL for quality and latency separately. If quality fails, recommend dropping separation from this release; never quietly return original mixture as isolated output. If quality passes but latency fails, label buffered experimental. Implement one stable adapter only after the gate, persistent state/model, bounded memory and honest capabilities. Stop model changes at H+8.
+
+Use the master plan acceptance dataset and gates. Developer 4 provides held-out evaluation; do not tune repeatedly on it. Tests using doubles prove contracts only. Each hourly handoff includes commit SHA, files, commands, observed results, next dependency and blockers. Do not modify API/web files or claim cross-agent messages were delivered unless actually delivered. Ask the human to relay handoffs if agents cannot communicate.

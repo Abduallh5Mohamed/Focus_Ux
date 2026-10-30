@@ -1,0 +1,741 @@
+{
+  "prepared_date": "2026-10-30",
+  "scope": "Engineering review, not manufacturing release",
+  "files": [
+    {
+      "path": "BOM_RevF_candidates.csv",
+      "bytes": 3453,
+      "sha256": "0682d54ba16f8811714f4310c9117837cb1a46e44e9c6b7af6fb91eef7a28b6a"
+    },
+    {
+      "path": "EXPERT_REVIEW_DOSSIER.md",
+      "bytes": 19206,
+      "sha256": "f040d87866cfc8d0ff3e8606d338a6989788bfd6079afd95755c132072355d1c"
+    },
+    {
+      "path": "FILE_INDEX.csv",
+      "bytes": 8260,
+      "sha256": "e846041dd44fa40f3556d64fcc82608264fc63e823a24182c7b2d44278021636"
+    },
+    {
+      "path": "MESSAGE_TO_EXPERT_AR.txt",
+      "bytes": 1901,
+      "sha256": "11e5c50aed8fde1c51c589d8b6ca6b4e026a1c2739416e71e3fdf1207a07329d"
+    },
+    {
+      "path": "hardware_revA/docs/VERIFICATION.md",
+      "bytes": 2112,
+      "sha256": "d72eccf47e4b591cbfb580c3e487920b767cbadcfc3553e5abc0ebafe74541e2"
+    },
+    {
+      "path": "hardware_revA/electronics/BOM.csv",
+      "bytes": 1400,
+      "sha256": "90c905bb08a129a5b1f29732552a16b70ee49c2101986e270e9f128a54bc5d56"
+    },
+    {
+      "path": "hardware_revA/electronics/build_carrier.py",
+      "bytes": 8458,
+      "sha256": "61718fa3acfa56d9bd48580d25b489534fd9d303400597dc1c5384b6d9041f49"
+    },
+    {
+      "path": "hardware_revA/electronics/carrier_generic_components.step",
+      "bytes": 1256743,
+      "sha256": "17b543f4266846e3b4064c04b0849008a699c1b0554dfa4490075445c2fbf09d"
+    },
+    {
+      "path": "hardware_revA/electronics/connectivity_check.json",
+      "bytes": 983,
+      "sha256": "4bcf5adcd1cd1aa2f530c22c210648c2c69035b605f35c8ebc282361faa40476"
+    },
+    {
+      "path": "hardware_revA/electronics/drc.rpt",
+      "bytes": 514,
+      "sha256": "a60bd553d7643f7cc55c1ed8351848868668023a3330f0823f137e33bb27f8ba"
+    },
+    {
+      "path": "hardware_revA/electronics/drc_codex_review.rpt",
+      "bytes": 514,
+      "sha256": "c31daf84d9d66d5da1a69069df7266498aa799dd566fc2e91789bb1db24c4e16"
+    },
+    {
+      "path": "hardware_revA/electronics/drc_parity.rpt",
+      "bytes": 514,
+      "sha256": "230a7205f6d80442278e925d654ac18295a42b2dfcbcbf3a5bc1c46a6ef8d114"
+    },
+    {
+      "path": "hardware_revA/electronics/erc.rpt",
+      "bytes": 357,
+      "sha256": "d106ab8e85cd854f3ff7521984876e92a3700468bb360d575e6a0cbfd8f2e406"
+    },
+    {
+      "path": "hardware_revA/electronics/erc_codex_review.rpt",
+      "bytes": 357,
+      "sha256": "b65459a48e1b5a351426d974b837cbfe9376503c8e27c7e46147f83266ce8e05"
+    },
+    {
+      "path": "hardware_revA/electronics/Focus.kicad_sym",
+      "bytes": 4722,
+      "sha256": "3dcb43cdcc6f2552d934d6081ac01749140b9ceb01453c3ebe1ca3b41692939e"
+    },
+    {
+      "path": "hardware_revA/electronics/focus_control.kicad_pcb",
+      "bytes": 48977,
+      "sha256": "cb637e4c71931fa02f8e6c3fd7413512cf1f9256b221c0a67d09159f10c9ee65"
+    },
+    {
+      "path": "hardware_revA/electronics/focus_control.kicad_pro",
+      "bytes": 2,
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "path": "hardware_revA/electronics/focus_control.kicad_sch",
+      "bytes": 16666,
+      "sha256": "2602918d79797247bada1f8478be6840a5e2384ed7b66141b052a2ec74cc6db7"
+    },
+    {
+      "path": "hardware_revA/electronics/focus_control_board.step",
+      "bytes": 90214,
+      "sha256": "ade35f00a6a4df3f117cfb3b4c11a7deafce84e17b16c2994ccca8744a2f5db7"
+    },
+    {
+      "path": "hardware_revA/electronics/HANDOFF.md",
+      "bytes": 2174,
+      "sha256": "5b595ce47ea919fa56beb13f564ab1f75bdc44889d50ab1a09c883eb7e3805c2"
+    },
+    {
+      "path": "hardware_revA/electronics/manufacturing/focus_control-B_Cu.gbl",
+      "bytes": 4608,
+      "sha256": "d7cac3a16814c7c831d1a61837685ea410482b335d67241ff805d5d3450cc217"
+    },
+    {
+      "path": "hardware_revA/electronics/manufacturing/focus_control-B_Mask.gbs",
+      "bytes": 1948,
+      "sha256": "8da344c5c536cccc880940ad0b44cec3dedca154c3744fca5a44aa17706a2b8b"
+    },
+    {
+      "path": "hardware_revA/electronics/manufacturing/focus_control-B_Silkscreen.gbo",
+      "bytes": 474,
+      "sha256": "85b13384327ee41ce72581fd9c0b1fcad000c5f43a5ba31e6ecad262295b9999"
+    },
+    {
+      "path": "hardware_revA/electronics/manufacturing/focus_control-Edge_Cuts.gm1",
+      "bytes": 646,
+      "sha256": "ecc285629def5817a5701a4ba6db10a0c8dcf83c2fa52ef17d45923c063bb89d"
+    },
+    {
+      "path": "hardware_revA/electronics/manufacturing/focus_control-F_Cu.gtl",
+      "bytes": 5024,
+      "sha256": "e47a93ea1e7085923671921481eed43acde2e65b6127ace469921825a250634c"
+    },
+    {
+      "path": "hardware_revA/electronics/manufacturing/focus_control-F_Mask.gts",
+      "bytes": 1948,
+      "sha256": "45f1237bc995b6e27b7d4a3f74f7adfa77820b7b036bb163c8831ee95ec8cd2a"
+    },
+    {
+      "path": "hardware_revA/electronics/manufacturing/focus_control-F_Silkscreen.gto",
+      "bytes": 18251,
+      "sha256": "1c4cec5217792b487ba0f2268c99a13400d4ed40d90fd7109a22b0ed94d64e85"
+    },
+    {
+      "path": "hardware_revA/electronics/manufacturing/focus_control-job.gbrjob",
+      "bytes": 2536,
+      "sha256": "90b87bfa5d2815f1e2fb58f61f11d1072b065f72ce34f247b22101ddfe8488fa"
+    },
+    {
+      "path": "hardware_revA/electronics/manufacturing/focus_control.drl",
+      "bytes": 1258,
+      "sha256": "f7859d60676256db274d197e562b7f0b097647e6bbb994eb3d5bada7dff23c02"
+    },
+    {
+      "path": "hardware_revA/electronics/pcb_preview.svg",
+      "bytes": 91915,
+      "sha256": "ff9bad8f88c7baf44429c8fbaf306fea04091afe3a49615ec66eabc3b323b159"
+    },
+    {
+      "path": "hardware_revA/electronics/pcb_top.pdf",
+      "bytes": 24684,
+      "sha256": "abf1dcdf4f4d460018acd4fb5232e58b8ab461141f62f103e0eb2f7ad61caa1c"
+    },
+    {
+      "path": "hardware_revA/electronics/PHYSICAL_ORIENTATION.md",
+      "bytes": 3063,
+      "sha256": "03c28a0c7088ab918f2f4efcefe72e0021c38144ee95e87889524c561876ee2e"
+    },
+    {
+      "path": "hardware_revA/electronics/physical_orientation_check.json",
+      "bytes": 5861,
+      "sha256": "ff4540f28650cb7816f96cb2a0a04632def70f9e0078e40636ebf193b00fd36c"
+    },
+    {
+      "path": "hardware_revA/electronics/placement.json",
+      "bytes": 1685,
+      "sha256": "99e275abc81c6ff3480df3f9f0f7aa8ed64515dbd0ea87d6b01dc05c1785565a"
+    },
+    {
+      "path": "hardware_revA/electronics/README.md",
+      "bytes": 8900,
+      "sha256": "5f3afccbedf30ad51b88e7c006939e5e6963117fd13897c6919c3d4e9595592b"
+    },
+    {
+      "path": "hardware_revA/electronics/schematic.net.xml",
+      "bytes": 15930,
+      "sha256": "cfb0e73247c8d0aa2659b159859f031b76ca1092b7cf77fb1773dcf8d463cccd"
+    },
+    {
+      "path": "hardware_revA/electronics/schematic.pdf",
+      "bytes": 69918,
+      "sha256": "7d4a49771d4350abb6263a7e2f4b5123f82386f224f0f478a94a621ea75c64c6"
+    },
+    {
+      "path": "hardware_revA/electronics/schematic_svg/focus_control.svg",
+      "bytes": 476206,
+      "sha256": "95a24208658a5128876007baa9687981d1038faaeefaf08f9c4055e88a37962e"
+    },
+    {
+      "path": "hardware_revA/electronics/sym-lib-table",
+      "bytes": 164,
+      "sha256": "76515fcc1dee5045eb08a9b4e4b31705328532171ad38e15a5fe5b0582b2b010"
+    },
+    {
+      "path": "hardware_revA/electronics/verify_netlist.py",
+      "bytes": 1201,
+      "sha256": "491c5afe7b4da1db83e920bebb312b619de1f77940fdf116ea6b742fb8e17c4b"
+    },
+    {
+      "path": "hardware_revA/firmware/main.py",
+      "bytes": 2001,
+      "sha256": "9344ee60b4edb613a72fd58bdb811868a1b62bc8df1f166aa939181dec321a06"
+    },
+    {
+      "path": "hardware_revA/firmware/observe_controls.py",
+      "bytes": 921,
+      "sha256": "de24de3c71ba2a6c9b1178376c7430d4a442bcfa90bd1b444b0354a3e107633b"
+    },
+    {
+      "path": "hardware_revA/manifest.json",
+      "bytes": 10119,
+      "sha256": "4c5743509eb22f97aa1a4922c18d63aee9b0513092c1944cb43ce1e9fcfe3712"
+    },
+    {
+      "path": "hardware_revA/mechanical/build_mechanical.py",
+      "bytes": 10281,
+      "sha256": "9807fce88696059c50c86c51db19adfc8c9e69da7ffd8dd4c96b419bec07b251"
+    },
+    {
+      "path": "hardware_revA/mechanical/FOCUS_Glasses_RevA.FCStd",
+      "bytes": 78648,
+      "sha256": "10acc776f5ad858fcae4b4dc5ed6b461e2dc971cd1bcb7a176615628add7db9c"
+    },
+    {
+      "path": "hardware_revA/mechanical/FOCUS_Glasses_RevA_Assembly.step",
+      "bytes": 432244,
+      "sha256": "afb3be18b855e69f249d9a9b8172732ba4a3d0407949eaf1bfbcad37156e940f"
+    },
+    {
+      "path": "hardware_revA/mechanical/geometry_validation.json",
+      "bytes": 2537,
+      "sha256": "e7c8aa8d017823f201830ef8eaf8f1553217b407232e61bca08f5442fea35181"
+    },
+    {
+      "path": "hardware_revA/mechanical/module_envelope_check.json",
+      "bytes": 176,
+      "sha256": "2f62c6f5ce2f4525bb61af0623d9dceb0553ff251236f42af4cea60586be3e2e"
+    },
+    {
+      "path": "hardware_revA/mechanical/parameters.json",
+      "bytes": 763,
+      "sha256": "aef784be5d93bf25af8a561750fd979faec65f8cdb6f45b1bf0a5ec4e436de92"
+    },
+    {
+      "path": "hardware_revA/mechanical/preview_mesh.json",
+      "bytes": 991890,
+      "sha256": "9efb898f10335a6bf23f3953e2dd6f9c778f2c6b17055f38b7f803549dce1289"
+    },
+    {
+      "path": "hardware_revA/mechanical/render_freecad.py",
+      "bytes": 1396,
+      "sha256": "f907244d019f5f28b1129321e5e6d340be2b68c351cd9e38c30c8e6ca95bb497"
+    },
+    {
+      "path": "hardware_revA/mechanical/stl/Camera_Cradle.stl",
+      "bytes": 57684,
+      "sha256": "9f323dabbfe9835fc1ce27bef6130d4a6199c51b8f99234d0b3616ddbd6a0707"
+    },
+    {
+      "path": "hardware_revA/mechanical/stl/Control_Pod_Base.stl",
+      "bytes": 421884,
+      "sha256": "4dbaf4fccac295b53d63cc9a70e66abd247974966cd99cce9949a6cc1b4b70af"
+    },
+    {
+      "path": "hardware_revA/mechanical/stl/Control_Pod_Lid.stl",
+      "bytes": 111684,
+      "sha256": "b802f95951daba81b958f42443ff1eed814a6fea25ae313cc315ecb69fea8857"
+    },
+    {
+      "path": "hardware_revA/mechanical/stl/Front_Frame.stl",
+      "bytes": 211084,
+      "sha256": "0667df08d298c8502e408e940126092beca95a5b2455595c319200e58a2f2ebb"
+    },
+    {
+      "path": "hardware_revA/mechanical/stl/Left_Temple.stl",
+      "bytes": 72484,
+      "sha256": "33ca79a77e8cf8032624c472d94a9ed83802d3f82bcc5b9301866560e20a1937"
+    },
+    {
+      "path": "hardware_revA/mechanical/stl/Right_Temple.stl",
+      "bytes": 123284,
+      "sha256": "e26a5d2ba07968819e6e2a23d0f7b2bb94b2e6790b64d67fc2c5da4bcb327fa2"
+    },
+    {
+      "path": "hardware_revA/previews/assembly_front.png",
+      "bytes": 10449,
+      "sha256": "0072f0df7786a154863ed45fafa318df7b48f92f786050476971b6aeef30f418"
+    },
+    {
+      "path": "hardware_revA/previews/assembly_isometric.png",
+      "bytes": 33089,
+      "sha256": "a5aee014388e784b8689715dcbc775e1e8da775042a94f2fedd37e17895069cb"
+    },
+    {
+      "path": "hardware_revA/previews/assembly_top.png",
+      "bytes": 10962,
+      "sha256": "50723aee16925fd8ebc4edc6c9a610dcc6ff3a510db2039aa5e0abaa11732af1"
+    },
+    {
+      "path": "hardware_revA/previews/pcb_top.png",
+      "bytes": 11508,
+      "sha256": "9a8f8dcfd6c4b13a7f53f673e7b4294b73fb6adbc830851e6ef5e69e5c07007e"
+    },
+    {
+      "path": "hardware_revA/previews/pcb_top_page.png",
+      "bytes": 26421,
+      "sha256": "bd367c8fcf06a538a61f55324a18320b845086614bcd51be808024c7617ce62b"
+    },
+    {
+      "path": "hardware_revA/README.md",
+      "bytes": 8130,
+      "sha256": "e719a44a92e5c553b78df62dcbaa436fed4a488d23c19ce09ff70ae61e249090"
+    },
+    {
+      "path": "hardware_revA/START_HERE_AR.md",
+      "bytes": 2252,
+      "sha256": "3c644e3eb1df38b9c9dcbe945451c7c99eac10b942e975eaf69fe1b9bff94b51"
+    },
+    {
+      "path": "hardware_revB/mechanical/build_revb.py",
+      "bytes": 4982,
+      "sha256": "ec289116ecb4c32f477420a111c89b8afff4001571ecf037b191b940efe2373d"
+    },
+    {
+      "path": "hardware_revB/mechanical/FOCUS_RevB_Clip_Packaging.FCStd",
+      "bytes": 36493,
+      "sha256": "e1f0058e120656a7fab6f82bbf2472f9a4324fe4bb7015e639d6afa8868b4a92"
+    },
+    {
+      "path": "hardware_revB/mechanical/FOCUS_RevB_Clip_Packaging.step",
+      "bytes": 153933,
+      "sha256": "5bd28e121ff7eedaf888bac69b7360885fea4ae7b981537306cdda572c8f09db"
+    },
+    {
+      "path": "hardware_revB/mechanical/render_revb.py",
+      "bytes": 1081,
+      "sha256": "775b2eb45bf8ae524ba9440dded0ffa8932d271ed065b28e12184a04c95d35ff"
+    },
+    {
+      "path": "hardware_revB/mechanical/stl/Clip_Cradle.stl",
+      "bytes": 58484,
+      "sha256": "6b10fb9f8adfce8273119d5065521e796ea0c293b583cf59ecdd6e42e3a1e97e"
+    },
+    {
+      "path": "hardware_revB/mechanical/stl/Lower_Clamp_Jaw.stl",
+      "bytes": 51484,
+      "sha256": "56fbf46ae7d4db48ce725893ea2cae4bde403939121d147df11d2e13d83fdcee"
+    },
+    {
+      "path": "hardware_revB/mechanical/stl/Rear_Service_Lid.stl",
+      "bytes": 2884,
+      "sha256": "d3ba5a8bee74e76a862b631914ca0caa74adc0c4929dc9ea4b422d081da47aad"
+    },
+    {
+      "path": "hardware_revB/mechanical/validation.json",
+      "bytes": 784,
+      "sha256": "4d8c72fcb9a03608d0f7b391182d1b8bb886e31bf81fd6ae084b07ef48cbcc16"
+    },
+    {
+      "path": "hardware_revB/previews/RevB_front.png",
+      "bytes": 8910,
+      "sha256": "3b6b4da165c654320478ac7a1981991f77818fafe67af647d9b343ec8d54c5a8"
+    },
+    {
+      "path": "hardware_revB/previews/RevB_isometric.png",
+      "bytes": 24715,
+      "sha256": "ac57cf8011d0c90e587a39b2bf663b3010ed7e567e4b69cf472a2214b07ae661"
+    },
+    {
+      "path": "hardware_revB/README.md",
+      "bytes": 7044,
+      "sha256": "27e365e99b7444bbcbfdcda8cdfe2798bdbc02d7885f17a728c8cd3f9c99769f"
+    },
+    {
+      "path": "hardware_revC/docs/BONE_CONDUCTION_REQUIREMENT.md",
+      "bytes": 3672,
+      "sha256": "c845de27030050f6345ee8d16bc52eedb1a64a4bc5fde941cdd0713c82997cac"
+    },
+    {
+      "path": "hardware_revC/docs/REVIEW.md",
+      "bytes": 10098,
+      "sha256": "42d65aff2e346b0838dafcd70b7a804bf92b98affae27427e328f9540009bcdc"
+    },
+    {
+      "path": "hardware_revC/mechanical/build_revc.py",
+      "bytes": 10309,
+      "sha256": "3a2de3cc3d7156da4a42679c55116a616d5648c263c8106ea21f7815088e56eb"
+    },
+    {
+      "path": "hardware_revC/mechanical/FOCUS_RevC_Assembly.step",
+      "bytes": 7428829,
+      "sha256": "9843e72025ced098d5c058ff37a2d46b8aee10cf6720ab3450929bc3d633cb6e"
+    },
+    {
+      "path": "hardware_revC/mechanical/FOCUS_RevC_Industrial_Review.FCStd",
+      "bytes": 885282,
+      "sha256": "af16123010643b557230f5619d76fb39a440cd1166ab08e1bcd30d6c79511797"
+    },
+    {
+      "path": "hardware_revC/mechanical/render_revc.py",
+      "bytes": 2313,
+      "sha256": "589c8342003fd7136ca479d15fc42ec98d4090c05bc39751218dc0024c31b616"
+    },
+    {
+      "path": "hardware_revC/mechanical/stl/Front_Capture_Chassis.stl",
+      "bytes": 492884,
+      "sha256": "04b7e34d0a2aefaa70d0a917a7fe7814995f24fe1c6c859b634c1cd9ff3f02c0"
+    },
+    {
+      "path": "hardware_revC/mechanical/stl/Left_Ear_Sleeve.stl",
+      "bytes": 804784,
+      "sha256": "61d932a58211d795048497b4904b5f895b4733ca4b42f3059ad320e4952e8d8c"
+    },
+    {
+      "path": "hardware_revC/mechanical/stl/Left_Temples.stl",
+      "bytes": 3041684,
+      "sha256": "ff96037ca79b6a136afab7c650e36b0324c5ed96046a1bc60c412d277c1f845b"
+    },
+    {
+      "path": "hardware_revC/mechanical/stl/Right_Ear_Sleeve.stl",
+      "bytes": 788084,
+      "sha256": "626e7c594f2e95887e7e7d6333da57a3825bc3b26df320cc10a731bc7ebb2b40"
+    },
+    {
+      "path": "hardware_revC/mechanical/stl/Right_Service_Door.stl",
+      "bytes": 77884,
+      "sha256": "5420e15e35f91edd7eb6264f9568fc0f40d1e6fbfc0c1d81e056b4d936b95b96"
+    },
+    {
+      "path": "hardware_revC/mechanical/stl/Right_Temples.stl",
+      "bytes": 3097684,
+      "sha256": "d6355f3e9b47ca7e30afc9ddd1cec72e6aef912c7256a2c3eae7929e289a86f1"
+    },
+    {
+      "path": "hardware_revC/mechanical/validation.json",
+      "bytes": 1346,
+      "sha256": "5613b02d960d1b52e0d4289e1fab540199c66ec6191b0690476f4cc699a6d267"
+    },
+    {
+      "path": "hardware_revC/previews/RevC_front.png",
+      "bytes": 17095,
+      "sha256": "d7b66072ba2db456b0e84aa47703c5d28f9d06a3a4fd385de32613b120aa0cc1"
+    },
+    {
+      "path": "hardware_revC/previews/RevC_hardware_fit.png",
+      "bytes": 67924,
+      "sha256": "82f758d881e3633abe5e247ebe24ec9a8d5da43e9afae6abda7545e266146a06"
+    },
+    {
+      "path": "hardware_revC/previews/RevC_isometric.png",
+      "bytes": 71282,
+      "sha256": "ce1971750835ea970b11e244b1088f090ca4bc9f61e053c4c9f9e1f6a186baf3"
+    },
+    {
+      "path": "hardware_revC/previews/RevC_top.png",
+      "bytes": 48249,
+      "sha256": "a3e21b9d4011706c6127b23d5418364fe4ab8fca185bec79e1ec928c4ae77310"
+    },
+    {
+      "path": "hardware_revC/README.md",
+      "bytes": 6031,
+      "sha256": "78abf8cd3cabdaf0f2385c39a55ca50d45f35a75c2332863575bff06aa6b26a1"
+    },
+    {
+      "path": "hardware_revC/reference/manufacturer_sense_3d.zip",
+      "bytes": 8832441,
+      "sha256": "773c16cb7518a3a18df926979f24c7e224f19309aad69962ec8a54454e288c59"
+    },
+    {
+      "path": "hardware_revC/reference/Seeed Studio XIAO-ESP32-S3-Sense.step",
+      "bytes": 5749825,
+      "sha256": "a37c6b41d5660cd3310fea05edde0238762fe00da4de623936b7ca66814cb698"
+    },
+    {
+      "path": "hardware_revC/START_HERE_AR.md",
+      "bytes": 1613,
+      "sha256": "f7bb301ef34e715b0bc2c16b00b94589a682a106ed03c73e2f4e5e6567b926a4"
+    },
+    {
+      "path": "hardware_revC/tests/TEST_REPORT_AR.md",
+      "bytes": 4059,
+      "sha256": "b863dece03731d2c26bcced45897f525ffafde6009850b281dbc6695a29f04e5"
+    },
+    {
+      "path": "hardware_revC/tests/test_revc_virtual.py",
+      "bytes": 4527,
+      "sha256": "123dfd4b315abed37a2c481b877b46ba42fb872090aeb99d163e5ce0fa04820a"
+    },
+    {
+      "path": "hardware_revC/tests/virtual_test_report.json",
+      "bytes": 7990,
+      "sha256": "30492ec80b549502e5c57dbc863ce3e412c5a119b747ba3fe795cb0e53f3db45"
+    },
+    {
+      "path": "hardware_revD/docs/AUDIO_ARCHITECTURE.md",
+      "bytes": 12768,
+      "sha256": "de3050e85d602435b294af2fb5de13ffb7016ba16f0775e7cb4686b089772d88"
+    },
+    {
+      "path": "hardware_revD/docs/sources/adafruit1674_dimensions.jpg",
+      "bytes": 15761,
+      "sha256": "f9edbf31a1278e6f74da1bc693ec69126fdd5f49c309a99c7be01ec90f8aa9e1"
+    },
+    {
+      "path": "hardware_revD/docs/sources/C2049_datasheet.pdf",
+      "bytes": 306645,
+      "sha256": "108a08e4bee6fdcf0a8f3ce69effc4ba3dde933080c5787390c473b3a95abb87"
+    },
+    {
+      "path": "hardware_revD/mechanical/build_revd.py",
+      "bytes": 13320,
+      "sha256": "b1bcdab5143398475f21ce8bcdc9f9d58f9d0a40388a99dbad0a4f98e2d09249"
+    },
+    {
+      "path": "hardware_revD/mechanical/FOCUS_RevD_Assembly.step",
+      "bytes": 7781552,
+      "sha256": "3d1130ef5f9cfc6bed4ac98b6741fbf0bf752f61a813091692018dc04afe9894"
+    },
+    {
+      "path": "hardware_revD/mechanical/FOCUS_RevD_Industrial_Review.FCStd",
+      "bytes": 1037212,
+      "sha256": "f514c23387481cc5bf303154fcc200e6092436a3a2336439ac3215fdf9d6afda"
+    },
+    {
+      "path": "hardware_revD/mechanical/render_revd.py",
+      "bytes": 2594,
+      "sha256": "a42f481e2a05adefcbe424f65aed0575c92f1e6dc36c95a81c467e8fc00f8fe0"
+    },
+    {
+      "path": "hardware_revD/mechanical/stl/Front_Capture_Chassis.stl",
+      "bytes": 484984,
+      "sha256": "b2940b6243aec4cfe3dcdf5eaebc60e8cc414f3bf5a411ee5f3d7e71e914a771"
+    },
+    {
+      "path": "hardware_revD/mechanical/stl/Left_BC_Contact_Cover.stl",
+      "bytes": 52284,
+      "sha256": "9c823efae5c3833e31fff697dacd0e2c49019835e689a4a174d165ebf6996cf9"
+    },
+    {
+      "path": "hardware_revD/mechanical/stl/Left_BC_Cradle.stl",
+      "bytes": 132284,
+      "sha256": "6dee68754a601872484170a60d2b5f5249ff77c0087ae932f6c325990e938a8d"
+    },
+    {
+      "path": "hardware_revD/mechanical/stl/Left_Ear_Sleeve.stl",
+      "bytes": 741684,
+      "sha256": "e99d07ca5bfb45a09ef102580de94019528a80a6daacd03872615e51443045f4"
+    },
+    {
+      "path": "hardware_revD/mechanical/stl/Left_Temples.stl",
+      "bytes": 3403984,
+      "sha256": "89948e43cd3b37f885fce5f2af94a2171f46968aaf22baeb68558f8b7b3f5c08"
+    },
+    {
+      "path": "hardware_revD/mechanical/stl/Right_BC_Contact_Cover.stl",
+      "bytes": 65484,
+      "sha256": "882436ca4320b8950e66699de4ccfea32ecb64a06d049f52bd6db3494f902944"
+    },
+    {
+      "path": "hardware_revD/mechanical/stl/Right_BC_Cradle.stl",
+      "bytes": 648184,
+      "sha256": "770251b11bf253965cbde272b20490540562a917f1061dd3931ebf3bcca7353d"
+    },
+    {
+      "path": "hardware_revD/mechanical/stl/Right_Ear_Sleeve.stl",
+      "bytes": 741484,
+      "sha256": "c66601e5e4825a5e5ecb94d36ee26bb81148bbe8ec373695159701307ed0ff54"
+    },
+    {
+      "path": "hardware_revD/mechanical/stl/Right_Service_Door.stl",
+      "bytes": 77884,
+      "sha256": "5420e15e35f91edd7eb6264f9568fc0f40d1e6fbfc0c1d81e056b4d936b95b96"
+    },
+    {
+      "path": "hardware_revD/mechanical/stl/Right_Temples.stl",
+      "bytes": 3384384,
+      "sha256": "2243ecfb33885b4e229013df2d7f8cee0faff017476b018908b4910fa113610e"
+    },
+    {
+      "path": "hardware_revD/mechanical/validation.json",
+      "bytes": 1833,
+      "sha256": "f6b7134873226085aaac24096cd268fab2bb03baa4651199cf98021aead71086"
+    },
+    {
+      "path": "hardware_revD/previews/RevD_front.png",
+      "bytes": 17164,
+      "sha256": "f8906d21e7bcf88590540f9f451ea5e6b0c2d044ec44ecd09a1e6fe6d6fefb0a"
+    },
+    {
+      "path": "hardware_revD/previews/RevD_hardware_fit.png",
+      "bytes": 65806,
+      "sha256": "e1af52bdba379ff61c421d202052f5cc80a1ca4eb97e21dcb8ed67318d82f1fc"
+    },
+    {
+      "path": "hardware_revD/previews/RevD_isometric.png",
+      "bytes": 65996,
+      "sha256": "3dc84e7b2f84b623411250f6804406c0779a444a0399db4897e8b0534d43e932"
+    },
+    {
+      "path": "hardware_revD/previews/RevD_top.png",
+      "bytes": 42315,
+      "sha256": "ca8be2c31676d124b9bf4f5627b55cfb1c1b8ffea9ad856a73e762e1c078889a"
+    },
+    {
+      "path": "hardware_revD/README.md",
+      "bytes": 4685,
+      "sha256": "9b98deebcd9acc4f6920e26374e679bcd1db57079a2a674e65a38c9cf52b6483"
+    },
+    {
+      "path": "hardware_revD/reference/Seeed Studio XIAO-ESP32-S3-Sense.step",
+      "bytes": 5749825,
+      "sha256": "a37c6b41d5660cd3310fea05edde0238762fe00da4de623936b7ca66814cb698"
+    },
+    {
+      "path": "hardware_revD/START_HERE_AR.md",
+      "bytes": 2201,
+      "sha256": "c9fdbc6fb6a06044c9e47a5777f3f6da49288f431c81e52e282740a5eda84ce2"
+    },
+    {
+      "path": "hardware_revD/tests/initial_motion_failure.json",
+      "bytes": 8080,
+      "sha256": "a1d334d57b201a50fbe65d8420376dc6d85871dffd0f8e76350524f652749c19"
+    },
+    {
+      "path": "hardware_revD/tests/TEST_REPORT.md",
+      "bytes": 798,
+      "sha256": "e6ba09db4172af8e176bd4717d9ec0686a8ee2e16b3648ec937ddbdcd2c826a7"
+    },
+    {
+      "path": "hardware_revD/tests/test_revd_virtual.py",
+      "bytes": 6375,
+      "sha256": "4c54f155db8d25e463ba1c9638f8d0932fc41465e19841bfc0b07dcbd7d480c2"
+    },
+    {
+      "path": "hardware_revD/tests/virtual_test_report.json",
+      "bytes": 8849,
+      "sha256": "78e0969bdf89f4216302a5c0719c83b17196fb0160672df523362bf2f9165974"
+    },
+    {
+      "path": "hardware_revE/docs/STANDALONE_CELLULAR_REQUIREMENTS.md",
+      "bytes": 4117,
+      "sha256": "ce86fa7b19f9e8cf642a0116c5e8f59501abb6878304b33a3709870dc085aabf"
+    },
+    {
+      "path": "hardware_revE/mechanical/build_reve.py",
+      "bytes": 9784,
+      "sha256": "9c587824c72a21261a127fb01dfcd6a0bd3bf613f5425587c0c7092d35fe77a9"
+    },
+    {
+      "path": "hardware_revE/mechanical/FOCUS_RevE_Wearability_Study.FCStd",
+      "bytes": 496202,
+      "sha256": "a2091adb729975c4d1be1bc56a6c3207bdad2787a3689456df232daff45c6439"
+    },
+    {
+      "path": "hardware_revE/mechanical/FOCUS_RevE_Wearability_Study.step",
+      "bytes": 1613687,
+      "sha256": "9b51ff4c43e4973922062d87202683187c0b20303ac3f2815fd89960501a0bb4"
+    },
+    {
+      "path": "hardware_revE/mechanical/form_study_checks.json",
+      "bytes": 1027,
+      "sha256": "bf833483f47c8a71a9429c917c8e4fc4f131d9947785f162efc23e9e0e5ff899"
+    },
+    {
+      "path": "hardware_revE/mechanical/render_reve.py",
+      "bytes": 1954,
+      "sha256": "d0f211f7443f627a84223b1be78c6d3aba471a9be2786a514d21561054c629ec"
+    },
+    {
+      "path": "hardware_revE/previews/RevE_component_packaging.png",
+      "bytes": 86928,
+      "sha256": "67e7e52505e51243e3f03450e66b3324021c04b9e40b3a510a1dd6033cf6d33e"
+    },
+    {
+      "path": "hardware_revE/previews/RevE_front.png",
+      "bytes": 32229,
+      "sha256": "bb8a21e62b0614e9f81e10d1b792cab124c6998b03b186abee36055591254bca"
+    },
+    {
+      "path": "hardware_revE/previews/RevE_isometric.png",
+      "bytes": 84070,
+      "sha256": "e13fcf32d0d9ddfdb90ab871465fd73c213259de9286937e864664703fab812c"
+    },
+    {
+      "path": "hardware_revE/previews/RevE_top.png",
+      "bytes": 60151,
+      "sha256": "4b634f275b7def47b3120925f64d1848fb32770d8ff463af1dcab5fda86f8df2"
+    },
+    {
+      "path": "hardware_revE/README.md",
+      "bytes": 6358,
+      "sha256": "bbff74d922986dc4ba84d65d3bcba8244d0204a49ea85b3aef546677615abccd"
+    },
+    {
+      "path": "hardware_revE/reference/Arducam_B0441_datasheet.pdf",
+      "bytes": 520691,
+      "sha256": "a36ba83cc250cb8e2421ef1173cb56b387f980edce7927c08e3dfef758231a9a"
+    },
+    {
+      "path": "hardware_revE/reference/BS08_catalog_facts.json",
+      "bytes": 492,
+      "sha256": "9ecbafd99d7e665af141cdf85c91f7ecc89b370c28c4ab5e61cbb315900929dc"
+    },
+    {
+      "path": "hardware_revE/START_HERE_AR.md",
+      "bytes": 1959,
+      "sha256": "9cedda8ef1d9a286bd9872a40c2e83e519456a59ce02fe2f156db3ad053424cc"
+    },
+    {
+      "path": "hardware_revF/docs/POWER_AND_RF.md",
+      "bytes": 13790,
+      "sha256": "a67e582ae90d9689a8b5c6ce15d11970ae06e66475bb4a47d83a26da2a2f5d8f"
+    },
+    {
+      "path": "hardware_revF/reference/power/FXP40.07.0085A.pdf",
+      "bytes": 3949392,
+      "sha256": "484646137770bdda0f07950d6f0f5341ee84c63654068ad9d06b9dfb5fe0e5fc"
+    },
+    {
+      "path": "hardware_revF/reference/power/GCT_SIM8051.pdf",
+      "bytes": 190320,
+      "sha256": "3d76903f2f04bee88b519c177d844c887189c2534055ed56b58094ae851be5f5"
+    },
+    {
+      "path": "hardware_revF/reference/power/SOURCES.md",
+      "bytes": 1620,
+      "sha256": "9714ad1841b1bcf8151316f888dc4ce2c637e935980a0f9000734e994d1c1e37"
+    },
+    {
+      "path": "hardware_revF/reference/power/tattu_official_brochure.pdf",
+      "bytes": 3442365,
+      "sha256": "a804cb3998829cb911aca54dbc3dba9e8a9be65ffb44801ebd30bfb27fd25b65"
+    }
+  ]
+}

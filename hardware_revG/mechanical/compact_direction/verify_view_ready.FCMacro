@@ -1,0 +1,14 @@
+import FreeCAD as App
+import FreeCADGui as Gui
+from pathlib import Path
+import traceback
+
+root = Path('A:/Focus_Ux/hardware_revG/mechanical/compact_direction')
+try:
+    doc = App.openDocument(str(root / 'FOCUS_RevG_Compact_VIEW_READY.FCStd'))
+    Gui.updateGui()
+    view = Gui.activeDocument().activeView()
+    view.saveImage(str(root / 'VIEW_READY_REOPEN_CHECK.png'), 1600, 1000, 'White')
+    (root / 'reopen_status.txt').write_text('opened=' + doc.Name + '\n', encoding='utf-8')
+except Exception:
+    (root / 'reopen_status.txt').write_text(traceback.format_exc(), encoding='utf-8')

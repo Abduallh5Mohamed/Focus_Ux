@@ -1,0 +1,38 @@
+import FreeCAD as App
+import FreeCADGui as Gui
+from pathlib import Path
+import traceback
+
+root = Path('A:/Focus_Ux/hardware_revG/mechanical/compact_direction')
+source = root / 'FOCUS_RevG_Compact_Packaging_Screen.FCStd'
+target = root / 'FOCUS_RevG_Compact_VIEW_READY.FCStd'
+log = root / 'view_ready_status.txt'
+
+try:
+    doc = App.openDocument(str(source))
+    Gui.activateWorkbench('PartWorkbench')
+    colors = {
+        'mechanical': (0.14, 0.19, 0.22),
+        'source': (0.12, 0.56, 0.67),
+    }
+    shown = 0
+    for obj in doc.Objects:
+        if obj.TypeId != 'Part::Feature':
+            continue
+        category = getattr(obj, 'Category', '')
+        obj.ViewObject.Visibility = category in ('mechanical', 'source')
+        obj.ViewObject.ShapeColor = colors.get(category, (0.55, 0.55, 0.55))
+        obj.ViewObject.LineColor = (0.06, 0.11, 0.13)
+        obj.ViewObject.DisplayMode = 'Flat Lines'
+        obj.ViewObject.Transparency = 0
+        shown += int(obj.ViewObject.Visibility)
+    view = Gui.activeDocument().activeView()
+    view.viewAxonometric()
+    view.fitAll()
+    Gui.updateGui()
+    view.saveImage(str(root / 'VIEW_READY_OPEN_CHECK.png'), 1600, 1000, 'White')
+    doc.recompute()
+    doc.saveAs(str(target))
+    log.write_text('SAVED ' + str(target) + '\nvisible=' + str(shown) + '\n', encoding='utf-8')
+except Exception:
+    log.write_text(traceback.format_exc(), encoding='utf-8')
