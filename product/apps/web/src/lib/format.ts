@@ -2,6 +2,10 @@
 
 export function formatClock(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return '0:00';
+  if (seconds > 0 && seconds < 1) {
+    const fraction = Math.max(1, Math.floor(seconds * 1000)).toString().padStart(3, '0').replace(/0+$/, '');
+    return `0:00.${fraction}`;
+  }
   const total = Math.floor(seconds);
   const mm = Math.floor(total / 60);
   const ss = total % 60;
@@ -10,6 +14,7 @@ export function formatClock(seconds: number): string {
 
 export function formatDuration(ms: number | null | undefined): string {
   if (ms === null || ms === undefined || !Number.isFinite(ms)) return '—';
+  if (ms > 0 && ms < 1000) return `${Math.max(0.001, Math.round(ms) / 1000)} ث`;
   const totalSeconds = Math.round(ms / 1000);
   const mm = Math.floor(totalSeconds / 60);
   const ss = totalSeconds % 60;

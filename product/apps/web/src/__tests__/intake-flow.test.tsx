@@ -108,4 +108,38 @@ describe('FaceSelect', () => {
     await screen.findAllByRole('radio');
     expect(screen.getByRole('button', { name: /ابدأ عزل الصوت/ })).toBeDisabled();
   });
+
+  it('shows a useful fallback when a successful media response cannot decode as an image', async () => {
+    await renderFaces((api) => vi.spyOn(api, 'fetchMedia').mockResolvedValue(new Blob(['not an image'])));
+    const image = await waitFor(() => {
+      const element = document.querySelector<HTMLImageElement>('.face-card img');
+      expect(element).not.toBeNull();
+      return element!;
+    });
+    fireEvent.error(image);
+    expect(await screen.findByText('الصورة مش متاحة')).toBeInTheDocument();
+    expect(image).not.toBeInTheDocument();
+  });
+
+  it('preserves a face crop and only overlays frame coordinates on a full-frame thumbnail', async () => {
+    await renderFaces((api) => vi.spyOn(api, 'fetchMedia').mockResolvedValue(new Blob(['jpeg'])));
+    const image = await waitFor(() => {
+      const element = document.querySelector<HTMLImageElement>('.face-card img');
+      expect(element).not.toBeNull();
+      return element!;
+    });
+    Object.defineProperties(image, {
+      naturalWidth: { value: 1280, configurable: true },
+      naturalHeight: { value: 720, configurable: true },
+    });
+    fireEvent.load(image);
+    expect(image.closest('.face-card')?.querySelector('.face-card__bbox')).not.toBeNull();
+    Object.defineProperties(image, {
+      naturalWidth: { value: 70, configurable: true },
+      naturalHeight: { value: 92, configurable: true },
+    });
+    fireEvent.load(image);
+    expect(image.closest('.face-card')?.querySelector('.face-card__bbox')).toBeNull();
+    expect(image).toHaveStyle({ objectFit: 'contain' });
+  });
 });

@@ -13,12 +13,24 @@ describe('formatClock', () => {
     expect(formatClock(Number.NaN)).toBe('0:00');
     expect(formatClock(-5)).toBe('0:00');
   });
+
+  it('does not display a positive subsecond clip as zero', () => {
+    expect(formatClock(0.16)).toBe('0:00.16');
+    expect(formatClock(0.166667)).toBe('0:00.166');
+    expect(formatClock(0.006)).toBe('0:00.006');
+  });
 });
 
 describe('formatDuration', () => {
   it('renders arabic units', () => {
     expect(formatDuration(9_000)).toBe('9 ث');
     expect(formatDuration(65_000)).toBe('1 د 5 ث');
+  });
+
+  it('preserves a subsecond uploaded or extracted duration', () => {
+    expect(formatDuration(160)).toBe('0.16 ث');
+    expect(formatDuration(166.667)).toBe('0.167 ث');
+    expect(formatDuration(0)).toBe('0 ث');
   });
 
   it('renders a dash when unknown', () => {

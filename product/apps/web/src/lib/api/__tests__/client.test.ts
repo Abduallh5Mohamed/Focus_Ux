@@ -242,6 +242,24 @@ describe('createHttpApi', () => {
     expect((init.headers as Record<string, string> | undefined)?.Authorization).toBeUndefined();
   });
 
+  it.each(['/api', ''])('fetches protected thumbnails through a relative API base %s', async (baseUrl) => {
+    const blob = new Blob(['jpeg'], { type: 'image/jpeg' });
+    const fetchImpl = vi.fn(async () => fakeResponse(200, undefined, { blob }));
+    const api = createHttpApi({ baseUrl, getToken: () => 'secret-token', fetchImpl: fetchImpl as unknown as typeof fetch });
+    await expect(api.fetchMedia('/videos/v1/faces/f1/thumbnail')).resolves.toBe(blob);
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe(`${baseUrl}/videos/v1/faces/f1/thumbnail`);
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer secret-token');
+  });
+
+  it.each(['//cdn.evil.test/thumb.jpg', '/\\cdn.evil.test/thumb.jpg'])('never tokens a foreign network-path URL %s', async (url) => {
+    const fetchImpl = vi.fn(async () => fakeResponse(200));
+    const api = createHttpApi({ baseUrl: '/api', getToken: () => 'secret-token', fetchImpl: fetchImpl as unknown as typeof fetch });
+    await api.fetchMedia(url);
+    const [, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect((init.headers as Record<string, string> | undefined)?.Authorization).toBeUndefined();
+  });
+
   it('fetches data: media without a token', async () => {
     const blob = new Blob(['x'], { type: 'image/svg+xml' });
     const fetchImpl = vi.fn(async () => fakeResponse(200, undefined, { blob }));

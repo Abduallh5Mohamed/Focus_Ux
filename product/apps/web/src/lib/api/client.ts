@@ -248,10 +248,15 @@ export function createHttpApi(options: HttpApiOptions): FocusApi {
       // Only attach the session token to media that belongs to the trusted API origin.
       // A foreign-origin URL is fetched anonymously so we never leak the token to a
       // third party. A relative path resolves against the API base (trusted) and is tokened.
-      const target = safeUrl(url, baseUrl);
-      const sameOrigin = target ? targetOriginMatches(target, baseUrl) : false;
+      // Resolve a proxy base such as /api (or an empty same-origin base) against
+      // the page before deciding whether the media may carry credentials.
+      const apiBase = safeUrl(baseUrl || '/', globalThis.location?.href);
+      const target = safeUrl(url, apiBase?.href);
+      const sameOrigin = Boolean(target && apiBase && target.origin === apiBase.origin);
       if (sameOrigin) {
-        return requestBlob(url, signal);
+        // Network-path references need their resolved origin; ordinary API paths
+        // still go through requestBlob so the /api proxy prefix is preserved.
+        return requestBlob(/^[\/\\]{2}/.test(url.trim()) ? target!.href : url, signal);
       }
       return fetchBlobAbsolute(doFetch, url, () => null, signal);
     },
@@ -273,15 +278,6 @@ function safeUrl(value: string, base?: string): URL | null {
     return new URL(value, base && /^https?:/i.test(base) ? base : undefined);
   } catch {
     return null;
-  }
-}
-
-function targetOriginMatches(target: URL, baseUrl?: string): boolean {
-  if (!baseUrl || !/^https?:/i.test(baseUrl)) return false;
-  try {
-    return new URL(baseUrl).origin === target.origin;
-  } catch {
-    return false;
   }
 }
 
