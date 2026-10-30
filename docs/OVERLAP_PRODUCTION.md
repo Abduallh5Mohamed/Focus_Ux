@@ -133,3 +133,6 @@ another file); acceptance regions are oracle; audio/video sync is checked as sam
 Yes to merge as dormant code: with nothing set, output is identical to the previous gate (tested). **No** to
 enabling the extractor: it is unvalidated. Continuity mode can be used now if the product wording says it plays the
 original mix quietly and is not isolation.
+
+
+Website wiring and the Windows trial steps: [WESEP_WEBSITE_TRIAL.md](WESEP_WEBSITE_TRIAL.md) (research-only, nothing measured).

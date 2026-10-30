@@ -10,7 +10,28 @@ from fastapi.responses import Response
 from .config import PRODUCT_ROOT
 
 
+# Needed by the audio-only worker, including overlap extraction and its validation tools.
+REQUIRED_PACKAGE_DIRS = ("voice", "overlap")
+OVERLAP_TOOLS = ("overlap_minimal_infer.py", "overlap_e2e.py", "overlap_acceptance.py",
+                 "Overlap-Validate.cmd", "Overlap-Preflight.cmd", "Setup-Overlap.cmd", "setup_overlap.py",
+                 "Start-Worker-Checkout.cmd")
+REFUSAL = ("This worker ZIP is incomplete and cannot run the audio-only worker. "
+           "Use the full repo checkout instead: update it with git pull --ff-only and run "
+           "product\\tools\\Start-Worker-Checkout.cmd.")
+
+
+def missing_parts() -> list[str]:
+    root = PRODUCT_ROOT / "packages/ml/focus_ml"
+    missing = [d for d in REQUIRED_PACKAGE_DIRS if not (root / d / "__init__.py").is_file()]
+    missing += [t for t in OVERLAP_TOOLS if not (PRODUCT_ROOT / "tools" / t).is_file()]
+    return missing
+
+
 def worker_kit() -> Response:
+    missing = missing_parts()
+    if missing:   # never ship a ZIP that starts and then fails on a missing module
+        return Response(REFUSAL + " Missing: " + ", ".join(missing), status_code=503,
+                        media_type="text/plain")
     output = io.BytesIO()
     tools = PRODUCT_ROOT / "tools"
     with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
@@ -34,7 +55,12 @@ def worker_kit() -> Response:
         archive.writestr("product/services/worker/__init__.py", "")
         archive.write(PRODUCT_ROOT / "services/worker/stream_proto.py",
                       "product/services/worker/stream_proto.py")
-        for path in sorted((PRODUCT_ROOT / "packages/ml/focus_ml").glob("*.py")):
+        for name in OVERLAP_TOOLS:
+            if name != "Start-Worker-Checkout.cmd":
+                archive.write(tools / name, name if name.endswith(".cmd") else "product/tools/" + name)
+        base = PRODUCT_ROOT / "packages/ml/focus_ml"
+        for path in sorted(base.glob("*.py")) + [
+                p for d in REQUIRED_PACKAGE_DIRS for p in sorted((base / d).glob("*.py"))]:
             archive.write(path, str(path.relative_to(PRODUCT_ROOT.parent)))
         archive.writestr(
             "READ-ME.txt",

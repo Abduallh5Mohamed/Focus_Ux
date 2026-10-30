@@ -7,7 +7,7 @@ rem   gpu_log.txt, report.json, validation-out\e2e\{strict,continuity}\isolated.
 set A1=%~f1
 set A2=%~f2
 set A3=%~f3
-cd /d "%~dp0\..\.."
+if exist "%~dp0product\tools\windows_worker.py" (cd /d "%~dp0") else cd /d "%~dp0..\.."
 set PY=A:\focus\.venv\Scripts\python.exe
 if not exist "%PY%" (
   echo Original Python was not found at %PY%.

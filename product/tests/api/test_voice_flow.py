@@ -293,3 +293,26 @@ def test_old_database_gains_job_columns(tmp_path):
     cols = {r[1] for r in repo._conn.execute("PRAGMA table_info(jobs)")}
     assert {"enrollment_id", "follow_periods"} <= cols
     repo.close()
+
+
+def test_job_response_shows_the_routing_summary_and_not_its_storage_marker(audio_api):
+    import json
+
+    summary = {"extractor_requested": "wesep_bsrnn", "extractor_ran": True, "overlap_extraction": "ran",
+               "overlap_seconds": 3.0, "pieces_extracted": 1, "pieces_muted": 0, "fallback_used": False,
+               "isolation_claim": "strict_isolation"}
+
+    class Runner(FakeAudioOnlyRunner):
+        def extract(self, job, job_dir, on_progress):
+            result = super().extract(job, job_dir, on_progress)
+            result.warnings = list(result.warnings) + ["routing: " + json.dumps(summary)]
+            return result
+
+    api, _p, video_id, token, face = audio_api(runner=Runner())
+    eid = _post(api, f"/videos/{video_id}/enrollments", token,
+                json={"face_id": face, "source": "voice", "voice_id": "voice-0"}).json()["enrollment_id"]
+    job = _post(api, "/jobs", token, json={"video_id": video_id, "enrollment_id": eid, "client_request_id": "r"})
+    api.drain()
+    result = api.get_job(job.json()["job_id"], token).json()["result"]
+    assert result["routing"] == summary
+    assert not any(w.startswith("routing:") for w in result.get("warnings", []))

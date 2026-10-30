@@ -243,14 +243,25 @@ class WorkerClient:
             # The request carries the enrollment and the cached diarization. No
             # video, frame, face or lip data exists on this path.
             from focus_ml.voice.engine import regions_to_wire
+            extra = {}
+            if payload.get("reference_wav_b64"):
+                # Clean enrollment audio only (an uploaded voice file); same task payload cap.
+                import base64
+                import io
+                import wave
+                import numpy as np
+                with wave.open(io.BytesIO(base64.b64decode(payload["reference_wav_b64"])), "rb") as ref:
+                    extra["reference_audio"] = np.frombuffer(
+                        ref.readframes(ref.getnframes()), dtype="<i2").astype(np.float32) / 32768.0
             result = engine.isolate_audio(
-                str(video), payload["voiceprint"], payload["diarization"], directory)
+                str(video), payload["voiceprint"], payload["diarization"], directory, **extra)
             wav = Path(result.wav_path)
             if wav.resolve().parent != Path(directory).resolve():
                 raise ValueError("engine output is outside its task directory")
             if result.source_offset_ms != 0 or wav.stat().st_size > MAX_OUTPUT_AUDIO_BYTES:
                 raise ValueError("engine output is oversized or shifted")
-            self.json(prefix + "/regions", {"regions": regions_to_wire(result.details["regions"])})
+            self.json(prefix + "/regions", {"regions": regions_to_wire(result.details["regions"]),
+                                            "routing": result.details.get("routing_summary")})
             with self.request(
                 prefix + "/audio", wav.read_bytes(), "audio/wav", {"X-Focus-Engine": "audio_only"},
             ) as response:

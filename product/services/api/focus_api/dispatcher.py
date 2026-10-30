@@ -325,6 +325,8 @@ class Dispatcher:
                     error_message=result["refused"], retryable=False)
                 return
             vp = result["voiceprint"]
+            if result.get("reference_wav_b64"):   # clean reference audio of an uploaded voice file
+                vp = dict(vp, reference_wav_b64=result["reference_wav_b64"])
             ok = self.repo.finish_enrollment(
                 enrollment_id, "ready", voiceprint=vp, warnings=result["warnings"],
                 clean_s=vp["duration_s"])

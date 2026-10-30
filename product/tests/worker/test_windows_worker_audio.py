@@ -111,3 +111,30 @@ def test_unknown_task_and_new_defaults(module, setup):
         Recorder(module).client.handle({"kind": "mystery"}, engine, audio, str(tmp), "/p")
     assert module.ENGINES[0] == "audio_only"
     assert module.MAX_MEDIA_BYTES >= 180 * 1024 * 1024
+
+
+def test_isolate_posts_routing_summary_and_passes_reference_audio(module, setup):
+    import base64
+    audio, engine, tmp = setup
+    seen = {}
+    real = engine.isolate_audio
+
+    def spy(*args, **kwargs):
+        seen.update(kwargs)
+        return real(*args, **kwargs)
+
+    engine.isolate_audio = spy
+    rec = Recorder(module)
+    analysis = engine.analyze_audio(str(audio))
+    vp = next(s for s in analysis["speakers"] if s["speaker"] == "A")["voiceprint"]
+    buf = io.BytesIO()
+    with wave.open(buf, "wb") as w:
+        w.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
+        w.writeframes(b"\x00\x01" * 16000)
+    task = {"kind": "isolate", "payload": {
+        "voiceprint": vp, "diarization": analysis["diarization"],
+        "reference_wav_b64": base64.b64encode(buf.getvalue()).decode()}}
+    rec.client.handle(task, engine, audio, str(tmp), "/p")
+    assert len(seen["reference_audio"]) == 16000
+    routing = rec.sent[0][1]["routing"]
+    assert routing["overlap_extraction"] == "disabled" and routing["isolation_claim"] == "strict_isolation"

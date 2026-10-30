@@ -30,7 +30,7 @@ from .enroll import (
 )
 from .errors import EnrollmentError
 from .extractor import Extractor, GatedBaseline
-from .routing import RoutedExtractor, RoutingConfig, routing_from_env
+from .routing import RoutedExtractor, RoutingConfig, routing_from_env, summarize_routing
 from .match import MatchConfig, classify_regions
 from .profile import ResidencyPolicy
 from .preprocess import load_canonical, slice_samples
@@ -191,30 +191,45 @@ class AudioOnlyEngine:
         with self._stage("enroll"):
             vp = enroll_from_file(samples, diar, self.embedder, self.enrollment, name)
         self._release("embedder")
-        return {"voiceprint": vp.as_dict(), "warnings": vp.warnings}
+        out = {"voiceprint": vp.as_dict(), "warnings": vp.warnings}
+        # The clean spans index THIS file, which is not kept; keep a short clean
+        # reference so a target-conditioned overlap model can still be used later.
+        spans = [Segment(float(s["start"]), float(s["end"]))
+                 for s in vp.source.get("clean_spans") or []]
+        if spans:
+            from ..overlap.base import trim_enrollment
+            out["reference_wav_b64"] = _wav_b64(trim_enrollment(
+                np.concatenate([slice_samples(samples, s) for s in spans])))
+        return out
 
     # -- isolation -----------------------------------------------------------
-    def _enrollment_audio(self, samples, enrollment: Voiceprint, path: str | None, diar=None):
+    def _enrollment_audio(self, samples, enrollment: Voiceprint, path: str | None, diar=None,
+                          reference=None):
         """Clean enrollment audio for target-conditioned models: a separate recording
-        if given, else the clean spans the voiceprint was made from (same audio)."""
+        if given, else reference audio kept at enrollment (uploaded voice files), else
+        the clean spans the voiceprint was made from (spans of this same audio)."""
         from ..overlap.base import trim_enrollment
         if path:
             return trim_enrollment(load_canonical(path))
+        if reference is not None and len(reference):
+            return trim_enrollment(reference)
         src = enrollment.source or {}
         if src.get("kind") == "voice_file":
-            return None
+            return None   # its spans index the uploaded file, not this recording
         spans = [Segment(float(s["start"]), float(s["end"])) for s in src.get("clean_spans") or []]
         if not spans and src.get("kind") == "speaker_label" and diar is not None:
             spans = [s for s in _clean_spans(diar, src.get("speaker"))[0]
                      if s.duration >= self.enrollment.min_span_s]
         return trim_enrollment(np.concatenate([slice_samples(samples, s) for s in spans])) if spans else None
 
-    def _routed(self, samples, enrollment: Voiceprint, enrollment_audio_path: str | None, diar=None):
+    def _routed(self, samples, enrollment: Voiceprint, enrollment_audio_path: str | None, diar=None,
+                reference=None):
         if self._explicit_extractor:
             return self.extractor
         routed = RoutedExtractor(None, self.routing)
         if self.overlap_extractor is not None:
-            ref = self._enrollment_audio(samples, enrollment, enrollment_audio_path, diar)
+            routed.requested = self.overlap_extractor.info.name
+            ref = self._enrollment_audio(samples, enrollment, enrollment_audio_path, diar, reference)
             if ref is None:
                 routed.skip_reason = "no clean enrollment audio is available for the target-conditioned model"
             else:
@@ -223,7 +238,8 @@ class AudioOnlyEngine:
         return routed
 
     def isolate(self, audio_path: str, voiceprint: dict, diarization: dict, job_dir: str,
-                on_progress=None, enrollment_audio_path: str | None = None) -> EngineResult:
+                on_progress=None, enrollment_audio_path: str | None = None,
+                reference_audio=None) -> EngineResult:
         """Audio + enrollment + the cached diarization in; isolated.wav and the
         labelled timeline out. Strict mode (default): overlap and unmatched speech are
         muted unless a validated overlap extractor is enabled. Continuity mode plays the
@@ -240,7 +256,7 @@ class AudioOnlyEngine:
         if on_progress:
             on_progress("matching", 1.0)
             on_progress("separating", 0.0)
-        extractor = self._routed(samples, enrollment, enrollment_audio_path, diar)
+        extractor = self._routed(samples, enrollment, enrollment_audio_path, diar, reference_audio)
         with self._stage("extract"):
             out = extractor.extract(samples, regions)
         self._release("embedder")
@@ -263,6 +279,7 @@ class AudioOnlyEngine:
             source_offset_ms=0, timings={"total": round(time.perf_counter() - t0, 2)},
             warnings=warnings, engine=ENGINE_NAME,
             details={"regions": [r.as_dict() for r in regions if r.label in (TARGET, UNCERTAIN)],
+                     "routing_summary": summarize_routing(routing),
                      **({"routing": routing} if routing else {})})
 
 

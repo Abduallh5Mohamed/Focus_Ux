@@ -88,7 +88,25 @@ export interface FollowPeriod {
   output_allowed: boolean;
 }
 
+/** What the overlap step actually did. A fallback is never isolation. */
+export interface OverlapRouting {
+  extractor_requested: string | null;
+  extractor_ran: boolean;
+  overlap_extraction: 'disabled' | 'ran' | 'skipped' | 'failed';
+  reason: string | null;
+  overlap_seconds: number;
+  windows: number;
+  pieces_extracted: number;
+  pieces_muted: number;
+  muted_seconds: number;
+  fallback_used: boolean;
+  fallback_seconds: number;
+  isolation_claim: 'strict_isolation' | 'not_isolation';
+}
+
 export interface JobResult {
+  /** Audio-only engine: overlap routing summary (absent for other engines). */
+  routing?: OverlapRouting;
   /** Optional: absent until the voice-follow models are approved and integrated. */
   follow_periods?: FollowPeriod[];
   duration_ms?: number;

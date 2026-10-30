@@ -98,15 +98,20 @@ class RoutedExtractor:
     name: str = "routed"
     last_report: dict = field(default_factory=dict)
     skip_reason: str | None = None
+    requested: str | None = None   # extractor name the operator asked for (None = disabled)
 
     def extract(self, samples, regions):
         x = np.asarray(samples, dtype=np.float32).reshape(-1)
         n = len(x)
-        report = {"mode": self.config.mode, "overlap_extractor": None, "overlap_extraction": "disabled",
+        report = {"mode": self.config.mode, "overlap_requested": self.requested, "overlap_extractor": None, "overlap_extraction": "disabled",
                   "overlap_error": None, "fallback_used": False, "fallback_seconds": 0.0,
                   "isolation_claim": "strict_isolation", "notices": []}
         pieces: list[dict] = []
         out = None
+        from ..overlap.hybrid import overlap_spans
+        spans = overlap_spans(regions, n)   # overlap present in the input, whatever happens next
+        report["overlap_observed_seconds"] = round(sum(b - a for a, b in spans) / SAMPLE_RATE, 3)
+        report["overlap_observed_regions"] = len(spans)
         if self.hybrid is not None:
             try:
                 out = self.hybrid.extract(x, regions)
@@ -133,3 +138,45 @@ class RoutedExtractor:
                 report["notices"].append(CONTINUITY_NOTICE)
         self.last_report = report
         return out
+
+
+MAX_SUMMARY_REGIONS = 200
+
+
+def summarize_routing(report: dict | None) -> dict:
+    """Short, wire-safe routing summary of one isolation run. It states what actually
+    happened (extractor ran or not, pieces kept or muted, whether the original mix
+    played) and never describes a fallback as isolation."""
+    report = report or {}
+    hybrid = report.get("hybrid") or {}
+    pieces = hybrid.get("pieces") or []
+    state = report.get("overlap_extraction") or "disabled"
+    ran = state == "ran"
+    err = report.get("overlap_error")
+    reason = err if isinstance(err, str) else (err.get("kind") if isinstance(err, dict) else None)
+    extracted = [p for p in pieces if p.get("status") == "extracted"]
+    name = report.get("overlap_extractor") or report.get("overlap_requested")
+    fallback = bool(report.get("fallback_used"))
+    return {
+        "extractor_requested": report.get("overlap_requested"),
+        "extractor_ran": ran,
+        "overlap_extraction": state,
+        "reason": reason,
+        "mode": report.get("mode") or STRICT,
+        "overlap_seconds": float(hybrid.get("overlap_seconds") if ran
+                                 else report.get("overlap_observed_seconds") or 0.0),
+        "windows": int(hybrid.get("windows") or 0),
+        "pieces_extracted": len(extracted),
+        "pieces_muted": len(pieces) - len(extracted) if ran
+        else int(report.get("overlap_observed_regions") or 0),
+        "muted_seconds": float(hybrid.get("uncertain_muted_seconds") if ran
+                               else report.get("overlap_observed_seconds") or 0.0),
+        "fallback_used": fallback,
+        "fallback_seconds": float(report.get("fallback_seconds") or 0.0),
+        "isolation_claim": "not_isolation" if fallback else "strict_isolation",
+        "regions": [
+            {"start_ms": int(round(p["start"] * 1000)), "end_ms": int(round(p["end"] * 1000)),
+             "route": name if ran else "muted", "status": p.get("status") or "muted",
+             "reason": str(p.get("reason") or "")[:80]}
+            for p in pieces[:MAX_SUMMARY_REGIONS]],
+    }
