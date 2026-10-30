@@ -68,6 +68,7 @@ class Settings:
     cleanup_temp_max_age_s: float = 3600.0
     inference_mode: str = "unavailable"
     worker_token: str | None = field(default=None, repr=False)
+    ffmpeg_path: str = "ffmpeg"
     # Experimental live mode (docs/04_REALTIME_GATE.md). Stays labelled
     # experimental until the gate report says otherwise.
     live_enabled: bool = False  # experimental: explicit opt-in
@@ -147,6 +148,7 @@ class Settings:
             cleanup_temp_max_age_s=_env_float("FOCUS_API_TEMP_MAX_AGE_S", 3600.0),
             inference_mode=os.environ.get("FOCUS_INFERENCE_MODE", "unavailable"),
             worker_token=os.environ.get("FOCUS_WORKER_TOKEN") or None,
+            ffmpeg_path=os.environ.get("FOCUS_FFMPEG") or "ffmpeg",
             live_enabled=os.environ.get("FOCUS_LIVE_ENABLED", "0") in ("1", "true"),
             live_max_queue_depth=_env_int("FOCUS_LIVE_MAX_QUEUE_DEPTH", 3),
             live_stream_enabled=os.environ.get("FOCUS_LIVE_STREAM", "0") in ("1", "true"),

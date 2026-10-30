@@ -15,7 +15,17 @@
 | GET /jobs/{id} | auth | حالة الطلب والمراحل والنتائج |
 | GET /jobs/{id}/audio | auth | WAV، يدعم وصول المشغل عبر fetch/blob |
 | GET /jobs/{id}/transcript | auth | segments أو pending/failed |
+| GET /jobs/{id}/mix | auth | sample_rate, others_available (+ سبب عدم التوفر), alignment_ms, level_gain, correlation |
+| GET /jobs/{id}/mix/{voice\|others} | auth | WAV float32 على timeline الفيديو الأصلي؛ others يرجع 409 MIX_UNRELIABLE لو الطرح غير موثوق |
+| POST /jobs/{id}/exports | voice_level 0..2, others_level 0..1, noise_reduction off/light/strong | 202 export_id, status=rendering؛ 409 MIX_UNRELIABLE لو others_level>0 والطرح غير موثوق |
+| GET /jobs/{id}/exports/{export_id} | auth | rendering / ready / failed (+ error) |
+| GET /jobs/{id}/exports/{export_id}/file | auth | video/mp4: نفس صورة الفيديو بدون إعادة ترميز + الصوت الجديد |
 | DELETE /videos/{id} | auth | 202 deletion_pending أو 204 بعد الحذف |
+
+### ميكس الصوت وتصدير الفيديو (الخادم فقط، بدون تغيير للـ worker)
+- الأصوات التانية = الصوت الأصلي ناقص الصوت المعزول بعد المحاذاة (source_offset_ms ثم بحث ارتباط محدود ±200ms) ومطابقة المستوى بالمربعات الصغرى. لو الارتباط أقل من 0.3 أو التغطية أقل من 90% أو الصوت صامت يتحول إلى unreliable ولا يُستخدم أبدًا.
+- تقليل الضوضاء فلتر ترددات عادي (high-pass 100Hz خفيف؛ 150Hz + low-pass 6kHz قوي)، وليس نموذج ذكاء اصطناعي.
+- الإخراج محدود الذروة (limiter بسقف 0.98) فلا يحصل clipping. التصدير يتطلب ffmpeg على الخادم (`FOCUS_FFMPEG`)، ينسخ الفيديو بدون تغيير، ويفشل بـ EXPORT_UNSUPPORTED لو الصورة لا تُنسخ داخل MP4 (مثل VP8). ملفات التصدير تحت jobs/{job}/exports وتُحذف مع الفيديو.
 
 لا ينفذ GET عملية GPU طويلة. الكشف async حيث يلزم. اخدم الصور والفيديو بنفس حماية الملكية؛ لا تحول media URLs العامة إلى تسريب ملفات. عند استخدام blob URL ألغِه عند مغادرة الشاشة.
 

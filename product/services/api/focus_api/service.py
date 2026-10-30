@@ -31,6 +31,8 @@ from .errors import (
     unauthorized,
 )
 from .identity import bbox_to_wire, frame_size_to_wire
+from .mix import MixError, MixSettings
+from .mix_service import MixService
 from .media_probe import ProbeError, probe_video
 from .storage import VIDEO_EXTENSIONS, Storage
 
@@ -65,6 +67,7 @@ class ApiService:
         self.storage = storage
         self.repo = repo
         self.dispatcher = dispatcher
+        self.mixer = MixService(settings.ffmpeg_path)
 
     # -- sessions ------------------------------------------------------------
     def new_session(self) -> tuple[str, str]:
@@ -356,6 +359,88 @@ class ApiService:
             raise no_audio("audio artifact is unavailable")
         return path, _sniff_wav_mime(path)
 
+    # -- voice mix -----------------------------------------------------------
+    def _mix_inputs(self, job_id: str, session_id: str):
+        job, video = self._owned_job(job_id, session_id)
+        wav, _mime = self.audio_file(job_id, session_id)
+        raw = video.canonical_path or video.original_path
+        path = Path(raw or "")
+        if not raw or not path.is_file() or not self.storage.is_managed(path):
+            raise not_found("video media is unavailable")
+        return job, video, path, wav
+
+    def _alignment(self, job_id: str, session_id: str):
+        job, video, path, wav = self._mix_inputs(job_id, session_id)
+        try:
+            return job, video, path, wav, self.mixer.analysis(
+                job_id=job_id, video_path=path, wav_path=wav,
+                offset_ms=float(job.source_offset_ms or 0), duration_ms=video.duration_ms,
+            )
+        except MixError as exc:
+            raise _mix_api_error(exc) from exc
+
+    def mix_info(self, job_id: str, session_id: str) -> dict:
+        _job, _video, _path, _wav, a = self._alignment(job_id, session_id)
+        return {
+            "sample_rate": 48_000,
+            "others_available": a.reliable,
+            "others_unavailable_reason": None if a.reliable else a.reason,
+            "alignment_ms": round(a.lag_ms, 2),
+            "level_gain": round(a.gain, 4),
+            "correlation": round(a.correlation, 4),
+            "noise_filters": {"light": {"highpass_hz": 100}, "strong": {"highpass_hz": 150, "lowpass_hz": 6000}},
+        }
+
+    def mix_track(self, job_id: str, track: str, session_id: str) -> bytes:
+        from . import mix
+        _job, _video, _path, _wav, a = self._alignment(job_id, session_id)
+        if track == "voice":
+            return mix.to_float_wav(a.voice)
+        if track == "others":
+            if not a.reliable:
+                raise ApiError("MIX_UNRELIABLE", "the other-voices track is unreliable for this job",
+                               status_code=409)
+            return mix.to_float_wav(a.others)
+        raise not_found("unknown mix track")
+
+    def start_export(self, job_id: str, session_id: str, payload: dict) -> dict:
+        job, video, path, wav = self._mix_inputs(job_id, session_id)
+        try:
+            settings = MixSettings(
+                voice_level=float(payload.get("voice_level", 1.0)),
+                others_level=float(payload.get("others_level", 0.25)),
+                noise_reduction=str(payload.get("noise_reduction", "off")),
+            )
+            record = self.mixer.start_export(
+                job_id=job_id, video_path=path, wav_path=wav,
+                offset_ms=float(job.source_offset_ms or 0), duration_ms=video.duration_ms,
+                settings=settings, export_dir=self.storage.job_dir(job_id) / "exports",
+            )
+        except MixError as exc:
+            raise _mix_api_error(exc) from exc
+        return {"export_id": record.export_id, "status": record.status}
+
+    def _export(self, job_id: str, export_id: str, session_id: str):
+        self._owned_job(job_id, session_id)
+        record = self.mixer.get_export(job_id, export_id)
+        if record is None:
+            raise not_found("export not found")
+        return record
+
+    def export_state(self, job_id: str, export_id: str, session_id: str) -> dict:
+        record = self._export(job_id, export_id, session_id)
+        body: dict = {"export_id": record.export_id, "status": record.status}
+        if record.status == "failed":
+            body["error"] = {"code": record.error_code, "message": record.error_message,
+                             "retryable": record.error_code != "EXPORT_UNSUPPORTED"}
+        return body
+
+    def export_file(self, job_id: str, export_id: str, session_id: str) -> tuple[Path, str]:
+        record = self._export(job_id, export_id, session_id)
+        if record.status != "ready" or record.path is None or not self.storage.is_managed(record.path):
+            raise not_ready("export is not ready yet")
+        return record.path, "video/mp4"
+
     def original_file(self, video_id: str, session_id: str) -> tuple[Path, str]:
         video = self._owned_video(video_id, session_id)
         raw = video.canonical_path or video.original_path
@@ -385,6 +470,8 @@ class ApiService:
             self.dispatcher.enqueue_cleanup(video_id)
             return {"deletion_pending": True}
         self.repo.mark_video_deleted(video_id)
+        # Stop renders first so directory removal never races an open file.
+        self.mixer.cancel_jobs([j.job_id for j in self.repo.jobs_for_video(video_id)])
         queued = self.repo.cancel_queued_for_video(video_id)
         if queued:
             logger.info("cancelled %d queued job(s) for deleted video %s", len(queued), video_id)
@@ -401,3 +488,10 @@ def _sniff_wav_mime(path: Path) -> str:
     if header[:4] == b"RIFF" and header[8:12] == b"WAVE":
         return "audio/wav"
     return "application/octet-stream"
+
+
+def _mix_api_error(exc: MixError) -> ApiError:
+    status = {"INVALID_REQUEST": 400, "NO_AUDIO": 409, "MIX_UNRELIABLE": 409,
+              "EXPORT_UNSUPPORTED": 422}.get(exc.code, 500)
+    return ApiError(exc.code, exc.message, status_code=status,
+                    retryable=exc.code in ("PROCESSING_FAILED",))

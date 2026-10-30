@@ -9,6 +9,8 @@
  *   GET    /jobs/{id}/audio
  *   GET    /jobs/{id}/transcript
  *   DELETE /videos/{id}
+ *   GET    /jobs/{id}/mix, /jobs/{id}/mix/{voice|others}
+ *   POST   /jobs/{id}/exports, GET /jobs/{id}/exports/{export_id}[/file]
  *
  * The session token travels in `Authorization: Bearer ...` and never in a URL.
  */
@@ -19,6 +21,9 @@ import type {
   CreateJobRequest,
   CreateJobResponse,
   DeleteVideoResponse,
+  ExportState,
+  MixInfo,
+  MixSettings,
   FaceCandidate,
   FacesResponse,
   JobState,
@@ -49,6 +54,13 @@ export interface FocusApi {
    */
   fetchOriginal(videoId: VideoId, signal?: AbortSignal): Promise<Blob>;
   deleteVideo(videoId: VideoId): Promise<DeleteVideoResponse>;
+  /** Alignment facts and whether the "other voices" track is reliable. */
+  getMixInfo(jobId: string, signal?: AbortSignal): Promise<MixInfo>;
+  /** Voice (aligned, level-matched) or other-voices WAV on the original timeline. */
+  fetchMixTrack(jobId: string, track: 'voice' | 'others', signal?: AbortSignal): Promise<Blob>;
+  startExport(jobId: string, settings: MixSettings): Promise<ExportState>;
+  getExport(jobId: string, exportId: string, signal?: AbortSignal): Promise<ExportState>;
+  fetchExport(jobId: string, exportId: string, signal?: AbortSignal): Promise<Blob>;
 }
 
 export interface HttpApiOptions {
@@ -258,6 +270,37 @@ export function createHttpApi(options: HttpApiOptions): FocusApi {
 
     fetchOriginal(videoId, signal) {
       return requestBlob(`/videos/${encodeURIComponent(videoId)}/original`, signal);
+    },
+
+    getMixInfo(jobId, signal) {
+      return request<MixInfo>(`/jobs/${encodeURIComponent(jobId)}/mix`, {}, signal);
+    },
+
+    fetchMixTrack(jobId, track, signal) {
+      return requestBlob(`/jobs/${encodeURIComponent(jobId)}/mix/${track}`, signal);
+    },
+
+    startExport(jobId, settings) {
+      return request<ExportState>(`/jobs/${encodeURIComponent(jobId)}/exports`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      });
+    },
+
+    getExport(jobId, exportId, signal) {
+      return request<ExportState>(
+        `/jobs/${encodeURIComponent(jobId)}/exports/${encodeURIComponent(exportId)}`,
+        {},
+        signal,
+      );
+    },
+
+    fetchExport(jobId, exportId, signal) {
+      return requestBlob(
+        `/jobs/${encodeURIComponent(jobId)}/exports/${encodeURIComponent(exportId)}/file`,
+        signal,
+      );
     },
 
     deleteVideo(videoId) {

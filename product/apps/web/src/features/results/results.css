@@ -257,3 +257,8 @@
 .follow-strip__seg--uncertain { background: #f59e0b; }
 .follow-strip__seg--conflict { background: #ef4444; }
 .follow-strip .hint { position: absolute; top: 12px; font-size: 12px; white-space: nowrap; }
+
+.mix__video { width: 100%; max-height: 360px; background: #000; border-radius: var(--radius-md, 8px); }
+.mix__controls { display: grid; gap: var(--sp-3, 12px); }
+.mix__control { display: grid; gap: 4px; }
+.mix__label { font-size: 14px; }

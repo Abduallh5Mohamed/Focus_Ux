@@ -31,7 +31,7 @@ from .interfaces import (
     UnavailableExtractionRunner,
 )
 from .lock import DispatcherLock
-from .schemas import CreateJobRequest
+from .schemas import CreateJobRequest, ExportRequest
 from .service import ApiService
 from .storage import Storage
 
@@ -172,6 +172,8 @@ def create_app(
             if bridge:
                 bridge.close()
             # A timed-out stop raises: do not close a live worker's repository.
+            service.mixer.cancel_jobs([])
+            service.mixer.close()
             dispatcher.stop()
             repo.close()
 
@@ -331,6 +333,35 @@ def create_app(
     def get_transcript(job_id: str, request: Request):
         session_id = _required_session(request, service)
         return service.transcript_response(job_id, session_id)
+
+    @app.get("/jobs/{job_id}/mix")
+    def get_mix_info(job_id: str, request: Request):
+        session_id = _required_session(request, service)
+        return service.mix_info(job_id, session_id)
+
+    @app.get("/jobs/{job_id}/mix/{track}")
+    def get_mix_track(job_id: str, track: str, request: Request):
+        session_id = _required_session(request, service)
+        data = service.mix_track(job_id, track, session_id)
+        return Response(content=data, media_type="audio/wav",
+                        headers={"Cache-Control": "private, no-store"})
+
+    @app.post("/jobs/{job_id}/exports", status_code=202)
+    def post_export(job_id: str, request: Request, payload: ExportRequest):
+        session_id = _required_session(request, service)
+        body = service.start_export(job_id, session_id, payload.model_dump(exclude_none=True))
+        return JSONResponse(body, status_code=202)
+
+    @app.get("/jobs/{job_id}/exports/{export_id}")
+    def get_export(job_id: str, export_id: str, request: Request):
+        session_id = _required_session(request, service)
+        return service.export_state(job_id, export_id, session_id)
+
+    @app.get("/jobs/{job_id}/exports/{export_id}/file")
+    def get_export_file(job_id: str, export_id: str, request: Request):
+        session_id = _required_session(request, service)
+        path, media_type = service.export_file(job_id, export_id, session_id)
+        return _file_response(request, path, media_type)
 
     @app.delete("/videos/{video_id}", status_code=202)
     def delete_video(video_id: str, request: Request):

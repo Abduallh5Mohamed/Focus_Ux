@@ -102,3 +102,9 @@ performed. No model weights were downloaded or copied into the project.
 `product/packages/eval/focus_eval` scores existing isolation outputs (wrong-person rate, CER/WER on normalised Arabic, SI-SDRi) and compares two runs for regressions. It needs only `numpy`, runs no engine/GPU/ASR, and the test set template lives in `product/datasets/egyptian_eval/` (see its README). Run its tests with `PYTHONPATH=product python -m pytest product/tests/eval -q`. Real measurements must be produced on the GPU machine.
 
 Adaptive face tracking (`focus_ml/adaptive_tracking.py`) is opt-in and unvalidated; `python -m focus_eval gate` decides adoption from GPU-machine runs. See `docs/DEV1_ML.md`.
+
+## Result downloads and voice mix
+- Downloads: isolated WAV (`GET /jobs/{id}/audio`), transcript text, and an exported MP4 (original picture copied unchanged + the new mix).
+- The result page has Selected voice / Other voices / Background noise reduction controls. "Other voices" is original minus the isolated voice after alignment and level matching; when that is unreliable the slider is disabled with an Arabic explanation. Noise reduction is a plain high/low-pass filter, not AI.
+- Mix math lives in `product/services/api/focus_api/mix.py`; exports in `mix_service.py`. Export needs `ffmpeg` (set `FOCUS_FFMPEG` if not on PATH). Exports are stored under `jobs/<job>/exports` and removed with the video.
+- Tests: `python -m pytest product/tests/api/test_mix_math.py product/tests/api/test_export.py`; web: `voice-mix.test.tsx`.

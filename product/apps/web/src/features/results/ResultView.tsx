@@ -10,6 +10,7 @@ import type { JobState, TranscriptResponse } from '../../lib/api/types';
 import { formatDuration, formatTimestamp } from '../../lib/format';
 import { forgetUpload, getRememberedUpload } from '../../lib/localMedia';
 import { ComparePlayer, type TrackMode } from './ComparePlayer';
+import { VoiceMixPanel } from './VoiceMixPanel';
 import { TranscriptPanel } from './TranscriptPanel';
 import { useAudioTransport } from './useAudioTransport';
 import './results.css';
@@ -259,6 +260,8 @@ export function ResultView({ job, videoId, onDeleted }: ResultViewProps): JSX.El
         followPeriods={job.result?.follow_periods}
       />
 
+      <VoiceMixPanel jobId={job.job_id} videoUrl={originalUrl} audioReady={job.audio_status === 'ready'} />
+
       <div className="grid-2">
         <TranscriptPanel
           status={job.transcript_status}
@@ -272,7 +275,7 @@ export function ResultView({ job, videoId, onDeleted }: ResultViewProps): JSX.El
         />
 
         <Card>
-          <CardHead title="الملف" hint="نزّل الصوت أو احذف الطلب بالكامل." />
+          <CardHead title="الملف" hint="نزّل الصوت المعزول أو احذف الطلب بالكامل. تصدير الفيديو بالميكس فوق." />
 
           <div className="stack">
             <dl className="facts">

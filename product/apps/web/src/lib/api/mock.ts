@@ -320,6 +320,34 @@ export function createMockApi(options: { latencyMs?: number; facesReadyMs?: numb
       return buildMockWav(9_000, 16_000, 294);
     },
 
+    async getMixInfo() {
+      return {
+        sample_rate: 48_000,
+        others_available: true,
+        others_unavailable_reason: null,
+        alignment_ms: 0,
+        level_gain: 1,
+        correlation: 0.9,
+        noise_filters: {},
+      };
+    },
+
+    async fetchMixTrack() {
+      return buildMockWav();
+    },
+
+    async startExport() {
+      return { export_id: 'mock-export', status: 'ready' as const };
+    },
+
+    async getExport(_jobId, exportId) {
+      return { export_id: exportId, status: 'ready' as const };
+    },
+
+    async fetchExport() {
+      return new Blob(['mock'], { type: 'video/mp4' });
+    },
+
     async deleteVideo(videoId) {
       await sleep(latency);
       videos.delete(videoId);

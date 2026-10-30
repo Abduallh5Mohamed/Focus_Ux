@@ -138,6 +138,35 @@ export interface DeleteVideoResponse {
   deletion_pending?: boolean;
 }
 
+export type NoiseReduction = 'off' | 'light' | 'strong';
+
+export interface MixSettings {
+  /** 0..2, 1 = the level the voice has in the original. */
+  voice_level: number;
+  /** 0..1, 1 = the level the other voices have in the original. */
+  others_level: number;
+  /** Plain high-pass / low-pass filtering. Not an AI model. */
+  noise_reduction: NoiseReduction;
+}
+
+export interface MixInfo {
+  sample_rate: number;
+  others_available: boolean;
+  others_unavailable_reason: string | null;
+  alignment_ms: number;
+  level_gain: number;
+  correlation: number;
+  noise_filters: Record<string, { highpass_hz?: number; lowpass_hz?: number }>;
+}
+
+export type ExportStatus = 'rendering' | 'ready' | 'failed';
+
+export interface ExportState {
+  export_id: string;
+  status: ExportStatus;
+  error?: ApiErrorPayload;
+}
+
 export const TERMINAL_JOB_STATUSES: readonly JobStatus[] = ['completed', 'failed', 'cancelled'];
 
 export function isTerminalStatus(status: JobStatus): boolean {
