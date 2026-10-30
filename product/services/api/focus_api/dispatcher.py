@@ -76,6 +76,7 @@ class Dispatcher:
         # Set by the live-session manager; runs on the dispatcher thread so live
         # chunks share the single-worker serialization with every other task.
         self.live_handler = None
+        self.live_maintenance = None
         self.recovered: list[str] = []
 
     # -- lifecycle -----------------------------------------------------------
@@ -152,6 +153,13 @@ class Dispatcher:
     # -- execution -----------------------------------------------------------
     def _run(self) -> None:
         while not self._stop.is_set():
+            # Run between tasks, never alongside inference or after releasing
+            # ownership. Also runs on an empty queue (no client needed).
+            if self.lock_acquired and self.live_maintenance is not None:
+                try:
+                    self.live_maintenance()
+                except Exception:
+                    logger.exception("live session maintenance failed; will retry")
             try:
                 kind, ident = self._queue.get(timeout=0.2)
             except queue.Empty:

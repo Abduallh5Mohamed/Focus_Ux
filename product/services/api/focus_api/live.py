@@ -107,6 +107,7 @@ class LiveSession:
     final_job_id: Optional[str] = None
     final_error: Optional[dict] = None
     error: Optional[dict] = None
+    cleanup_at: Optional[float] = None
     lock: threading.RLock = field(default_factory=threading.RLock)
 
 
@@ -118,6 +119,7 @@ class LiveManager:
         self._lock = threading.Lock()
         self.extra_active = lambda: None  # the continuous stream hub registers itself
         dispatcher.live_handler = self.handle
+        dispatcher.live_maintenance = self.maintain
 
     @property
     def root(self) -> Path:
@@ -152,14 +154,33 @@ class LiveManager:
     def _expire_idle(self) -> None:
         now = time.monotonic()
         for s in list(self.sessions.values()):
-            if s.phase in ("awaiting_chunk", "awaiting_target", "live") and (
-                now - s.last_seen > self.settings.live_idle_timeout_s
-            ):
-                logger.info("live session %s idle; stopping", s.live_id)
+            # Recheck activity under the ingest lock, not from a stale snapshot.
+            with s.lock:
+                if s.phase in ("awaiting_chunk", "awaiting_target", "live") and (
+                    now - s.last_seen > self.settings.live_idle_timeout_s
+                ):
+                    logger.info("live session %s idle; stopping", s.live_id)
+                    try:
+                        self.stop(s.live_id, s.owner)
+                    except Exception:
+                        logger.exception("idle stop failed for %s; will retry", s.live_id)
+
+    def maintain(self) -> None:
+        """Periodic recovery on the owning dispatcher, between inference tasks."""
+        if not self.dispatcher.lock_acquired:
+            return
+        with self._lock:
+            self._expire_idle()
+            sessions = list(self.sessions.values())
+        for s in sessions:
+            with s.lock:
+                if s.cleanup_at is None or time.monotonic() < s.cleanup_at:
+                    continue
                 try:
-                    self.stop(s.live_id, s.owner)
-                except ApiError:
-                    pass
+                    self.cleanup_chunks(s.live_id)
+                except Exception:
+                    logger.exception("live cleanup failed for %s; will retry", s.live_id)
+                    s.cleanup_at = time.monotonic() + 1.0
 
     def _active(self) -> Optional[LiveSession]:
         return next(
@@ -357,13 +378,15 @@ class LiveManager:
         with s.lock:
             if s.phase in ("stopped", "finalizing", "done", "failed"):
                 return s
-            s.phase = "stopped"
             for seq in sorted(s.chunks):
                 c = s.chunks[seq]
                 if c.state == "deferred":
                     c.state = "queued"
                     self._dispatch(s, seq)
             self._dispatch(s, 0, tag="final")
+            # If enqueue fails, keep the active phase so idle recovery retries.
+            # Finalization takes this same lock before changing the phase.
+            s.phase = "stopped"
         return s
 
     def set_playback(self, live_id, owner, report: dict) -> None:
@@ -467,9 +490,9 @@ class LiveManager:
         except ApiError as exc:
             s.phase, s.final_error = "failed", exc.payload()["error"]
         finally:
-            timer = threading.Timer(60.0, self.cleanup_chunks, args=(s.live_id,))
-            timer.daemon = True
-            timer.start()
+            # Keep chunk playback available briefly. The owning dispatcher
+            # performs deletion later, so no timer can outlive its repository.
+            s.cleanup_at = time.monotonic() + 60.0
 
     def _build_final(self, s: LiveSession) -> None:
         stream = s.directory / "stream.webm"
@@ -536,7 +559,9 @@ class LiveManager:
                 c.wav_path = None
         if s.first_video_id:
             s.first_video_id = None
-        shutil.rmtree(s.directory, ignore_errors=True)
+        if s.directory.exists():
+            shutil.rmtree(s.directory)
+        s.cleanup_at = None
 
     # -- views ---------------------------------------------------------------
     def view(self, live_id, owner) -> dict:

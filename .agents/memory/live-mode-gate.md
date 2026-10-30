@@ -31,3 +31,9 @@ Failure to save playback measurements must not block access to a finished record
 **Why:** measurement completeness and final-result availability are separate requirements; retrying failed telemetry forever strands an otherwise usable result.
 
 **How to apply:** bound telemetry saving, show a clear warning if it fails, and omit unavailable metrics rather than fetching stale measurements or inventing successful playback.
+
+Live idle recovery and delayed chunk cleanup must execute between tasks in the owning dispatcher, not on independent timers.
+
+**Why:** a timer can delete media during inference or access a repository after shutdown; a shutdown timeout does not cancel inference or transfer ownership.
+
+**How to apply:** keep recovery serialized with inference and scoped to the original live session. Retry failed cleanup while ownership is held, and preserve completed full recordings and their audio.

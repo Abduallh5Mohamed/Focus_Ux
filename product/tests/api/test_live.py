@@ -132,6 +132,43 @@ def test_full_session_flow_and_final_transcript(make_api, stream):
     assert api.client.post("/live/sessions", headers=H(tok)).status_code == 201
 
 
+def test_idle_recording_finalizes_then_cleans_only_chunks(make_api, stream):
+    import time
+    from pathlib import Path
+    from .test_live_recovery import abandon, wait_for
+
+    api = make_api(start_dispatcher=True, transcriber=FakeTranscriber())
+    api.settings.live_idle_timeout_s = 3600
+    live = api.app.state.live
+    sid, tok = start(api, stream)
+    assert put(api, sid, tok, 0, stream[0]).status_code == 200
+    assert api.dispatcher.wait_idle()
+    s = live.sessions[sid]
+    video_id = s.chunks[0].video_id
+    faces = api.get_faces(video_id, tok).json()["faces"]
+    assert api.client.post(
+        f"/live/sessions/{sid}/target", json={"face_id": faces[0]["face_id"]},
+        headers=H(tok),
+    ).status_code == 200
+    assert api.dispatcher.wait_idle()
+    assert s.chunks[0].state == "ready"
+    abandon(s)
+    wait_for(lambda: s.phase == "done")
+    wait_for(lambda: s.cleanup_at is not None)
+    assert s.cleanup_at > time.monotonic() + 58
+    final_job = api.repo.get(s.final_job_id)
+    assert Path(final_job.wav_path).is_file()
+    assert api.get_original(s.full_video_id, tok).status_code == 200
+    replacement = live.create("new-owner")
+    with s.lock:
+        s.cleanup_at = 0
+    wait_for(lambda: not s.directory.exists())
+    wait_for(lambda: api.repo.get_video(video_id).original_path is None)
+    assert api.get_original(s.full_video_id, tok).status_code == 200
+    assert api.get_audio(s.final_job_id, tok).status_code == 200
+    assert replacement.phase == "awaiting_chunk" and replacement.directory.is_dir()
+
+
 def test_missing_chunk_is_explicit(make_api, stream):
     api = make_api()
     sid, tok = start(api, stream)
