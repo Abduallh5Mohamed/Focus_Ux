@@ -40,6 +40,12 @@ class ConnectionSetupError(RuntimeError):
     """Safe, actionable connection error. Contains no credentials or URLs."""
 
 
+def failure_code(exc):
+    # HTTPError.code is an integer HTTP status, not a provider failure code.
+    code = getattr(exc, "code", None)
+    return code if isinstance(code, str) else "PROCESSING_FAILED"
+
+
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, *_args, **_kwargs):
         raise ConnectionSetupError(
@@ -190,7 +196,7 @@ class WorkerClient:
         except Exception as exc:
             # The website receives a curated code, never local paths/stderr.
             try:
-                self.json(prefix + "/error", {"code": getattr(exc, "code", "PROCESSING_FAILED")})
+                self.json(prefix + "/error", {"code": failure_code(exc)})
             except Exception:
                 pass
             raise

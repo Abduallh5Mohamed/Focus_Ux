@@ -1,0 +1,295 @@
+{
+  "revision": "A - engineering prototype, not production release",
+  "files": [
+    {
+      "path": "docs/VERIFICATION.md",
+      "bytes": 2112,
+      "sha256": "d72eccf47e4b591cbfb580c3e487920b767cbadcfc3553e5abc0ebafe74541e2"
+    },
+    {
+      "path": "electronics/BOM.csv",
+      "bytes": 1400,
+      "sha256": "90c905bb08a129a5b1f29732552a16b70ee49c2101986e270e9f128a54bc5d56"
+    },
+    {
+      "path": "electronics/build_carrier.py",
+      "bytes": 8458,
+      "sha256": "61718fa3acfa56d9bd48580d25b489534fd9d303400597dc1c5384b6d9041f49"
+    },
+    {
+      "path": "electronics/carrier_generic_components.step",
+      "bytes": 1256743,
+      "sha256": "17b543f4266846e3b4064c04b0849008a699c1b0554dfa4490075445c2fbf09d"
+    },
+    {
+      "path": "electronics/connectivity_check.json",
+      "bytes": 983,
+      "sha256": "4bcf5adcd1cd1aa2f530c22c210648c2c69035b605f35c8ebc282361faa40476"
+    },
+    {
+      "path": "electronics/drc.rpt",
+      "bytes": 514,
+      "sha256": "a60bd553d7643f7cc55c1ed8351848868668023a3330f0823f137e33bb27f8ba"
+    },
+    {
+      "path": "electronics/drc_codex_review.rpt",
+      "bytes": 514,
+      "sha256": "c31daf84d9d66d5da1a69069df7266498aa799dd566fc2e91789bb1db24c4e16"
+    },
+    {
+      "path": "electronics/drc_parity.rpt",
+      "bytes": 514,
+      "sha256": "230a7205f6d80442278e925d654ac18295a42b2dfcbcbf3a5bc1c46a6ef8d114"
+    },
+    {
+      "path": "electronics/erc.rpt",
+      "bytes": 357,
+      "sha256": "d106ab8e85cd854f3ff7521984876e92a3700468bb360d575e6a0cbfd8f2e406"
+    },
+    {
+      "path": "electronics/erc_codex_review.rpt",
+      "bytes": 357,
+      "sha256": "b65459a48e1b5a351426d974b837cbfe9376503c8e27c7e46147f83266ce8e05"
+    },
+    {
+      "path": "electronics/Focus.kicad_sym",
+      "bytes": 4722,
+      "sha256": "3dcb43cdcc6f2552d934d6081ac01749140b9ceb01453c3ebe1ca3b41692939e"
+    },
+    {
+      "path": "electronics/focus_control.kicad_pcb",
+      "bytes": 48977,
+      "sha256": "cb637e4c71931fa02f8e6c3fd7413512cf1f9256b221c0a67d09159f10c9ee65"
+    },
+    {
+      "path": "electronics/focus_control.kicad_pro",
+      "bytes": 2,
+      "sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"
+    },
+    {
+      "path": "electronics/focus_control.kicad_sch",
+      "bytes": 16666,
+      "sha256": "2602918d79797247bada1f8478be6840a5e2384ed7b66141b052a2ec74cc6db7"
+    },
+    {
+      "path": "electronics/focus_control_board.step",
+      "bytes": 90214,
+      "sha256": "ade35f00a6a4df3f117cfb3b4c11a7deafce84e17b16c2994ccca8744a2f5db7"
+    },
+    {
+      "path": "electronics/HANDOFF.md",
+      "bytes": 2174,
+      "sha256": "5b595ce47ea919fa56beb13f564ab1f75bdc44889d50ab1a09c883eb7e3805c2"
+    },
+    {
+      "path": "electronics/manufacturing/focus_control-B_Cu.gbl",
+      "bytes": 4608,
+      "sha256": "d7cac3a16814c7c831d1a61837685ea410482b335d67241ff805d5d3450cc217"
+    },
+    {
+      "path": "electronics/manufacturing/focus_control-B_Mask.gbs",
+      "bytes": 1948,
+      "sha256": "8da344c5c536cccc880940ad0b44cec3dedca154c3744fca5a44aa17706a2b8b"
+    },
+    {
+      "path": "electronics/manufacturing/focus_control-B_Silkscreen.gbo",
+      "bytes": 474,
+      "sha256": "85b13384327ee41ce72581fd9c0b1fcad000c5f43a5ba31e6ecad262295b9999"
+    },
+    {
+      "path": "electronics/manufacturing/focus_control-Edge_Cuts.gm1",
+      "bytes": 646,
+      "sha256": "ecc285629def5817a5701a4ba6db10a0c8dcf83c2fa52ef17d45923c063bb89d"
+    },
+    {
+      "path": "electronics/manufacturing/focus_control-F_Cu.gtl",
+      "bytes": 5024,
+      "sha256": "e47a93ea1e7085923671921481eed43acde2e65b6127ace469921825a250634c"
+    },
+    {
+      "path": "electronics/manufacturing/focus_control-F_Mask.gts",
+      "bytes": 1948,
+      "sha256": "45f1237bc995b6e27b7d4a3f74f7adfa77820b7b036bb163c8831ee95ec8cd2a"
+    },
+    {
+      "path": "electronics/manufacturing/focus_control-F_Silkscreen.gto",
+      "bytes": 18251,
+      "sha256": "1c4cec5217792b487ba0f2268c99a13400d4ed40d90fd7109a22b0ed94d64e85"
+    },
+    {
+      "path": "electronics/manufacturing/focus_control-job.gbrjob",
+      "bytes": 2536,
+      "sha256": "90b87bfa5d2815f1e2fb58f61f11d1072b065f72ce34f247b22101ddfe8488fa"
+    },
+    {
+      "path": "electronics/manufacturing/focus_control.drl",
+      "bytes": 1258,
+      "sha256": "f7859d60676256db274d197e562b7f0b097647e6bbb994eb3d5bada7dff23c02"
+    },
+    {
+      "path": "electronics/pcb_preview.svg",
+      "bytes": 91915,
+      "sha256": "ff9bad8f88c7baf44429c8fbaf306fea04091afe3a49615ec66eabc3b323b159"
+    },
+    {
+      "path": "electronics/pcb_top.pdf",
+      "bytes": 24684,
+      "sha256": "abf1dcdf4f4d460018acd4fb5232e58b8ab461141f62f103e0eb2f7ad61caa1c"
+    },
+    {
+      "path": "electronics/PHYSICAL_ORIENTATION.md",
+      "bytes": 3063,
+      "sha256": "03c28a0c7088ab918f2f4efcefe72e0021c38144ee95e87889524c561876ee2e"
+    },
+    {
+      "path": "electronics/physical_orientation_check.json",
+      "bytes": 5861,
+      "sha256": "ff4540f28650cb7816f96cb2a0a04632def70f9e0078e40636ebf193b00fd36c"
+    },
+    {
+      "path": "electronics/placement.json",
+      "bytes": 1685,
+      "sha256": "99e275abc81c6ff3480df3f9f0f7aa8ed64515dbd0ea87d6b01dc05c1785565a"
+    },
+    {
+      "path": "electronics/README.md",
+      "bytes": 8900,
+      "sha256": "5f3afccbedf30ad51b88e7c006939e5e6963117fd13897c6919c3d4e9595592b"
+    },
+    {
+      "path": "electronics/schematic.net.xml",
+      "bytes": 15930,
+      "sha256": "cfb0e73247c8d0aa2659b159859f031b76ca1092b7cf77fb1773dcf8d463cccd"
+    },
+    {
+      "path": "electronics/schematic.pdf",
+      "bytes": 69918,
+      "sha256": "7d4a49771d4350abb6263a7e2f4b5123f82386f224f0f478a94a621ea75c64c6"
+    },
+    {
+      "path": "electronics/schematic_svg/focus_control.svg",
+      "bytes": 476206,
+      "sha256": "95a24208658a5128876007baa9687981d1038faaeefaf08f9c4055e88a37962e"
+    },
+    {
+      "path": "electronics/sym-lib-table",
+      "bytes": 164,
+      "sha256": "76515fcc1dee5045eb08a9b4e4b31705328532171ad38e15a5fe5b0582b2b010"
+    },
+    {
+      "path": "electronics/verify_netlist.py",
+      "bytes": 1201,
+      "sha256": "491c5afe7b4da1db83e920bebb312b619de1f77940fdf116ea6b742fb8e17c4b"
+    },
+    {
+      "path": "firmware/main.py",
+      "bytes": 2001,
+      "sha256": "9344ee60b4edb613a72fd58bdb811868a1b62bc8df1f166aa939181dec321a06"
+    },
+    {
+      "path": "firmware/observe_controls.py",
+      "bytes": 921,
+      "sha256": "de24de3c71ba2a6c9b1178376c7430d4a442bcfa90bd1b444b0354a3e107633b"
+    },
+    {
+      "path": "mechanical/build_mechanical.py",
+      "bytes": 10281,
+      "sha256": "9807fce88696059c50c86c51db19adfc8c9e69da7ffd8dd4c96b419bec07b251"
+    },
+    {
+      "path": "mechanical/FOCUS_Glasses_RevA.20261029-212102.FCBak",
+      "bytes": 61404,
+      "sha256": "14fedd7780e28ba7090fc411eeb574f5864e6e9c4e0c4c8b42bc8661d5cd3a9b"
+    },
+    {
+      "path": "mechanical/FOCUS_Glasses_RevA.FCStd",
+      "bytes": 78648,
+      "sha256": "10acc776f5ad858fcae4b4dc5ed6b461e2dc971cd1bcb7a176615628add7db9c"
+    },
+    {
+      "path": "mechanical/FOCUS_Glasses_RevA_Assembly.step",
+      "bytes": 432244,
+      "sha256": "afb3be18b855e69f249d9a9b8172732ba4a3d0407949eaf1bfbcad37156e940f"
+    },
+    {
+      "path": "mechanical/geometry_validation.json",
+      "bytes": 2537,
+      "sha256": "e7c8aa8d017823f201830ef8eaf8f1553217b407232e61bca08f5442fea35181"
+    },
+    {
+      "path": "mechanical/module_envelope_check.json",
+      "bytes": 176,
+      "sha256": "2f62c6f5ce2f4525bb61af0623d9dceb0553ff251236f42af4cea60586be3e2e"
+    },
+    {
+      "path": "mechanical/parameters.json",
+      "bytes": 763,
+      "sha256": "aef784be5d93bf25af8a561750fd979faec65f8cdb6f45b1bf0a5ec4e436de92"
+    },
+    {
+      "path": "mechanical/render_freecad.py",
+      "bytes": 1396,
+      "sha256": "f907244d019f5f28b1129321e5e6d340be2b68c351cd9e38c30c8e6ca95bb497"
+    },
+    {
+      "path": "mechanical/stl/Camera_Cradle.stl",
+      "bytes": 57684,
+      "sha256": "9f323dabbfe9835fc1ce27bef6130d4a6199c51b8f99234d0b3616ddbd6a0707"
+    },
+    {
+      "path": "mechanical/stl/Control_Pod_Base.stl",
+      "bytes": 421884,
+      "sha256": "4dbaf4fccac295b53d63cc9a70e66abd247974966cd99cce9949a6cc1b4b70af"
+    },
+    {
+      "path": "mechanical/stl/Control_Pod_Lid.stl",
+      "bytes": 111684,
+      "sha256": "b802f95951daba81b958f42443ff1eed814a6fea25ae313cc315ecb69fea8857"
+    },
+    {
+      "path": "mechanical/stl/Front_Frame.stl",
+      "bytes": 211084,
+      "sha256": "0667df08d298c8502e408e940126092beca95a5b2455595c319200e58a2f2ebb"
+    },
+    {
+      "path": "mechanical/stl/Left_Temple.stl",
+      "bytes": 72484,
+      "sha256": "33ca79a77e8cf8032624c472d94a9ed83802d3f82bcc5b9301866560e20a1937"
+    },
+    {
+      "path": "mechanical/stl/Right_Temple.stl",
+      "bytes": 123284,
+      "sha256": "e26a5d2ba07968819e6e2a23d0f7b2bb94b2e6790b64d67fc2c5da4bcb327fa2"
+    },
+    {
+      "path": "previews/assembly_front.png",
+      "bytes": 10449,
+      "sha256": "0072f0df7786a154863ed45fafa318df7b48f92f786050476971b6aeef30f418"
+    },
+    {
+      "path": "previews/assembly_isometric.png",
+      "bytes": 33089,
+      "sha256": "a5aee014388e784b8689715dcbc775e1e8da775042a94f2fedd37e17895069cb"
+    },
+    {
+      "path": "previews/assembly_top.png",
+      "bytes": 10962,
+      "sha256": "50723aee16925fd8ebc4edc6c9a610dcc6ff3a510db2039aa5e0abaa11732af1"
+    },
+    {
+      "path": "previews/pcb_top.png",
+      "bytes": 11508,
+      "sha256": "9a8f8dcfd6c4b13a7f53f673e7b4294b73fb6adbc830851e6ef5e69e5c07007e"
+    },
+    {
+      "path": "README.md",
+      "bytes": 8130,
+      "sha256": "e719a44a92e5c553b78df62dcbaa436fed4a488d23c19ce09ff70ae61e249090"
+    },
+    {
+      "path": "START_HERE_AR.md",
+      "bytes": 2252,
+      "sha256": "3c644e3eb1df38b9c9dcbe945451c7c99eac10b942e975eaf69fe1b9bff94b51"
+    }
+  ]
+}

@@ -53,6 +53,7 @@ from focus_ml.timing import audio_window_to_roi, duration_ms_from_samples, frame
 from focus_ml.tracking import DETECT_EVERY, FACE_BOX_SCALE, match_detections
 from focus_ml.windows import merge_windows, normalize_input, normalize_output, plan_windows
 from focus_ml.types import ExtractionResult, FaceCandidate, ModelBundle, TargetSelection
+from focus_ml.window_plan import separation_windows
 
 _HEAVY_MODULES = ("torch", "cv2", "face_alignment", "soundfile")
 _BACKEND_MESSAGE = "the ML engine backend is unavailable on this machine"
@@ -572,6 +573,8 @@ class LegacyDolphinAdapter:
             backend, mix_wav, mouth_roi, cfg, models.dolphin
         )
         timings["forward_cuda_ms"] = round(forward_ms, 1)
+        alignment_samples = getattr(self, "last_audio_alignment_samples", 0)
+        timings["audio_alignment_samples"] = float(alignment_samples)
         timings["separate_wall"] = round(time.perf_counter() - separate_start, 2)
         if on_progress is not None:
             on_progress("separating", 1.0)
@@ -580,6 +583,10 @@ class LegacyDolphinAdapter:
         result_warnings.extend(roi_warnings)
         result_warnings.extend(fps_warnings)
         result_warnings.extend([_EXPANSION_WARNING, _GPU_WARNING])
+        if alignment_samples:
+            result_warnings.append(
+                "decoded audio end padding was aligned to the canonical video timeline"
+            )
         if video_id is None:
             result_warnings.append(_VIDEO_ID_FALLBACK_WARNING)
         return ExtractionResult(
@@ -977,7 +984,8 @@ class LegacyDolphinAdapter:
         return out
 
     def _separate(self, backend: dict, mix_wav: str, mouth_roi, cfg: AdapterConfig, dolphin):
-        """Windowed separation, matching the legacy _separate stage exactly
+        """Windowed separation using the legacy full-window path, with short
+        trailing output borrowing past context instead of an empty visual ROI
         (legacy focus_runner.py lines 182-206): the TARGET speaker's ROI goes
         through ``I.get_preprocessing_pipelines()["val"]`` ONCE, each audio
         window maps to ROI frames via ``sf_ = int(start/sr*25)`` /
@@ -998,19 +1006,54 @@ class LegacyDolphinAdapter:
             )
         prepared_roi = pipelines()["val"](mouth_roi)
         data, sr = sf.read(mix_wav, dtype="float32", always_2d=True)
+        # AAC decoding can expose a partial codec frame beyond the last video
+        # frame. Without alignment, a 6 s clip can get a fourth audio window
+        # with zero mouth frames. Keep the canonical video duration, allowing
+        # only the small frame/codec rounding margin accepted by the API.
+        video_samples = round(len(prepared_roi) * sr / cfg.fps)
+        self.last_audio_alignment_samples = video_samples - len(data)
+        if sr != cfg.sample_rate or video_samples <= 0 or abs(self.last_audio_alignment_samples) > round(sr * 0.080):
+            raise MediaError(
+                "audio and canonical video timelines do not align",
+                detail=f"audio_samples={len(data)}, video_samples={video_samples}, rate={sr}",
+            )
+        mono = np.ascontiguousarray(data.mean(axis=1))
+        if len(mono) > video_samples:
+            mono = mono[:video_samples]
+        elif len(mono) < video_samples:
+            mono = np.pad(mono, (0, video_samples - len(mono)))
         device = torch.device(_resolve_device(torch, cfg.device))
-        mix_np = np.ascontiguousarray(data.mean(axis=1))
+        mix_np = mono
         if cfg.normalize_audio:
             mix_np, _gain_db = normalize_input(mix_np)
         mix = torch.from_numpy(mix_np).to(device)
         overlap = 0.0 if cfg.merge == "direct" else cfg.window_overlap
         spans = plan_windows(len(mix), cfg.sample_rate, cfg.window_s, overlap)
+        if cfg.merge == "direct":
+            # Back-to-back windows: a codec tail may have too few mouth frames,
+            # so it borrows preceding audio/visual context (output unchanged).
+            try:
+                plan = list(separation_windows(
+                    len(mix), int(round(cfg.window_s * cfg.sample_rate)),
+                    len(prepared_roi), cfg.sample_rate, cfg.fps,
+                ))
+            except ValueError as exc:
+                raise MediaError(
+                    "insufficient synchronized audio and mouth context", detail=str(exc)
+                ) from exc
+            spans = [(w.output_start, w.output_end) for w in plan]
+            steps = [(w.output_start, w.output_end, w.model_start, w.roi_start,
+                      w.roi_end, w.output_offset) for w in plan]
+        else:
+            steps = []
+            for start, end in spans:
+                rs, re_ = audio_window_to_roi(
+                    start, end, cfg.sample_rate, cfg.fps, roi_len=len(prepared_roi)
+                )
+                steps.append((start, end, start, rs, re_, 0))
         estimates = []
         forward_ms = 0.0
-        for start, end in spans:
-            roi_start, roi_end = audio_window_to_roi(
-                start, end, cfg.sample_rate, cfg.fps, roi_len=len(prepared_roi)
-            )
+        for start, end, model_start, roi_start, roi_end, offset in steps:
             window_roi = (
                 torch.from_numpy(
                     np.ascontiguousarray(prepared_roi[roi_start:roi_end])
@@ -1022,11 +1065,11 @@ class LegacyDolphinAdapter:
             e1 = torch.cuda.Event(enable_timing=True)
             e0.record()
             with torch.inference_mode():
-                est = dolphin(mix[start:end][None], window_roi)
+                est = dolphin(mix[model_start:end][None], window_roi)
             e1.record()
             torch.cuda.synchronize()
             forward_ms += e0.elapsed_time(e1)
-            estimates.append(est[0, 0, : end - start].detach().cpu().numpy())
+            estimates.append(est[0, 0, offset:offset + end - start].detach().cpu().numpy())
         merged = merge_windows(estimates, spans, len(mix))
         if cfg.normalize_audio:
             merged, _ = normalize_output(merged)

@@ -260,6 +260,13 @@ export function IntakeFlow(props: IntakeFlowProps): JSX.Element {
                 </div>
               </dl>
 
+              {durationMs !== null && durationMs > 0 && durationMs < 1000 ? (
+                <Notice tone="warn" title="الفيديو أقل من ثانية">
+                  مدة الملف اللي اخترته {formatDuration(durationMs)} فقط. لو تقصد فيديو أطول،
+                  راجع القص أو التصدير وغيّر الملف قبل الرفع.
+                </Notice>
+              ) : null}
+
               {durationUnknown ? (
                 <p className="hint">
                   مقدرناش نقرا مدة الفيديو من المتصفح. مش هيتمنع الرفع — الخادم هيتحقق من المدة بنفسه.

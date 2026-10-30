@@ -1,0 +1,5 @@
+{
+  "result": "PASS",
+  "part_vs_reference_envelope_intersections": [],
+  "note": "Only modeled static envelopes; physical fit, cables and fastener mating not validated."
+}

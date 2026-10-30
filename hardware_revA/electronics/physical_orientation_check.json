@@ -1,0 +1,287 @@
+{
+  "result": "PASS",
+  "reference": "KiCad10 Module:RaspberryPi_Pico_Common_THT rotated+90deg,physical1 located8.37,24.89; official USB-top pinout independently inspected",
+  "verified_pins": 40,
+  "pin_coordinates": [
+    {
+      "socket": "J1",
+      "socket_pin": 1,
+      "pico_physical_pin": 1,
+      "x_mm": 8.369999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 2,
+      "pico_physical_pin": 2,
+      "x_mm": 10.909999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 3,
+      "pico_physical_pin": 3,
+      "x_mm": 13.449999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 4,
+      "pico_physical_pin": 4,
+      "x_mm": 15.989999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 5,
+      "pico_physical_pin": 5,
+      "x_mm": 18.529999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 6,
+      "pico_physical_pin": 6,
+      "x_mm": 21.069999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 7,
+      "pico_physical_pin": 7,
+      "x_mm": 23.609999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 8,
+      "pico_physical_pin": 8,
+      "x_mm": 26.149999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 9,
+      "pico_physical_pin": 9,
+      "x_mm": 28.689999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 10,
+      "pico_physical_pin": 10,
+      "x_mm": 31.229999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 11,
+      "pico_physical_pin": 11,
+      "x_mm": 33.769999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 12,
+      "pico_physical_pin": 12,
+      "x_mm": 36.309999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 13,
+      "pico_physical_pin": 13,
+      "x_mm": 38.849999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 14,
+      "pico_physical_pin": 14,
+      "x_mm": 41.389999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 15,
+      "pico_physical_pin": 15,
+      "x_mm": 43.929999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 16,
+      "pico_physical_pin": 16,
+      "x_mm": 46.469999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 17,
+      "pico_physical_pin": 17,
+      "x_mm": 49.009999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 18,
+      "pico_physical_pin": 18,
+      "x_mm": 51.549999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 19,
+      "pico_physical_pin": 19,
+      "x_mm": 54.089999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J1",
+      "socket_pin": 20,
+      "pico_physical_pin": 20,
+      "x_mm": 56.629999,
+      "y_mm": 24.89
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 1,
+      "pico_physical_pin": 40,
+      "x_mm": 8.369999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 2,
+      "pico_physical_pin": 39,
+      "x_mm": 10.909999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 3,
+      "pico_physical_pin": 38,
+      "x_mm": 13.449999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 4,
+      "pico_physical_pin": 37,
+      "x_mm": 15.989999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 5,
+      "pico_physical_pin": 36,
+      "x_mm": 18.529999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 6,
+      "pico_physical_pin": 35,
+      "x_mm": 21.069999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 7,
+      "pico_physical_pin": 34,
+      "x_mm": 23.609999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 8,
+      "pico_physical_pin": 33,
+      "x_mm": 26.149999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 9,
+      "pico_physical_pin": 32,
+      "x_mm": 28.689999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 10,
+      "pico_physical_pin": 31,
+      "x_mm": 31.229999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 11,
+      "pico_physical_pin": 30,
+      "x_mm": 33.769999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 12,
+      "pico_physical_pin": 29,
+      "x_mm": 36.309999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 13,
+      "pico_physical_pin": 28,
+      "x_mm": 38.849999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 14,
+      "pico_physical_pin": 27,
+      "x_mm": 41.389999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 15,
+      "pico_physical_pin": 26,
+      "x_mm": 43.929999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 16,
+      "pico_physical_pin": 25,
+      "x_mm": 46.469999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 17,
+      "pico_physical_pin": 24,
+      "x_mm": 49.009999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 18,
+      "pico_physical_pin": 23,
+      "x_mm": 51.549999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 19,
+      "pico_physical_pin": 22,
+      "x_mm": 54.089999,
+      "y_mm": 7.11
+    },
+    {
+      "socket": "J2",
+      "socket_pin": 20,
+      "pico_physical_pin": 21,
+      "x_mm": 56.629999,
+      "y_mm": 7.11
+    }
+  ]
+}

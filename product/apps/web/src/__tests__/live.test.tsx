@@ -168,7 +168,8 @@ describe('LiveFlow camera lifecycle', () => {
       created.resolve({ live_session_id: 'abandoned', session_token: 'old-owner', chunk_ms: 2000, max_chunks: 10 });
       await starting;
     });
-    expect(api.stop).toHaveBeenCalledExactlyOnceWith('abandoned', { sessionToken: 'old-owner', keepalive: true });
+    expect(api.stop).toHaveBeenCalledTimes(1);
+    expect(api.stop).toHaveBeenCalledWith('abandoned', { sessionToken: 'old-owner', keepalive: true });
     expect(navigator.mediaDevices.getUserMedia).not.toHaveBeenCalled();
     expect(audioCreated).not.toHaveBeenCalled();
     expect(api.get).not.toHaveBeenCalled();
@@ -184,7 +185,8 @@ describe('LiveFlow camera lifecycle', () => {
     act(() => { starting = old.result.current.start(); });
     await waitFor(() => expect(navigator.mediaDevices.getUserMedia).toHaveBeenCalledTimes(1));
     old.unmount();
-    expect(api.stop).toHaveBeenCalledExactlyOnceWith('L1', { sessionToken: 't', keepalive: true });
+    expect(api.stop).toHaveBeenCalledTimes(1);
+    expect(api.stop).toHaveBeenCalledWith('L1', { sessionToken: 't', keepalive: true });
     expect(audioClosed).toHaveBeenCalledTimes(1);
 
     vi.mocked(api.create).mockResolvedValue({ live_session_id: 'replacement', session_token: 'new-owner', chunk_ms: 2000, max_chunks: 10 });
@@ -228,7 +230,8 @@ describe('LiveFlow camera lifecycle', () => {
     expect(audioCreated).toHaveBeenCalledTimes(1);
     expect(audioClosed).not.toHaveBeenCalled();
     if (outcome === 'resolve') {
-      expect(api.stop).toHaveBeenCalledExactlyOnceWith('abandoned', { sessionToken: 'old-owner', keepalive: true });
+      expect(api.stop).toHaveBeenCalledTimes(1);
+      expect(api.stop).toHaveBeenCalledWith('abandoned', { sessionToken: 'old-owner', keepalive: true });
     } else expect(api.stop).not.toHaveBeenCalled();
   });
 
@@ -264,7 +267,8 @@ describe('live startup cleanup transport', () => {
     const api = createLiveApi({ baseUrl: '/api', getToken: () => 'current-owner', fetchImpl });
     const request = new AbortController();
     await api.stop('L1', { signal: request.signal });
-    expect(fetchImpl).toHaveBeenCalledExactlyOnceWith('/api/live/sessions/L1/stop', expect.objectContaining({
+    expect(fetchImpl).toHaveBeenCalledTimes(1);
+    expect(fetchImpl).toHaveBeenCalledWith('/api/live/sessions/L1/stop', expect.objectContaining({
       method: 'POST', signal: request.signal,
       headers: expect.objectContaining({ Authorization: 'Bearer current-owner' }),
     }));

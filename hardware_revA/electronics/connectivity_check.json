@@ -1,0 +1,65 @@
+{
+  "result": "PASS",
+  "connected_nets": {
+    "GND": [
+      [
+        "D1",
+        "1"
+      ],
+      [
+        "J1",
+        "3"
+      ],
+      [
+        "J3",
+        "2"
+      ],
+      [
+        "J4",
+        "2"
+      ]
+    ],
+    "LED_A": [
+      [
+        "D1",
+        "2"
+      ],
+      [
+        "R1",
+        "2"
+      ]
+    ],
+    "LED_DRIVE": [
+      [
+        "J1",
+        "6"
+      ],
+      [
+        "R1",
+        "1"
+      ]
+    ],
+    "SELECT_N": [
+      [
+        "J1",
+        "4"
+      ],
+      [
+        "J3",
+        "1"
+      ]
+    ],
+    "STOP_N": [
+      [
+        "J1",
+        "5"
+      ],
+      [
+        "J4",
+        "1"
+      ]
+    ]
+  },
+  "comparison": "Exact connected-net pad membership equality after normalizing root-sheet leading slash; intentionally NC pins ignored.",
+  "note": "This is not KiCad schematic-parity DRC; mounting holes are board-only mechanical footprints."
+}

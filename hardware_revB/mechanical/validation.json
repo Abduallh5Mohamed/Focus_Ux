@@ -1,0 +1,31 @@
+{
+  "revision": "B - packaging feasibility only",
+  "module_candidate_mm": [
+    21,
+    17.8,
+    15
+  ],
+  "cradle_body_mm": [
+    24,
+    18,
+    21
+  ],
+  "complete_clip_extents_mm": [
+    36,
+    41,
+    21
+  ],
+  "prototype_parts": 3,
+  "valid_single_solids": true,
+  "print_part_intersections": [],
+  "module_envelope_intersections": [],
+  "unverified": [
+    "simultaneous A/V capture+WiFi throughput and timestamps",
+    "actual module revision and connector/antenna layout",
+    "framefit and retention",
+    "weight, comfort and heat",
+    "battery/charging and mobile gateway",
+    "lowlatency extraction and returned audio"
+  ],
+  "notice": "Geometry checks only; no electrical or wearable proof. No custom RevB PCB or firmware delivered."
+}

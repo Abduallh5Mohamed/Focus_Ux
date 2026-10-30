@@ -1,0 +1,126 @@
+{
+  "status": "engineering prototype - not manufacturing release",
+  "parameters": {
+    "frame_width_mm": 146,
+    "lens_opening_width_mm": 50,
+    "lens_opening_height_mm": 34,
+    "front_thickness_mm": 5,
+    "temple_pivot_x_mm": 70,
+    "temple_length_mm": 139,
+    "camera_module_mm": [
+      38,
+      38,
+      19.01
+    ],
+    "camera_xy_clearance_mm": 0.8,
+    "carrier_pcb_mm": [
+      65,
+      32,
+      1.6
+    ],
+    "control_pod_outer_mm": [
+      79,
+      44,
+      28
+    ],
+    "pcb_mount_holes_mm": [
+      [
+        3,
+        3
+      ],
+      [
+        62,
+        3
+      ],
+      [
+        3,
+        29
+      ],
+      [
+        62,
+        29
+      ]
+    ],
+    "nominal_print_clearance_mm": 0.4,
+    "screw_clearance_M3_mm": 3.4,
+    "NOTE": "Prototype assumptions, not fit/comfort/strength certification. Camera holes and switches intentionally not inferred."
+  },
+  "parts": [
+    {
+      "name": "Front_Frame",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 10384.7,
+      "bbox_mm": [
+        146.0,
+        13.0,
+        44.0
+      ]
+    },
+    {
+      "name": "Left_Temple",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 5540.3,
+      "bbox_mm": [
+        10.0,
+        144.0,
+        21.0
+      ]
+    },
+    {
+      "name": "Right_Temple",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 5486.01,
+      "bbox_mm": [
+        10.0,
+        144.0,
+        21.0
+      ]
+    },
+    {
+      "name": "Camera_Cradle",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 7045.71,
+      "bbox_mm": [
+        44.0,
+        26.0,
+        46.0
+      ]
+    },
+    {
+      "name": "Control_Pod_Base",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 21029.54,
+      "bbox_mm": [
+        48.0,
+        79.0,
+        32.0
+      ]
+    },
+    {
+      "name": "Control_Pod_Lid",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 6158.07,
+      "bbox_mm": [
+        44.0,
+        79.0,
+        2.0
+      ]
+    }
+  ],
+  "print_part_intersections": [],
+  "reference_geometry_excluded_from_collision_certification": true,
+  "unverified": [
+    "human fit and load balance",
+    "camera edge retention and mic/cable clearance",
+    "actual socket and plug dimensions",
+    "pilot hole sizing after material/fastener choice",
+    "hinge fastener stack and strap design",
+    "thermal, drop, sweat, optical and acoustic performance"
+  ]
+}

@@ -1,5 +1,19 @@
 # FOCUS coordination - active implementation milestone
 
+## Latest verified audit — 2026-10-30 (supersedes stale readiness claims below)
+
+Real file-paced Live diagnostic also ran: emitted RTF 14.5099, queue depth 3, overload at sequence 3, 3 ready chunks/1 unusable; gate internal_only. Server-ready p95 87.373 s excludes browser playback. Tool labels four chunks as 8 s on a 6 s fixture, so partial-chunk metadata requires correction before precise comparisons. Full log and caveats are in the audit report.
+
+Codex ran current local UI/API/GPU worker together. After AAC-tail and numeric failure-code fixes, real two-face selection, audio generation/download, job completion with failed transcription, and unauthenticated access denial passed. Post-fix upload run took 89.094 s for 6 s of content (extraction interval 77.735 s); not acceptable real-time performance. Live/chunk infrastructure exists; sustained camera-to-play gate remains unverified. Combined worker/tail/timing regression suite: 45 passed. See `docs/REALTIME_STATUS_2026-10-30.md` for evidence, overlapping test counts, limitations and ordered next tasks. No public deployment, real-time acceptance or manufacturing readiness is claimed.
+
+## Separate D:/Focus machine session 2026-10-30 (Codex)
+- Short-result report investigated: user's stored upload decodes to 5 frames/0.167 s; result 0.160 s. Fixed UI zero-rounding and added short-upload warning. Independent real 15 s duration smoke returned full 15 s WAV. Web tests 75 passed. User must supply intended full-length source; no media/database edits made. See LOCAL_RUN_STATUS.md.
+- User-requested thumbnail repair: relative `/api` media URL/auth resolution fixed; real Chrome now decodes both JPEG faces. Crop display/decode fallback corrected. Web tests 73 passed and typecheck passed; existing services remain running. Details in LOCAL_RUN_STATUS.md.
+- Final update: real GPU inference and browser upload -> last face selection -> WAV download -> refresh/playback passed on RTX 2050. UI http://127.0.0.1:5173, API http://127.0.0.1:8000 (`inference.mode=local`), left running. All new environments/caches/assets/temp on D:. AAC tail alignment regression fixed and tested. ASR unavailable; no GT/realtime/subjective-quality claims. Current evidence and commands in LOCAL_RUN_STATUS.md; earlier bullets below are historical.
+- Update: user authorized official weight download; verified `model.safetensors` and config now cached in `model-assets/cache/hf/hub/models--JusperLee--Dolphin`. See LOCAL_RUN_STATUS.md. Inference remains unvalidated; full source/runtime and supporting assets are still missing.
+- Current machine checkout D:/Focus/Focus_Ux: UI verified at http://127.0.0.1:5173, API at http://127.0.0.1:8000, left running.
+- Inference unavailable: user confirmed original Dolphin/assets/weights are absent on this machine. No weight downloads or inference success claimed. See LOCAL_RUN_STATUS.md for installation workaround, checks and processes.
+
 Codex: integration lead, shared contracts, task arbitration and validation. Human owner can work anywhere; coordinate with their active changes.
 
 ## Assigned ownership

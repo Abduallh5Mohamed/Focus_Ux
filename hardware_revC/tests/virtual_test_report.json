@@ -1,0 +1,296 @@
+{
+  "scope": "Exact-BRep static and sampled kinematic screening only, RevC unmodified",
+  "interference_threshold_mm3": 0.05,
+  "tests": [
+    {
+      "test": "BRep validity and solids",
+      "status": "PASS",
+      "data": {
+        "part_count": 6
+      }
+    },
+    {
+      "test": "Open-position part interference",
+      "status": "PASS",
+      "data": []
+    },
+    {
+      "test": "Actual manufacturer module overlap",
+      "status": "PASS",
+      "data": [
+        {
+          "part": "Front_Capture_Chassis",
+          "min_clearance_mm": null,
+          "overlap_mm3": 0.0,
+          "note": "Exact minimum-distance solve not completed; this checks overlap only."
+        },
+        {
+          "part": "Right_Service_Door",
+          "min_clearance_mm": null,
+          "overlap_mm3": 0.0,
+          "note": "Exact minimum-distance solve not completed; this checks overlap only."
+        },
+        {
+          "part": "Right_Temples",
+          "min_clearance_mm": null,
+          "overlap_mm3": 0.0,
+          "note": "Exact minimum-distance solve not completed; this checks overlap only."
+        }
+      ]
+    },
+    {
+      "test": "Nominal hinge pin gauge",
+      "status": "PASS",
+      "data": [
+        {
+          "pivot_x_mm": -68,
+          "part": "Front_Capture_Chassis",
+          "gauge_diameter_mm": 2.5,
+          "overlap_mm3": 0.0
+        },
+        {
+          "pivot_x_mm": -68,
+          "part": "Left_Temples",
+          "gauge_diameter_mm": 2.5,
+          "overlap_mm3": 0.0
+        },
+        {
+          "pivot_x_mm": 73,
+          "part": "Front_Capture_Chassis",
+          "gauge_diameter_mm": 2.5,
+          "overlap_mm3": 0.0
+        },
+        {
+          "pivot_x_mm": 73,
+          "part": "Right_Temples",
+          "gauge_diameter_mm": 2.5,
+          "overlap_mm3": 0.0
+        }
+      ]
+    },
+    {
+      "test": "Nominal camera centreline access",
+      "status": "PASS",
+      "data": {
+        "note": "Bounding-geometry centreline only; full FoV not evaluated",
+        "parts": [
+          {
+            "part": "Front_Capture_Chassis",
+            "probe_overlap_mm3": 0.0
+          },
+          {
+            "part": "Right_Service_Door",
+            "probe_overlap_mm3": 0.0
+          }
+        ]
+      }
+    },
+    {
+      "test": "Independent temple fold sweep",
+      "status": "FAIL",
+      "data": [
+        {
+          "side": "Left",
+          "direction_about_z": -1,
+          "samples": [
+            {
+              "fold_deg": 0,
+              "interferences": []
+            },
+            {
+              "fold_deg": 5,
+              "interferences": []
+            },
+            {
+              "fold_deg": 10,
+              "interferences": []
+            },
+            {
+              "fold_deg": 15,
+              "interferences": []
+            },
+            {
+              "fold_deg": 30,
+              "interferences": [
+                {
+                  "obstacle": "chassis",
+                  "overlap_mm3": 5.665
+                }
+              ]
+            },
+            {
+              "fold_deg": 45,
+              "interferences": [
+                {
+                  "obstacle": "chassis",
+                  "overlap_mm3": 16.187
+                }
+              ]
+            },
+            {
+              "fold_deg": 60,
+              "interferences": [
+                {
+                  "obstacle": "chassis",
+                  "overlap_mm3": 20.197
+                }
+              ]
+            },
+            {
+              "fold_deg": 75,
+              "interferences": [
+                {
+                  "obstacle": "chassis",
+                  "overlap_mm3": 14.681
+                }
+              ]
+            },
+            {
+              "fold_deg": 90,
+              "interferences": [
+                {
+                  "obstacle": "chassis",
+                  "overlap_mm3": 4.935
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "side": "Right",
+          "direction_about_z": 1,
+          "samples": [
+            {
+              "fold_deg": 0,
+              "interferences": []
+            },
+            {
+              "fold_deg": 5,
+              "interferences": [
+                {
+                  "obstacle": "chassis",
+                  "overlap_mm3": 1.221
+                },
+                {
+                  "obstacle": "door",
+                  "overlap_mm3": 0.264
+                }
+              ]
+            },
+            {
+              "fold_deg": 10,
+              "interferences": [
+                {
+                  "obstacle": "chassis",
+                  "overlap_mm3": 2.897
+                },
+                {
+                  "obstacle": "door",
+                  "overlap_mm3": 0.521
+                }
+              ]
+            },
+            {
+              "fold_deg": 15,
+              "interferences": [
+                {
+                  "obstacle": "chassis",
+                  "overlap_mm3": 5.132
+                },
+                {
+                  "obstacle": "door",
+                  "overlap_mm3": 0.76
+                }
+              ]
+            },
+            {
+              "fold_deg": 30,
+              "interferences": [
+                {
+                  "obstacle": "chassis",
+                  "overlap_mm3": 21.348
+                },
+                {
+                  "obstacle": "door",
+                  "overlap_mm3": 1.293
+                }
+              ]
+            },
+            {
+              "fold_deg": 45,
+              "interferences": [
+                {
+                  "obstacle": "chassis",
+                  "overlap_mm3": 64.28
+                },
+                {
+                  "obstacle": "door",
+                  "overlap_mm3": 1.397
+                }
+              ]
+            },
+            {
+              "fold_deg": 60,
+              "interferences": [
+                {
+                  "obstacle": "chassis",
+                  "overlap_mm3": 137.631
+                },
+                {
+                  "obstacle": "door",
+                  "overlap_mm3": 1.397
+                }
+              ]
+            },
+            {
+              "fold_deg": 75,
+              "interferences": [
+                {
+                  "obstacle": "chassis",
+                  "overlap_mm3": 235.208
+                },
+                {
+                  "obstacle": "door",
+                  "overlap_mm3": 1.397
+                }
+              ]
+            },
+            {
+              "fold_deg": 90,
+              "interferences": [
+                {
+                  "obstacle": "chassis",
+                  "overlap_mm3": 150.018
+                },
+                {
+                  "obstacle": "door",
+                  "overlap_mm3": 2.426
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "test": "Material volume screening",
+      "status": "INFO",
+      "data": {
+        "solid_part_volume_cm3": 33.664,
+        "mass_formula": "mass_g = actual_material_density_g_cm3 * solid_volume_cm3; infill, supports, electronics and fasteners not included",
+        "measured_weight": false
+      }
+    }
+  ],
+  "physical_validation": false,
+  "not_tested": [
+    "full FoV and optical performance",
+    "dynamic continuous collision between sampled angles",
+    "temple-to-temple interaction when sequentially folded",
+    "mechanical stress, fatigue, fastener preload and drop",
+    "RF/antenna, temperature and battery current",
+    "real video/audio transport, extraction quality and capture-to-ear delay",
+    "comfort, retention and human fit"
+  ],
+  "overall": "FAIL"
+}

@@ -365,12 +365,14 @@ function FaceThumbnail({ face }: { face: FaceCandidate }) {
   const api = useApi();
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [showsFullFrame, setShowsFullFrame] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
     let objectUrl: string | null = null;
     setUrl(null);
     setFailed(false);
+    setShowsFullFrame(false);
 
     api
       .fetchMedia(face.thumbnail_url, controller.signal)
@@ -390,7 +392,8 @@ function FaceThumbnail({ face }: { face: FaceCandidate }) {
     };
   }, [api, face.thumbnail_url]);
 
-  const aspect = frameAspect(face);
+  // The real API returns a cropped face JPEG, not a full video frame.
+  const aspect = showsFullFrame ? frameAspect(face) : '1';
   const box = bboxStyle(face);
 
   return (
@@ -402,8 +405,23 @@ function FaceThumbnail({ face }: { face: FaceCandidate }) {
         </div>
       ) : url ? (
         <>
-          <img src={url} alt="" />
-          {box ? <span className="face-card__bbox" style={box} aria-hidden="true" /> : null}
+          <img
+            src={url}
+            alt=""
+            style={{ objectFit: 'contain' }}
+            onError={() => setFailed(true)}
+            onLoad={(event) => {
+              const image = event.currentTarget;
+              const frameRatio = face.frame_size.width / face.frame_size.height;
+              // The real provider returns face crops; mocks/other providers may
+              // return full frames. Frame-coordinate boxes only fit full frames.
+              setShowsFullFrame(
+                face.frame_size.width > 0 && face.frame_size.height > 0 &&
+                Math.abs(image.naturalWidth / image.naturalHeight - frameRatio) < 0.01,
+              );
+            }}
+          />
+          {box && showsFullFrame ? <span className="face-card__bbox" style={box} aria-hidden="true" /> : null}
         </>
       ) : (
         <div className="skeleton face-card__skeleton" aria-hidden="true" />
