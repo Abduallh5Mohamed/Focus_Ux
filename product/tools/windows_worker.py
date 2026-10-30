@@ -27,6 +27,11 @@ sys.path.insert(0, str(ROOT / "product"))
 TOKEN_FILE = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "FocusWorker" / "worker-token"
 LOCAL_TOKEN_FILE = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "FocusLocalTrial" / "worker-token"
 PREVIEW_TOKEN_FILE = TOKEN_FILE.parent / "preview-access-token"
+# A 3-minute canonical clip is tens of MB. Configurable, still bounded.
+MAX_MEDIA_BYTES = int(os.environ.get("FOCUS_WORKER_MAX_MEDIA_MB", "250")) * 1024 * 1024
+MAX_OUTPUT_AUDIO_BYTES = 8 * 1024 * 1024  # 3 min mono PCM16 @ 16 kHz is about 5.8 MB
+AUDIO_TASKS = ("transcribe", "analyze", "enroll", "isolate")  # media is audio, not video
+ENGINES = ("audio_only", "dolphin", "av_mossformer2", "separate_select")
 
 
 class ConnectionSetupError(RuntimeError):
@@ -128,8 +133,8 @@ class WorkerClient:
 
     def json(self, path, payload=None):
         with self.request(path, json.dumps(payload or {}).encode()) as response:
-            raw = response.read(512 * 1024 + 1)
-            if len(raw) > 512 * 1024:
+            raw = response.read(4 * 1024 * 1024 + 1)  # task payloads carry the diarization
+            if len(raw) > 4 * 1024 * 1024:
                 raise ValueError("server response too large")
             return json.loads(raw) if raw else None
 
@@ -165,40 +170,20 @@ class WorkerClient:
         try:
             with tempfile.TemporaryDirectory(prefix="focus-inference-") as directory:
                 video = Path(directory) / (
-                    "isolated.wav" if task["kind"] == "transcribe" else "canonical.mp4"
+                    "canonical.mp4" if task["kind"] in ("detect", "extract", "visibility")
+                    else "task-audio.wav"
                 )
                 digest, total = hashlib.sha256(), 0
                 with self.request(prefix + "/media") as response, video.open("wb") as output:
                     while chunk := response.read(64 * 1024):
                         total += len(chunk)
-                        if total > 50 * 1024 * 1024:
+                        if total > MAX_MEDIA_BYTES:
                             raise ValueError("canonical media exceeds the worker limit")
                         digest.update(chunk)
                         output.write(chunk)
                 if digest.hexdigest() != task["sha256"]:
                     raise ValueError("canonical media checksum mismatch")
-                if task["kind"] == "detect":
-                    result = engine.detect(task["video_id"], str(video))
-                    self.json(prefix + "/faces", result)
-                elif task["kind"] == "extract":
-                    result = engine.extract(
-                        task["video_id"], str(video), task["face_id"], directory
-                    )
-                    wav = Path(result.wav_path)
-                    if wav.resolve().parent != Path(directory).resolve():
-                        raise ValueError("engine output is outside its task directory")
-                    if result.source_offset_ms != 0 or wav.stat().st_size > 2 * 1024 * 1024:
-                        raise ValueError("engine output is oversized or shifted")
-                    with self.request(
-                        prefix + "/audio", wav.read_bytes(), "audio/wav",
-                        {"X-Focus-Engine": getattr(result, "engine", "dolphin")},
-                    ) as response:
-                        response.read(1024)
-                elif task["kind"] == "transcribe":
-                    segments = engine.transcribe_audio(str(video))
-                    self.json(prefix + "/transcript", {"segments": segments})
-                else:
-                    raise ValueError("unsupported task")
+                self.handle(task, engine, video, directory, prefix)
                 print("Task complete. Temporary media removed.", flush=True)
         except Exception as exc:
             # The website receives a curated code, never local paths/stderr.
@@ -207,6 +192,63 @@ class WorkerClient:
             except Exception:
                 pass
             raise
+
+    def handle(self, task, engine, video, directory, prefix):
+        kind = task["kind"]
+        payload = task.get("payload") or {}
+        if kind == "detect":
+            self.json(prefix + "/faces", engine.detect(task["video_id"], str(video)))
+        elif kind == "extract":
+            result = engine.extract(task["video_id"], str(video), task["face_id"], directory)
+            wav = Path(result.wav_path)
+            if wav.resolve().parent != Path(directory).resolve():
+                raise ValueError("engine output is outside its task directory")
+            if result.source_offset_ms != 0 or wav.stat().st_size > 2 * 1024 * 1024:
+                raise ValueError("engine output is oversized or shifted")
+            with self.request(
+                prefix + "/audio", wav.read_bytes(), "audio/wav",
+                {"X-Focus-Engine": getattr(result, "engine", "dolphin")},
+            ) as response:
+                response.read(1024)
+        elif kind == "transcribe":
+            self.json(prefix + "/transcript", {"segments": engine.transcribe_audio(str(video))})
+        elif kind == "analyze":
+            # Audio only: diarization, voiceprints, clean sample spans and clips.
+            self.json(prefix + "/analysis", engine.analyze_audio(str(video)))
+        elif kind == "enroll":
+            try:
+                if payload.get("mode") == "range":
+                    result = engine.enroll_audio_range(
+                        str(video), payload["diarization"],
+                        payload["start_ms"] / 1000, payload["end_ms"] / 1000)
+                else:
+                    result = engine.enroll_audio_file(str(video))
+            except Exception as exc:
+                if getattr(exc, "code", None) != "ENROLLMENT_REFUSED":
+                    raise
+                result = {"refused": str(getattr(exc, "message", exc))[:400]}
+            self.json(prefix + "/enrollment", result)
+        elif kind == "visibility":
+            spans = engine.face_visibility(str(video), payload["bbox"], payload["frame_size"])
+            self.json(prefix + "/visibility", {"visible": spans})
+        elif kind == "isolate":
+            # The request carries the enrollment and the cached diarization. No
+            # video, frame, face or lip data exists on this path.
+            from focus_ml.voice.engine import regions_to_wire
+            result = engine.isolate_audio(
+                str(video), payload["voiceprint"], payload["diarization"], directory)
+            wav = Path(result.wav_path)
+            if wav.resolve().parent != Path(directory).resolve():
+                raise ValueError("engine output is outside its task directory")
+            if result.source_offset_ms != 0 or wav.stat().st_size > MAX_OUTPUT_AUDIO_BYTES:
+                raise ValueError("engine output is oversized or shifted")
+            self.json(prefix + "/regions", {"regions": regions_to_wire(result.details["regions"])})
+            with self.request(
+                prefix + "/audio", wav.read_bytes(), "audio/wav", {"X-Focus-Engine": "audio_only"},
+            ) as response:
+                response.read(1024)
+        else:
+            raise ValueError("unsupported task")
 
 
 def setup():
@@ -297,9 +339,11 @@ def run(url, focus, *, local_api=False, engine=None):
         "FOCUS_MODEL_CACHE": str(focus / "cache" / "hf"),
         "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1",
     })
-    engine_name = engine or os.environ.get("FOCUS_ISOLATION_ENGINE") or "dolphin"
-    os.environ["FOCUS_ISOLATION_ENGINE"] = engine_name
-    if engine_name != "dolphin":
+    engine_name = engine or os.environ.get("FOCUS_ISOLATION_ENGINE") or "audio_only"
+    # audio_only handles the voice tasks; the lip engine setting below still
+    # serves face detection and any lip-based job the website is set to.
+    os.environ["FOCUS_ISOLATION_ENGINE"] = "dolphin" if engine_name == "audio_only" else engine_name
+    if engine_name not in ("dolphin", "audio_only"):
         # Extra engines live in a separate folder. It is appended LAST on
         # sys.path so the original environment's packages always win.
         clearervoice = Path(os.environ.get("FOCUS_CLEARERVOICE_DIR") or CLEARERVOICE_DIR)
@@ -360,8 +404,8 @@ def main():
     parser.add_argument("--setup", action="store_true")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--preview-access", action="store_true")
-    parser.add_argument("--engine", choices=("dolphin", "av_mossformer2", "separate_select"),
-                        help="Isolation engine (default: FOCUS_ISOLATION_ENGINE or dolphin)")
+    parser.add_argument("--engine", choices=ENGINES,
+                        help="Isolation engine (default: FOCUS_ISOLATION_ENGINE or audio_only)")
     parser.add_argument("--url")
     parser.add_argument("--focus", default="A:/focus")
     parser.add_argument("--local-api", action="store_true",

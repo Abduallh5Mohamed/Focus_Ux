@@ -256,3 +256,49 @@ describe('createHttpApi', () => {
     expect((init.headers as Record<string, string> | undefined)?.Authorization).toBeUndefined();
   });
 });
+
+describe('audio-only endpoints', () => {
+  function api(fetchImpl: ReturnType<typeof vi.fn>) {
+    return createHttpApi({
+      baseUrl: 'https://api.test',
+      getToken: () => 'tok',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    });
+  }
+
+  it('posts an enrollment as JSON with the token in the header only', async () => {
+    const fetchImpl = vi.fn(async () => fakeResponse(202, { enrollment_id: 'e1', status: 'pending' }));
+    await api(fetchImpl).createEnrollment('v1', { face_id: 'f1', source: 'range', start_ms: 0, end_ms: 6000 });
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.test/videos/v1/enrollments');
+    expect(JSON.parse(init.body as string)).toEqual({ face_id: 'f1', source: 'range', start_ms: 0, end_ms: 6000 });
+    expect(url).not.toContain('tok');
+  });
+
+  it('uploads a voice file as multipart form data', async () => {
+    const fetchImpl = vi.fn(async () => fakeResponse(202, { enrollment_id: 'e1', status: 'pending' }));
+    const file = new File(['abc'], 'me.wav', { type: 'audio/wav' });
+    await api(fetchImpl).createVoiceFileEnrollment('v1', 'f1', file);
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('https://api.test/videos/v1/enrollments/upload');
+    const form = init.body as FormData;
+    expect(form.get('face_id')).toBe('f1');
+    expect((form.get('file') as File).name).toBe('me.wav');
+    expect((init.headers as Record<string, string>)['Content-Type']).toBeUndefined();
+  });
+
+  it('reads config, analysis and suggestions from their routes', async () => {
+    const fetchImpl = vi.fn(async () => fakeResponse(200, {}));
+    const a = api(fetchImpl);
+    await a.getConfig();
+    await a.getAnalysis('v1');
+    await a.requestSuggestion('v1', 'f1');
+    await a.getSuggestion('v1', 'f1');
+    expect(fetchImpl.mock.calls.map((c) => (c as unknown as [string])[0])).toEqual([
+      'https://api.test/config',
+      'https://api.test/videos/v1/analysis',
+      'https://api.test/videos/v1/voice-suggestions',
+      'https://api.test/videos/v1/voice-suggestions/f1',
+    ]);
+  });
+});

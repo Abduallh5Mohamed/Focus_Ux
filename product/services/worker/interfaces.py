@@ -31,6 +31,7 @@ class TargetRunResult:
     source_offset_ms: int = 0
     timings: dict = field(default_factory=dict)
     warnings: list = field(default_factory=list)
+    follow_periods: list = field(default_factory=list)
 
 
 class JobRepository(Protocol):

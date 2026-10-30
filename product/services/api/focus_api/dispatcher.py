@@ -44,6 +44,9 @@ _FACES = "faces"
 _JOB = "job"
 _CLEANUP = "cleanup"
 _LIVE = "live"
+_ANALYSIS = "analysis"
+_SUGGEST = "suggest"
+_ENROLL = "enroll"
 
 
 class Dispatcher:
@@ -97,6 +100,12 @@ class Dispatcher:
             self._cleanup_deleted_videos()
             for video_id, _created in self.repo.pending_face_videos():
                 self.enqueue_faces(video_id)
+            for video_id in self.repo.pending_analysis_videos():
+                self.enqueue_analysis(video_id)
+            for video_id, face_id in self.repo.pending_suggestions():
+                self.enqueue_suggestion(video_id, face_id)
+            for enrollment_id in self.repo.pending_enrollments():
+                self.enqueue_enrollment(enrollment_id)
             for job_id, _created in self.repo.queued_jobs():
                 self.enqueue_job(job_id)
             self._thread = threading.Thread(
@@ -138,6 +147,15 @@ class Dispatcher:
 
     def enqueue_cleanup(self, video_id: str) -> None:
         self._put(_CLEANUP, video_id)
+
+    def enqueue_analysis(self, video_id: str) -> None:
+        self._put(_ANALYSIS, video_id)
+
+    def enqueue_suggestion(self, video_id: str, face_id: str) -> None:
+        self._put(_SUGGEST, f"{video_id}:{face_id}")
+
+    def enqueue_enrollment(self, enrollment_id: str) -> None:
+        self._put(_ENROLL, enrollment_id)
 
     def enqueue_live(self, ident: str) -> None:
         self._put(_LIVE, ident)
@@ -182,6 +200,12 @@ class Dispatcher:
             self._process_job(ident)
         elif kind == _CLEANUP:
             self._process_cleanup(ident)
+        elif kind == _ANALYSIS:
+            self._process_analysis(ident)
+        elif kind == _SUGGEST:
+            self._process_suggestion(*ident.split(":", 1))
+        elif kind == _ENROLL:
+            self._process_enrollment(ident)
         elif kind == _LIVE and self.live_handler is not None:
             self.live_handler(ident)
 
@@ -194,6 +218,130 @@ class Dispatcher:
             logger.exception("job %s failed outside worker error handling", job_id)
 
     def _process_faces(self, video_id: str) -> None:
+        """Face detection; with the audio-only engine the audio analysis runs in
+        parallel and is cached per video for enrollment and extraction."""
+        analysis = None
+        if self.settings.audio_only:
+            analysis = threading.Thread(
+                target=self._safe_analysis, args=(video_id,), name="focus-audio-analysis", daemon=True)
+            analysis.start()
+        try:
+            self._detect_faces(video_id)
+        finally:
+            if analysis is not None:
+                analysis.join()
+
+    def _safe_analysis(self, video_id: str) -> None:
+        try:
+            self._process_analysis(video_id)
+        except Exception:
+            logger.exception("audio analysis crashed for %s", video_id)
+
+    def _process_analysis(self, video_id: str) -> None:
+        video = self.repo.get_video(video_id)
+        if video is None or video.deleted:
+            return
+        current = self.repo.get_analysis(video_id)
+        if current and current["status"] == "ready":
+            return
+        analyze = getattr(self.candidate_provider, "analyze", None)
+        if analyze is None:
+            self.repo.set_analysis(
+                video_id, "failed", error_code="MODEL_UNAVAILABLE", retryable=False,
+                error_message="audio analysis is not configured on this server")
+            return
+        self.repo.set_analysis(video_id, "pending")
+        source = video.canonical_path or video.original_path
+        written: list[Path] = []
+        try:
+            result = analyze(video_id=video_id, video_path=source)
+            stored = dict(result)
+            stored["speakers"] = []
+            for index, speaker in enumerate(result["speakers"]):
+                item = {k: v for k, v in speaker.items() if k != "sample_wav_b64"}
+                item["clip"] = False
+                if speaker.get("sample_wav_b64"):
+                    import base64
+                    from .inference import voice_sample_path
+                    path = voice_sample_path(self.settings, video_id, index)
+                    path.write_bytes(base64.b64decode(speaker["sample_wav_b64"]))
+                    written.append(path)
+                    item["clip"] = True
+                stored["speakers"].append(item)
+            if not self.repo.set_analysis(video_id, "ready", result=stored):
+                raise RuntimeError("media was deleted")
+        except Exception as exc:
+            for path in written:
+                path.unlink(missing_ok=True)
+            message = getattr(exc, "message", None)
+            if not isinstance(message, str) or not message:
+                message = "audio analysis failed"
+            logger.warning("audio analysis failed for %s: %s", video_id, message)
+            self.repo.set_analysis(
+                video_id, "failed", error_code=str(getattr(exc, "code", "PROCESSING_FAILED")),
+                error_message=message, retryable=bool(getattr(exc, "retryable", True)))
+
+    def _process_suggestion(self, video_id: str, face_id: str) -> None:
+        face = self.repo.get_face(video_id, face_id)
+        video = self.repo.get_video(video_id)
+        if face is None or video is None or video.deleted:
+            return
+        visibility = getattr(self.candidate_provider, "visibility", None)
+        try:
+            if visibility is None:
+                raise RuntimeError("face visibility is not configured")
+            visible = visibility(video_id=video_id, face=face)
+            self.repo.set_suggestion(video_id, face_id, "ready", visible=visible)
+        except Exception as exc:
+            message = getattr(exc, "message", None)
+            if not isinstance(message, str) or not message:
+                message = "could not measure when the face is on screen"
+            self.repo.set_suggestion(
+                video_id, face_id, "failed", error_code=str(getattr(exc, "code", "PROCESSING_FAILED")),
+                error_message=message, retryable=bool(getattr(exc, "retryable", True)))
+
+    def _process_enrollment(self, enrollment_id: str) -> None:
+        item = self.repo.get_enrollment(enrollment_id)
+        if item is None or item["status"] != "pending":
+            return
+        video_id, source = item["video_id"], item["source"]
+        voice_file = self.settings.media_dir / f"{video_id}.voice-{enrollment_id}.wav"
+        try:
+            video = self.repo.get_video(video_id)
+            analysis = self.repo.get_analysis(video_id)
+            if video is None or video.deleted:
+                return
+            if item["source_kind"] == "range":
+                if not analysis or analysis["status"] != "ready":
+                    raise RuntimeError("audio analysis is not ready")
+                result = self.candidate_provider.enroll_range(
+                    video_id=video_id, diarization=analysis["result"]["diarization"],
+                    start_ms=source["start_ms"], end_ms=source["end_ms"])
+            else:
+                result = self.candidate_provider.enroll_file(video_id=video_id, wav_path=str(voice_file))
+            if "refused" in result:
+                self.repo.finish_enrollment(
+                    enrollment_id, "failed", error_code="ENROLLMENT_REFUSED",
+                    error_message=result["refused"], retryable=False)
+                return
+            vp = result["voiceprint"]
+            ok = self.repo.finish_enrollment(
+                enrollment_id, "ready", voiceprint=vp, warnings=result["warnings"],
+                clean_s=vp["duration_s"])
+            current = self.repo.get_video(video_id)
+            if ok and (current is None or current.deleted):
+                self.repo.delete_voice_data(video_id)
+        except Exception as exc:
+            message = getattr(exc, "message", None)
+            if not isinstance(message, str) or not message:
+                message = "voice enrollment failed"
+            self.repo.finish_enrollment(
+                enrollment_id, "failed", error_code=str(getattr(exc, "code", "PROCESSING_FAILED")),
+                error_message=message, retryable=bool(getattr(exc, "retryable", True)))
+        finally:
+            voice_file.unlink(missing_ok=True)  # a separate recording is never kept
+
+    def _detect_faces(self, video_id: str) -> None:
         video = self.repo.get_video(video_id)
         if video is None or video.deleted:
             return

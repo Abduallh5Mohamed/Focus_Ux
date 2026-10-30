@@ -37,7 +37,7 @@ def test_upload_normalize_second_face_and_protected_playable_audio(tmp_path):
     auth = {"Authorization": "Bearer " + "flow-test-only-" * 4}
     app = create_app(
         settings=Settings(
-            storage_root=tmp_path / "storage", inference_mode="remote",
+            storage_root=tmp_path / "storage", inference_mode="remote", isolation_engine="dolphin",
             worker_token=auth["Authorization"][7:],
         ), start_dispatcher=False,
     )
@@ -177,3 +177,11 @@ def test_remote_transcriber_maps_failures_to_reasons():
         with pytest.raises(TranscriptError) as caught:
             RemoteTranscriber(Bridge(exc), repo).transcribe(path)
         assert caught.value.reason == reason
+
+
+def test_local_mode_accepts_the_default_audio_only_engine_setting(monkeypatch, tmp_path):
+    monkeypatch.setenv("FOCUS_ISOLATION_ENGINE", "audio_only")
+    from services.api.focus_api.inference import build_inference
+    settings = Settings(storage_root=tmp_path, inference_mode="local", isolation_engine="audio_only")
+    providers, bridge = build_inference(settings, None)
+    assert providers is not None and bridge is None

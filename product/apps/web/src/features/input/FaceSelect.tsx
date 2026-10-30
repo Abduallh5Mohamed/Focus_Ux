@@ -18,6 +18,11 @@ export interface FaceSelectProps {
   videoId: string;
   /** Called after POST /jobs returns a job_id. */
   onJobCreated: (jobId: string) => void;
+  /**
+   * Audio-only engine: choosing a face goes on to voice confirmation instead of creating a
+   * job. When set, no job is created here.
+   */
+  onFaceChosen?: (faceId: string) => void;
 }
 
 const POLL_DELAY_MS = 1_500;
@@ -34,7 +39,7 @@ const MAX_ATTEMPTS = 60;
  */
 export function FaceSelect(props: FaceSelectProps): JSX.Element {
   const api = useApi();
-  const { videoId, onJobCreated } = props;
+  const { videoId, onJobCreated, onFaceChosen } = props;
 
   const [response, setResponse] = useState<FacesResponse | null>(null);
   const [transportError, setTransportError] = useState<unknown | null>(null);
@@ -108,6 +113,10 @@ export function FaceSelect(props: FaceSelectProps): JSX.Element {
 
   async function handleConfirm() {
     if (!selectedId || creating) return;
+    if (onFaceChosen) {
+      onFaceChosen(selectedId);
+      return;
+    }
 
     // Same video + same face => same key, so a retry is idempotent.
     const key = `${videoId}:${selectedId}`;
@@ -221,7 +230,7 @@ export function FaceSelect(props: FaceSelectProps): JSX.Element {
               disabled={!selectedId || creating}
               loading={creating}
             >
-              ابدأ عزل الصوت
+              {onFaceChosen ? 'التالي: تأكيد الصوت' : 'ابدأ عزل الصوت'}
             </Button>
           </div>
 

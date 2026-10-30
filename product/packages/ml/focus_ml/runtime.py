@@ -98,3 +98,40 @@ class LocalEngine:
         self.initialize()
         with offline_inference():
             return self.isolation.run(video_id, video_path, face_id, job_dir, on_progress)
+
+    # -- audio-only engine (no frames, faces or lips after enrollment) -------
+    @property
+    def audio(self):
+        if getattr(self, "_audio", None) is None:
+            from .voice.engine import AudioOnlyEngine
+            self._audio = AudioOnlyEngine.from_env()
+        return self._audio
+
+    def analyze_audio(self, audio_path):
+        with offline_inference():
+            return self.audio.analyze(audio_path)
+
+    def enroll_audio_range(self, audio_path, diarization, start_s, end_s):
+        with offline_inference():
+            return self.audio.enroll_range(audio_path, diarization, start_s, end_s)
+
+    def enroll_audio_file(self, audio_path):
+        with offline_inference():
+            return self.audio.enroll_file(audio_path)
+
+    def isolate_audio(self, audio_path, voiceprint, diarization, job_dir, on_progress=None):
+        with offline_inference():
+            return self.audio.isolate(audio_path, voiceprint, diarization, job_dir, on_progress)
+
+    def face_visibility(self, video_path, bbox, frame_size):
+        """On-screen spans of the chosen face; used only to rank voice candidates."""
+        self.initialize()
+        from .adapter import _bgr_to_rgb, _corners_to_xywh
+        from .voice.visibility import read_samples, track_visibility
+
+        def detect(frame):
+            corners = self.adapter._detect_frame(self.models.detect_faces, _bgr_to_rgb(frame))
+            return [tuple(float(v) for v in _corners_to_xywh(c, frame_size)[0]) for c in corners]
+
+        with offline_inference():
+            return track_visibility(read_samples(video_path), detect, tuple(float(v) for v in bbox))

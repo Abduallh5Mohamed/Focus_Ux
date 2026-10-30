@@ -37,6 +37,21 @@ const STAGE_ORDER: readonly JobStage[] = [
   'ready',
 ];
 
+/** Audio-only engine: matching the confirmed voice replaces face tracking; no transcription. */
+const AUDIO_ONLY_STAGE_ORDER: readonly JobStage[] = [
+  'validating',
+  'preparing',
+  'matching',
+  'separating',
+  'ready',
+];
+
+function stagesFor(job: { transcript_enabled?: boolean; stage: JobStage }): readonly JobStage[] {
+  return job.transcript_enabled === false || job.stage === 'matching'
+    ? AUDIO_ONLY_STAGE_ORDER
+    : STAGE_ORDER;
+}
+
 const STATUS_TONE: Record<JobStatus, PillTone> = {
   queued: 'neutral',
   processing: 'info',
@@ -161,7 +176,7 @@ export function ProcessingView(props: ProcessingViewProps): JSX.Element {
           </Notice>
         ) : null}
 
-        <StageRail stage={job.stage} status={job.status} />
+        <StageRail stage={job.stage} status={job.status} order={stagesFor(job)} />
 
         {failure && polling ? (
           <Notice tone="warn" title={failure.title} code={failure.code} action={retryAction}>
@@ -225,6 +240,10 @@ export function ProcessingView(props: ProcessingViewProps): JSX.Element {
           </div>
         ) : null}
 
+        {job.transcript_enabled === false ? (
+          <p className="hint">المسار الصوتي مبيعملش تفريغ نص.</p>
+        ) : (
+          <>
         <div className="row row--between">
           <span className="label">تفريغ النص</span>
           <Pill tone={TRANSCRIPT_TONE[job.transcript_status]} busy={job.transcript_status === 'processing'}>
@@ -235,17 +254,27 @@ export function ProcessingView(props: ProcessingViewProps): JSX.Element {
         {job.transcript_status === 'failed' ? (
           <p className="hint">تفريغ النص فشل، لكن الصوت المعزول مش متأثر بده.</p>
         ) : null}
+          </>
+        )}
       </div>
     </Card>
   );
 }
 
-function StageRail({ stage, status }: { stage: JobStage; status: JobStatus }) {
-  const current = STAGE_ORDER.indexOf(stage);
+function StageRail({
+  stage,
+  status,
+  order,
+}: {
+  stage: JobStage;
+  status: JobStatus;
+  order: readonly JobStage[];
+}) {
+  const current = order.indexOf(stage);
 
   return (
     <ol className="stage-rail" aria-label="مراحل المعالجة">
-      {STAGE_ORDER.map((item, index) => {
+      {order.map((item, index) => {
         // A stage only counts as passed when the server actually moved past it.
         const done = index < current || (status === 'completed' && index === current);
         const state = done

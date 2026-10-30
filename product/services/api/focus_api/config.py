@@ -21,8 +21,15 @@ REPO_ROOT = PRODUCT_ROOT.parent
 
 DEFAULT_STORAGE_ROOT = REPO_ROOT / "runtime" / "round2" / "api"
 DEFAULT_UI_ORIGINS = ("http://localhost:5173", "http://127.0.0.1:5173")
-DEFAULT_MAX_UPLOAD_BYTES = 50 * 1024 * 1024
-DEFAULT_MAX_VIDEO_MS = 15_000
+# About 3 minutes. Both limits are configurable (FOCUS_API_MAX_UPLOAD_MB,
+# FOCUS_API_MAX_VIDEO_MS). The lip-based engines keep their own 15 s limit.
+DEFAULT_MAX_UPLOAD_BYTES = 200 * 1024 * 1024
+DEFAULT_MAX_VIDEO_MS = 180_000
+LIP_ENGINE_MAX_VIDEO_MS = 15_000
+ENGINE_CHOICES = ("audio_only", "dolphin", "av_mossformer2", "separate_select")
+DEFAULT_ENGINE = "audio_only"
+VOICE_FILE_MAX_BYTES = 20 * 1024 * 1024
+VOICE_FILE_MAX_MS = 120_000
 
 
 def _env_path(name: str) -> Path | None:
@@ -69,6 +76,9 @@ class Settings:
     inference_mode: str = "unavailable"
     worker_token: str | None = field(default=None, repr=False)
     ffmpeg_path: str = "ffmpeg"
+    # audio_only (default): the user confirms a voice and the job carries the
+    # enrollment. Other values are the lip-based engines (job carries a face).
+    isolation_engine: str = DEFAULT_ENGINE
     # Experimental live mode (docs/04_REALTIME_GATE.md). Stays labelled
     # experimental until the gate report says otherwise.
     live_enabled: bool = False  # experimental: explicit opt-in
@@ -86,6 +96,8 @@ class Settings:
     live_stream_max_s: float = 600.0
 
     def __post_init__(self) -> None:
+        if self.isolation_engine not in ENGINE_CHOICES:
+            raise ValueError(f"isolation_engine must be one of {ENGINE_CHOICES}")
         self.storage_root = Path(self.storage_root).expanduser().resolve()
         if self.db_path is not None:
             self.db_path = Path(self.db_path).expanduser().resolve()
@@ -123,6 +135,19 @@ class Settings:
         return max(1, int(self.max_upload_bytes // (1024 * 1024)) or 1)
 
     @property
+    def audio_only(self) -> bool:
+        return self.isolation_engine == "audio_only"
+
+    @property
+    def max_audio_s(self) -> float:
+        """Longest WAV the worker may send back (clip length plus a second)."""
+        return self.max_video_ms / 1000 + 1
+
+    @property
+    def max_audio_bytes(self) -> int:
+        return int(self.max_audio_s * 16_000 * 2) + 4096
+
+    @property
     def thumbnail_url_prefix(self) -> str:
         base = (self.public_base_url or "").rstrip("/")
         return base
@@ -149,6 +174,7 @@ class Settings:
             inference_mode=os.environ.get("FOCUS_INFERENCE_MODE", "unavailable"),
             worker_token=os.environ.get("FOCUS_WORKER_TOKEN") or None,
             ffmpeg_path=os.environ.get("FOCUS_FFMPEG") or "ffmpeg",
+            isolation_engine=os.environ.get("FOCUS_ISOLATION_ENGINE") or DEFAULT_ENGINE,
             live_enabled=os.environ.get("FOCUS_LIVE_ENABLED", "0") in ("1", "true"),
             live_max_queue_depth=_env_int("FOCUS_LIVE_MAX_QUEUE_DEPTH", 3),
             live_stream_enabled=os.environ.get("FOCUS_LIVE_STREAM", "0") in ("1", "true"),

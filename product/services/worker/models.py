@@ -24,6 +24,7 @@ class JobStage(str, Enum):
     VALIDATING = "validating"
     PREPARING = "preparing"
     TRACKING = "tracking"
+    MATCHING = "matching"  # audio-only: compare each speech region with the enrolled voice
     SEPARATING = "separating"
     TRANSCRIBING = "transcribing"
     READY = "ready"
@@ -79,6 +80,8 @@ class Job:
     transcript_segments: list[TranscriptSegment] = field(default_factory=list)
     error: Optional[ErrorPayload] = None
     queue_position: int = 0
+    # Audio-only jobs carry the voice enrollment instead of relying on a face.
+    enrollment_id: Optional[str] = None
 
     def copied(self) -> "Job":
         clone = copy.copy(self)

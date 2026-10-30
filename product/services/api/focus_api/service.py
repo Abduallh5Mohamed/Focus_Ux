@@ -17,7 +17,7 @@ from typing import BinaryIO, Optional
 
 from services.worker.models import AudioStatus, Job, JobStage, JobStatus, TranscriptStatus
 
-from .config import Settings
+from .config import LIP_ENGINE_MAX_VIDEO_MS, VOICE_FILE_MAX_BYTES, VOICE_FILE_MAX_MS, Settings
 from .db import FaceRecord, JobNotFound, SqliteRepository, VideoRecord
 from .dispatcher import Dispatcher
 from .errors import (
@@ -39,6 +39,8 @@ from .storage import VIDEO_EXTENSIONS, Storage
 logger = logging.getLogger("focus_api.service")
 
 _CHUNK = 1024 * 1024
+MIN_ENROLL_MS = 4000   # matches the enrollment rule: at least 4 s of one voice
+MAX_RANGE_MS = 60_000
 _TRANSCRIPT_WARNING = "transcript failed:"
 _TRANSCRIPT_REASONS = {
     "not_configured": "transcription is not configured on this server",
@@ -172,6 +174,8 @@ class ApiService:
             deleted_at=None,
         )
         self.repo.create_video(video)
+        if self.settings.audio_only:
+            self.repo.set_analysis(video_id, "pending")  # analysed beside face detection
         self.dispatcher.enqueue_faces(video_id)
 
         metadata = {
@@ -236,9 +240,29 @@ class ApiService:
 
     # -- jobs ----------------------------------------------------------------
     def create_job(
-        self, *, video_id: str, face_id: str, client_request_id: str, session_id: str
+        self, *, video_id: str, face_id: Optional[str], client_request_id: str, session_id: str,
+        enrollment_id: Optional[str] = None,
     ) -> tuple[str, bool]:
         video = self._owned_video(video_id, session_id)
+        if self.settings.audio_only:
+            if not enrollment_id:
+                raise ApiError("ENROLLMENT_REQUIRED", "confirm a voice before starting the job",
+                               status_code=409)
+            enrollment = self.repo.get_enrollment(enrollment_id)
+            if enrollment is None or enrollment["video_id"] != video_id:
+                raise ApiError("ENROLLMENT_REQUIRED", "voice enrollment not found", status_code=409)
+            if enrollment["status"] != "ready":
+                raise ApiError("ENROLLMENT_REQUIRED", "voice enrollment is not ready", status_code=409)
+            # The face only identifies the user's choice; it never reaches extraction.
+            face_id = enrollment["face_id"]
+        else:
+            enrollment_id = None
+            if not face_id:
+                raise ApiError("INVALID_REQUEST", "face_id is required", status_code=422)
+            if video.duration_ms > LIP_ENGINE_MAX_VIDEO_MS:
+                raise limit_exceeded(
+                    f"the {self.settings.isolation_engine} engine supports clips up to "
+                    f"{LIP_ENGINE_MAX_VIDEO_MS // 1000}s")
         existing = self.repo.find_job_id(video_id, face_id, client_request_id)
         if existing is not None:
             return existing, False
@@ -258,6 +282,7 @@ class ApiService:
             audio_status=AudioStatus.PENDING,
             transcript_status=TranscriptStatus.PENDING,
             queue_position=len(self.repo.queued_jobs()),
+            enrollment_id=enrollment_id,
         )
         inserted = self.repo.create_job(job)
         if not inserted:
@@ -292,6 +317,8 @@ class ApiService:
             if job.audio_warnings:
                 result["warnings"] = [w for w in job.audio_warnings
                                       if not w.startswith("engine: ")]
+            if job.enrollment_id:
+                result["follow_periods"] = [dict(p) for p in job.follow_periods]
         return {
             "job_id": job.job_id,
             "status": job.status.value,
@@ -300,6 +327,8 @@ class ApiService:
             "audio_status": job.audio_status.value,
             "transcript_status": job.transcript_status.value,
             "queue_position": queue_position,
+            # The audio-only flow runs no speech recognition (the feature stays for other engines).
+            "transcript_enabled": not job.enrollment_id,
             "error": self._error_wire(job),
             "result": result,
         }
@@ -460,6 +489,225 @@ class ApiService:
         if not path.is_file() or not self.storage.is_managed(path):
             raise not_found("thumbnail not found")
         return path, face.thumbnail_mime or "image/jpeg"
+
+    # -- audio analysis, voice suggestion, enrollment ------------------------
+    def config_response(self) -> dict:
+        lip = not self.settings.audio_only
+        return {
+            "engine": self.settings.isolation_engine,
+            "max_video_ms": min(self.settings.max_video_ms, LIP_ENGINE_MAX_VIDEO_MS) if lip
+            else self.settings.max_video_ms,
+            "max_upload_bytes": self.settings.max_upload_bytes,
+            "voice_file_max_ms": VOICE_FILE_MAX_MS,
+            "min_enrollment_ms": MIN_ENROLL_MS,
+        }
+
+    def _analysis_result(self, video_id: str) -> dict:
+        record = self.repo.get_analysis(video_id)
+        if record is None or record["status"] != "ready" or not record["result"]:
+            raise not_ready("audio analysis is not ready yet")
+        return record["result"]
+
+    def analysis_response(self, video_id: str, session_id: str) -> dict:
+        self._owned_video(video_id, session_id)
+        record = self.repo.get_analysis(video_id)
+        if record is None:
+            return {"status": "failed", "voices": [], "warnings": [], "duration_ms": 0,
+                    "error": {"code": "MODEL_UNAVAILABLE", "retryable": False,
+                              "message": "audio analysis is not available for this video"}}
+        body = {"status": record["status"], "voices": [], "warnings": [], "duration_ms": 0, "error": None}
+        if record["status"] == "failed":
+            body["error"] = {"code": record["error_code"] or "PROCESSING_FAILED",
+                             "message": record["error_message"] or "audio analysis failed",
+                             "retryable": record["retryable"]}
+        result = record["result"]
+        if record["status"] == "ready" and result:
+            prefix = self.settings.thumbnail_url_prefix
+            body["duration_ms"] = result["duration_ms"]
+            body["warnings"] = result["warnings"]
+            for index, sp in enumerate(result["speakers"]):
+                sample = sp["sample"]
+                body["voices"].append({
+                    "voice_id": f"voice-{index}",
+                    "speech_s": sp["speech_s"], "clean_s": sp["clean_s"],
+                    "overlap_fraction": sp["overlap_fraction"],
+                    "usable": sp["usable"], "refusal": sp["refusal"], "warnings": sp["warnings"],
+                    "sample": None if sample is None else {
+                        "start_ms": round(sample["start"] * 1000), "end_ms": round(sample["end"] * 1000)},
+                    "sample_url": f"{prefix}/videos/{video_id}/analysis/voices/voice-{index}/sample"
+                    if sp.get("clip") else None,
+                })
+        return body
+
+    def retry_analysis(self, video_id: str, session_id: str) -> dict:
+        self._owned_video(video_id, session_id)
+        record = self.repo.get_analysis(video_id)
+        if record is not None and record["status"] == "failed":
+            self.repo.set_analysis(video_id, "pending")
+            self.dispatcher.enqueue_analysis(video_id)
+        return {"status": (self.repo.get_analysis(video_id) or {"status": "failed"})["status"]}
+
+    @staticmethod
+    def _voice_index(voice_id: str, count: int) -> int:
+        if not voice_id.startswith("voice-") or not voice_id[6:].isdigit():
+            raise not_found("voice not found")
+        index = int(voice_id[6:])
+        if index >= count:
+            raise not_found("voice not found")
+        return index
+
+    def voice_sample_file(self, video_id: str, voice_id: str, session_id: str) -> tuple[Path, str]:
+        self._owned_video(video_id, session_id)
+        result = self._analysis_result(video_id)
+        index = self._voice_index(voice_id, len(result["speakers"]))
+        from .inference import voice_sample_path
+        path = voice_sample_path(self.settings, video_id, index)
+        if not result["speakers"][index].get("clip") or not path.is_file():
+            raise not_found("voice sample not found")
+        return path, "audio/wav"
+
+    def request_suggestion(self, video_id: str, face_id: str, session_id: str) -> dict:
+        self._owned_video(video_id, session_id)
+        if self.repo.get_face(video_id, face_id) is None:
+            raise face_not_found("selected face candidate is not available")
+        record = self.repo.get_suggestion(video_id, face_id)
+        if record is None or record["status"] == "failed":
+            self.repo.set_suggestion(video_id, face_id, "pending")
+            self.dispatcher.enqueue_suggestion(video_id, face_id)
+            record = {"status": "pending"}
+        return {"status": record["status"]}
+
+    def suggestion_response(self, video_id: str, face_id: str, session_id: str) -> dict:
+        from .voice_suggest import SUGGESTION_NOTE, rank_voices
+        self._owned_video(video_id, session_id)
+        if self.repo.get_face(video_id, face_id) is None:
+            raise face_not_found("selected face candidate is not available")
+        record = self.repo.get_suggestion(video_id, face_id)
+        analysis = self.repo.get_analysis(video_id)
+        body = {"status": "pending", "candidates": [], "evidence": None, "note": SUGGESTION_NOTE,
+                "error": None}
+        if analysis is None or analysis["status"] == "failed":
+            body["status"] = "failed"
+            body["error"] = {"code": "PROCESSING_FAILED", "retryable": bool(analysis and analysis["retryable"]),
+                             "message": "the voices could not be analysed for this video"}
+            return body
+        if analysis["status"] != "ready":
+            return body
+        if record is None:
+            return body
+        if record["status"] == "pending":
+            return body
+        visible = record["visible"] if record["status"] == "ready" else None
+        ranked = rank_voices(analysis["result"], visible)
+        body.update(status="ready", evidence=ranked["evidence"], note=ranked["note"])
+        if record["status"] == "failed":
+            body["notice"] = "تعذّر قياس ظهور الوجه؛ الترتيب حسب مدة الكلام فقط."
+        body["candidates"] = [
+            {"voice_id": f"voice-{r['index']}", "rank": r["rank"], "suggested": r["suggested"],
+             "talk_s": r["talk_s"], "visible_talk_s": r["visible_talk_s"]}
+            for r in ranked["candidates"]
+        ]
+        return body
+
+    def _enrollment_wire(self, item: dict) -> dict:
+        error = None
+        if item["status"] == "failed":
+            error = {"code": item["error_code"] or "PROCESSING_FAILED",
+                     "message": item["error_message"] or "voice enrollment failed",
+                     "retryable": item["retryable"]}
+        return {"enrollment_id": item["enrollment_id"], "status": item["status"],
+                "face_id": item["face_id"], "source": item["source_kind"],
+                "warnings": item["warnings"], "clean_s": item["clean_s"], "error": error}
+
+    def create_enrollment(self, video_id: str, session_id: str, payload: dict) -> dict:
+        """Confirm a detected voice, or enroll a manual time range."""
+        video = self._owned_video(video_id, session_id)
+        face_id = payload.get("face_id")
+        if not isinstance(face_id, str) or self.repo.get_face(video_id, face_id) is None:
+            raise face_not_found("selected face candidate is not available")
+        source = payload.get("source")
+        enrollment_id = uuid.uuid4().hex
+        if source == "voice":
+            result = self._analysis_result(video_id)
+            index = self._voice_index(str(payload.get("voice_id", "")), len(result["speakers"]))
+            speaker = result["speakers"][index]
+            if not speaker["usable"] or not speaker["voiceprint"]:
+                raise ApiError("ENROLLMENT_REFUSED", speaker["refusal"] or "this voice sample is too short",
+                               status_code=422)
+            vp = dict(speaker["voiceprint"], warnings=list(speaker["warnings"]))
+            self.repo.create_enrollment(
+                enrollment_id, video_id, face_id, "voice", {"voice_id": f"voice-{index}"}, "ready",
+                voiceprint=vp, warnings=speaker["warnings"], clean_s=speaker["clean_s"])
+        elif source == "range":
+            start, end = payload.get("start_ms"), payload.get("end_ms")
+            if type(start) is not int or type(end) is not int or start < 0 or end <= start \
+                    or end > video.duration_ms + 80:
+                raise ApiError("INVALID_REQUEST", "the time range is not valid", status_code=422)
+            if end - start < MIN_ENROLL_MS:
+                raise ApiError("ENROLLMENT_REFUSED",
+                               f"The range is too short; choose at least {MIN_ENROLL_MS // 1000} seconds "
+                               "of one person speaking.", status_code=422)
+            if end - start > MAX_RANGE_MS:
+                raise ApiError("INVALID_REQUEST", f"the range is longer than {MAX_RANGE_MS // 1000} seconds",
+                               status_code=422)
+            self._analysis_result(video_id)
+            self.repo.create_enrollment(enrollment_id, video_id, face_id, "range",
+                                        {"start_ms": start, "end_ms": min(end, video.duration_ms)})
+            self.dispatcher.enqueue_enrollment(enrollment_id)
+        else:
+            raise ApiError("INVALID_REQUEST", "source must be voice, range or a voice file", status_code=422)
+        return self._enrollment_wire(self.repo.get_enrollment(enrollment_id))
+
+    def create_voice_file_enrollment(self, video_id: str, session_id: str, face_id: str,
+                                     stream: BinaryIO) -> dict:
+        """A separate recording of the person; kept only until enrollment finishes."""
+        import wave
+        from .inference import extract_audio_wav
+        from .interfaces import ProviderError
+        self._owned_video(video_id, session_id)
+        if self.repo.get_face(video_id, face_id) is None:
+            raise face_not_found("selected face candidate is not available")
+        enrollment_id = uuid.uuid4().hex
+        target = self.settings.media_dir / f"{video_id}.voice-{enrollment_id}.wav"
+        total = 0
+        with self.storage.own_temp_upload() as raw_path:
+            try:
+                with open(raw_path, "wb") as out:
+                    while chunk := stream.read(_CHUNK):
+                        total += len(chunk)
+                        if total > VOICE_FILE_MAX_BYTES:
+                            raise limit_exceeded(
+                                f"the voice recording exceeds {VOICE_FILE_MAX_BYTES // (1024 * 1024)} MB")
+                        out.write(chunk)
+                if total <= 0:
+                    raise invalid_media("the voice recording is empty")
+                try:
+                    extract_audio_wav(self.settings.ffmpeg_path, raw_path, str(target))
+                except ProviderError as exc:
+                    raise invalid_media("the voice recording could not be read as audio") from exc
+                with wave.open(str(target), "rb") as audio:
+                    duration_ms = round(audio.getnframes() * 1000 / audio.getframerate())
+                if duration_ms < MIN_ENROLL_MS:
+                    raise ApiError("ENROLLMENT_REFUSED",
+                                   f"The recording is too short; use at least {MIN_ENROLL_MS // 1000} "
+                                   "seconds of one person speaking.", status_code=422)
+                if duration_ms > VOICE_FILE_MAX_MS:
+                    raise limit_exceeded(f"the voice recording is longer than {VOICE_FILE_MAX_MS // 1000}s")
+                if not self.repo.create_enrollment(enrollment_id, video_id, face_id, "file",
+                                                   {"duration_ms": duration_ms}):
+                    raise not_found("video not found")
+            except Exception:
+                target.unlink(missing_ok=True)
+                raise
+        self.dispatcher.enqueue_enrollment(enrollment_id)
+        return self._enrollment_wire(self.repo.get_enrollment(enrollment_id))
+
+    def enrollment_response(self, video_id: str, enrollment_id: str, session_id: str) -> dict:
+        self._owned_video(video_id, session_id)
+        item = self.repo.get_enrollment(enrollment_id)
+        if item is None or item["video_id"] != video_id:
+            raise not_found("enrollment not found")
+        return self._enrollment_wire(item)
 
     # -- deletion ------------------------------------------------------------
     def delete_video(self, video_id: str, session_id: str) -> dict:

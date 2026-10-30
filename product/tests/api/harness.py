@@ -15,6 +15,8 @@ from services.api.focus_api.config import Settings
 
 
 def make_settings(base: Path, **overrides) -> Settings:
+    # The existing suites exercise the lip-based flow (job carries a face).
+    overrides.setdefault("isolation_engine", "dolphin")
     settings = Settings(storage_root=Path(base), **overrides)
     return settings
 

@@ -31,7 +31,7 @@ interface ComparePlayerProps {
 
 const FOLLOW_LABEL: Record<string, string> = {
   voice_follow: 'متابعة بالصوت',
-  uncertain: 'غير متأكد',
+  uncertain: 'غير متأكد (مكتوم)',
   conflict: 'تعارض الصوت مع الوش',
 };
 
@@ -163,7 +163,7 @@ export function ComparePlayer({
               <span className="hint">
                 {followPeriods.some((p) => p.state === 'voice_follow') ? 'متابعة بالصوت ' : ''}
                 {followPeriods.some((p) => p.state === 'uncertain' || p.state === 'conflict')
-                  ? '· فيه فترات غير مؤكدة'
+                  ? '· فيه فترات غير مؤكدة وهي مكتومة في الصوت المعزول'
                   : ''}
               </span>
             </div>

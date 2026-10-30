@@ -10,3 +10,4 @@
 - [Continuous live stream](live-stream-continuous.md) — HTTP batches not WebSocket; single worker; gate needs browser latency + SI-SDRi.
 - [Voice pipeline POC](voice-pipeline.md) — audio-only pipeline quirks: SpeechBrain needs pretrained_path override, HF secret not in forked shell, numbers are non-Egyptian only.
 - [Overlap extraction](overlap-extraction.md) — candidates unrun on real weights; REAL-TSE only on Google Drive; blind separators never called voice-conditioned.
+- [Audio-only engine](audio-only-engine.md) — enrollment-based default engine: audio-only tasks, visibility fallback, test layout.

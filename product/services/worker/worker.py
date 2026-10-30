@@ -89,7 +89,8 @@ class SingleWorker:
             self._validate(job)
             self._begin(job, JobStage.PREPARING)
             job_dir = self._ensure_job_dir(job)
-            self._begin(job, JobStage.TRACKING)
+            # Audio-only jobs never track a face: the real stage is voice matching.
+            self._begin(job, JobStage.MATCHING if job.enrollment_id else JobStage.TRACKING)
             wav = self.targeting.extract(
                 job, job_dir, on_progress=self._adapter_progress(job)
             )
@@ -100,6 +101,8 @@ class SingleWorker:
             try:
                 if (job.client_request_id or "").startswith(LIVE_CHUNK_PREFIX):
                     pass  # no per-chunk transcription; transcript_status stays pending
+                elif job.enrollment_id:
+                    pass  # the audio-only flow runs no speech recognition
                 else:
                     self._transcribe(job)
             except _Cancelled:
@@ -192,6 +195,7 @@ class SingleWorker:
         job.wav_path = None
         job.duration_ms = None
         job.source_offset_ms = 0
+        job.follow_periods = []
         job.transcript_segments = []
         job.audio_warnings = []
         job.error = None
@@ -205,7 +209,7 @@ class SingleWorker:
             raise MediaError("media file not found")
         if os.path.getsize(job.video_path) > self.max_upload_mb * 1024 * 1024:
             raise LimitExceededError("media exceeds configured upload size limit")
-        if not job.face_id:
+        if not job.enrollment_id and not job.face_id:
             raise FaceNotFoundError("no face selection recorded for job")
 
     def _ensure_job_dir(self, job: Job) -> str:
@@ -247,6 +251,7 @@ class SingleWorker:
         job.duration_ms = result.duration_ms
         job.source_offset_ms = result.source_offset_ms
         job.audio_warnings.extend(result.warnings)
+        job.follow_periods = [dict(p) for p in getattr(result, "follow_periods", [])]
         job.audio_status = AudioStatus.READY
 
     def _transcribe(self, job: Job) -> None:

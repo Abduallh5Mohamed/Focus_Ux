@@ -107,3 +107,31 @@ calibrated on non-Egyptian speech. Oracle regions hide diarizer errors. Batch si
 **Needs from the team:** run `Setup-Overlap.cmd` (HF read token with the pyannote ami terms accepted; approval for
 downloads), Egyptian solo recordings (>= 3 speakers, >= 25 s each) and MUSAN noise, optionally real overlap clips with
 annotations; run the bake-off on the RTX 3050 laptop and send `report.json`.
+
+
+## App integration: voice enrollment and the audio-only engine
+**Integrated (validated components only):** pyannote community-1 diarizer, ECAPA (provisional default) / pyannote
+embedders and the gated-baseline extractor (overlap muted). **Left out, with reasons:** the overlap-extraction
+candidates (never run on real weights, no numbers, no default chosen) and the optional speaking-face score (not
+measured, so not used; the suggestion uses only which speaker talks while the face is on screen).
+
+**Flow:** upload -> convert -> face detection and audio analysis in parallel (analysis cached per video) -> user picks a
+face -> ranked voices (suggestion only) -> user listens and confirms / picks another / manual range / separate recording
+-> enrollment (voiceprint stored for the job only, deleted with the video) -> job carries `enrollment_id`, no face ->
+worker stages matching, separating -> target / uncertain periods (`follow_periods`, uncertain muted).
+No speech recognition runs for this engine; the transcript feature is untouched for the lip engines.
+
+**Audio only after enrollment:** `analyze`, `enroll` and `isolate` worker tasks download WAV only; `AudioOnlyEngine`
+methods have no video/face parameters (asserted by a test). Face visibility is measured only at enrollment time with a
+sparse detector-continuity sampler (not the 15 s Dolphin tracker); if it fails the ranking falls back to talk time and
+says so (`evidence=talk_time_only`). Suggestion rule: >=1.5 s on-screen evidence and >=1.5x the runner-up, else none.
+**Refusals:** under 4 s of clean speech, range over 60 s, voice file over 120 s / 20 MB, unreadable audio.
+
+**Limits:** upload ~3 min / 200 MB (configurable); worker media cap 250 MB (`FOCUS_WORKER_MAX_MEDIA_MB`); output WAV cap
+8 MB; lip engines keep 15 s.
+
+**Tests run (this workspace, no GPU/torch):** visibility independence (original / blacked-out / no video give
+byte-identical output through ffmpeg extraction + `AudioOnlyEngine`, with tone test models for diarizer and embedder),
+API routes, enrollment validation, voiceprint deletion, bridge protocol validation, Windows worker handlers, web screens.
+**Not measured:** real-model quality, Egyptian Arabic, RTX 3050 time/VRAM for a 3-minute clip, real-camera visibility
+suggestion accuracy. ECAPA thresholds remain calibrated on non-Egyptian speech.

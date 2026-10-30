@@ -37,7 +37,7 @@ describe('IntakeFlow local validation', () => {
 
   it('rejects a file over the size limit without uploading it', async () => {
     const { input, uploadSpy } = renderIntake();
-    fireEvent.change(input, { target: { files: [makeFile('big.mp4', 'video/mp4', 60 * 1024 * 1024)] } });
+    fireEvent.change(input, { target: { files: [makeFile('big.mp4', 'video/mp4', 210 * 1024 * 1024)] } });
 
     expect(await screen.findByText('الملف أكبر من الحد المسموح')).toBeInTheDocument();
     expect(uploadSpy).not.toHaveBeenCalled();

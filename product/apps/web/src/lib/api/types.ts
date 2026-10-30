@@ -68,6 +68,7 @@ export type JobStatus = 'queued' | 'processing' | 'completed' | 'failed' | 'canc
 export type JobStage =
   | 'validating'
   | 'preparing'
+  | 'matching'
   | 'tracking'
   | 'separating'
   | 'transcribing'
@@ -108,11 +109,16 @@ export interface JobState {
   queue_position: number;
   error: ApiErrorPayload | null;
   result: JobResult | null;
+  /** False for the audio-only engine: no speech recognition runs for it. Absent = true. */
+  transcript_enabled?: boolean;
 }
 
 export interface CreateJobRequest {
   video_id: VideoId;
-  face_id: FaceId;
+  /** Lip-based engines only. */
+  face_id?: FaceId;
+  /** Audio-only engine: the confirmed voice enrollment (no face, no frames). */
+  enrollment_id?: string;
   /** Idempotency key: retrying with the same value must not create a second job. */
   client_request_id: string;
 }
@@ -167,6 +173,67 @@ export interface ExportState {
   error?: ApiErrorPayload;
 }
 
+export interface AppConfig {
+  engine: string;
+  max_video_ms: number;
+  max_upload_bytes: number;
+  voice_file_max_ms: number;
+  min_enrollment_ms: number;
+}
+
+export interface VoiceCandidateInfo {
+  voice_id: string;
+  speech_s: number;
+  clean_s: number;
+  overlap_fraction: number;
+  usable: boolean;
+  refusal: string | null;
+  warnings: string[];
+  sample: { start_ms: number; end_ms: number } | null;
+  /** Protected media URL; fetch with the session token. */
+  sample_url: string | null;
+}
+
+export interface AnalysisResponse {
+  status: 'pending' | 'ready' | 'failed';
+  voices: VoiceCandidateInfo[];
+  warnings: string[];
+  duration_ms: number;
+  error: ApiErrorPayload | null;
+}
+
+export interface SuggestionCandidate {
+  voice_id: string;
+  rank: number;
+  suggested: boolean;
+  talk_s: number;
+  visible_talk_s: number;
+}
+
+export interface SuggestionResponse {
+  status: 'pending' | 'ready' | 'failed';
+  candidates: SuggestionCandidate[];
+  evidence: 'on_screen' | 'talk_time_only' | null;
+  /** States that this is a suggestion only. */
+  note: string;
+  notice?: string;
+  error: ApiErrorPayload | null;
+}
+
+export type EnrollmentRequest =
+  | { face_id: FaceId; source: 'voice'; voice_id: string }
+  | { face_id: FaceId; source: 'range'; start_ms: number; end_ms: number };
+
+export interface EnrollmentState {
+  enrollment_id: string;
+  status: 'pending' | 'ready' | 'failed';
+  face_id: FaceId;
+  source: string;
+  warnings: string[];
+  clean_s: number | null;
+  error: ApiErrorPayload | null;
+}
+
 export const TERMINAL_JOB_STATUSES: readonly JobStatus[] = ['completed', 'failed', 'cancelled'];
 
 export function isTerminalStatus(status: JobStatus): boolean {
@@ -177,6 +244,7 @@ export function isTerminalStatus(status: JobStatus): boolean {
 export const JOB_STAGE_LABEL: Record<JobStage, string> = {
   validating: 'التحقق من الفيديو',
   preparing: 'تجهيز المدخل',
+  matching: 'مطابقة الصوت المؤكَّد',
   tracking: 'تتبّع الوجه المختار',
   separating: 'عزل الصوت',
   transcribing: 'تفريغ النص',

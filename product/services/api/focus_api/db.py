@@ -157,7 +157,56 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_jobs_idempotency
     ON jobs(video_id, face_id, client_request_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status, created_at);
 CREATE INDEX IF NOT EXISTS idx_jobs_video ON jobs(video_id);
+
+-- Audio analysis, voice suggestions and enrollments are private to one video
+-- and are removed with it (mark_video_deleted and the ON DELETE CASCADE).
+CREATE TABLE IF NOT EXISTS analyses (
+    video_id TEXT PRIMARY KEY,
+    status TEXT NOT NULL DEFAULT 'pending',
+    error_code TEXT,
+    error_message TEXT,
+    error_retryable INTEGER NOT NULL DEFAULT 0,
+    result_json TEXT,
+    updated_at REAL NOT NULL,
+    FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS suggestions (
+    video_id TEXT NOT NULL,
+    face_id TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    error_code TEXT,
+    error_message TEXT,
+    error_retryable INTEGER NOT NULL DEFAULT 0,
+    visible_json TEXT,
+    updated_at REAL NOT NULL,
+    PRIMARY KEY (video_id, face_id),
+    FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS enrollments (
+    enrollment_id TEXT PRIMARY KEY,
+    video_id TEXT NOT NULL,
+    face_id TEXT NOT NULL,
+    source_kind TEXT NOT NULL,
+    source_json TEXT NOT NULL DEFAULT '{}',
+    status TEXT NOT NULL DEFAULT 'pending',
+    error_code TEXT,
+    error_message TEXT,
+    error_retryable INTEGER NOT NULL DEFAULT 0,
+    warnings_json TEXT NOT NULL DEFAULT '[]',
+    voiceprint_json TEXT,
+    clean_s REAL,
+    created_at REAL NOT NULL,
+    FOREIGN KEY (video_id) REFERENCES videos(video_id) ON DELETE CASCADE
+);
+CREATE INDEX IF NOT EXISTS idx_enrollments_video ON enrollments(video_id);
 """
+
+_JOB_COLUMNS = (
+    ("enrollment_id", "TEXT"),
+    ("follow_periods", "TEXT NOT NULL DEFAULT '[]'"),
+)
 
 
 class SqliteRepository:
@@ -177,6 +226,10 @@ class SqliteRepository:
             self._conn.execute("PRAGMA foreign_keys=ON")
             self._conn.execute("PRAGMA busy_timeout=10000")
             self._conn.executescript(_SCHEMA)
+            have = {row["name"] for row in self._conn.execute("PRAGMA table_info(jobs)")}
+            for name, decl in _JOB_COLUMNS:
+                if name not in have:
+                    self._conn.execute(f"ALTER TABLE jobs ADD COLUMN {name} {decl}")
 
     def close(self) -> None:
         with self._lock:
@@ -321,7 +374,157 @@ class SqliteRepository:
                 "UPDATE videos SET deleted_at=COALESCE(deleted_at, ?) WHERE video_id=?",
                 (time.time() if now is None else now, video_id),
             )
+            # Voiceprints go at once, even if file cleanup has to be retried.
+            self.delete_voice_data(video_id)
             return cur.rowcount == 1
+
+    def delete_voice_data(self, video_id: str) -> None:
+        with self._lock:
+            for table in ("enrollments", "suggestions", "analyses"):
+                self._conn.execute(f"DELETE FROM {table} WHERE video_id=?", (video_id,))
+
+    # -- audio analysis cache ------------------------------------------------
+    def set_analysis(self, video_id, status, *, result=None, error_code=None,
+                     error_message=None, retryable=False) -> bool:
+        """Never resurrects a deleted video's analysis."""
+        with self._lock:
+            video = self._conn.execute(
+                "SELECT deleted_at FROM videos WHERE video_id=?", (video_id,)).fetchone()
+            if video is None or video["deleted_at"] is not None:
+                return False
+            self._conn.execute(
+                """INSERT INTO analyses(video_id, status, error_code, error_message,
+                       error_retryable, result_json, updated_at) VALUES(?,?,?,?,?,?,?)
+                   ON CONFLICT(video_id) DO UPDATE SET status=excluded.status,
+                       error_code=excluded.error_code, error_message=excluded.error_message,
+                       error_retryable=excluded.error_retryable, result_json=excluded.result_json,
+                       updated_at=excluded.updated_at""",
+                (video_id, status, error_code, error_message, 1 if retryable else 0,
+                 json.dumps(result) if result is not None else None, time.time()),
+            )
+            return True
+
+    def get_analysis(self, video_id: str) -> Optional[dict]:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM analyses WHERE video_id=?", (video_id,)).fetchone()
+        if row is None:
+            return None
+        return {
+            "status": row["status"], "error_code": row["error_code"],
+            "error_message": row["error_message"], "retryable": bool(row["error_retryable"]),
+            "result": json.loads(row["result_json"]) if row["result_json"] else None,
+        }
+
+    def pending_analysis_videos(self) -> list[str]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT a.video_id FROM analyses a JOIN videos v ON v.video_id=a.video_id "
+                "WHERE a.status='pending' AND v.deleted_at IS NULL AND v.faces_status!='pending' "
+                "ORDER BY v.created_at, a.video_id").fetchall()
+        return [row["video_id"] for row in rows]
+
+    # -- voice suggestions ---------------------------------------------------
+    def set_suggestion(self, video_id, face_id, status, *, visible=None, error_code=None,
+                       error_message=None, retryable=False) -> bool:
+        with self._lock:
+            video = self._conn.execute(
+                "SELECT deleted_at FROM videos WHERE video_id=?", (video_id,)).fetchone()
+            if video is None or video["deleted_at"] is not None:
+                return False
+            self._conn.execute(
+                """INSERT INTO suggestions(video_id, face_id, status, error_code, error_message,
+                       error_retryable, visible_json, updated_at) VALUES(?,?,?,?,?,?,?,?)
+                   ON CONFLICT(video_id, face_id) DO UPDATE SET status=excluded.status,
+                       error_code=excluded.error_code, error_message=excluded.error_message,
+                       error_retryable=excluded.error_retryable, visible_json=excluded.visible_json,
+                       updated_at=excluded.updated_at""",
+                (video_id, face_id, status, error_code, error_message, 1 if retryable else 0,
+                 json.dumps(visible) if visible is not None else None, time.time()),
+            )
+            return True
+
+    def get_suggestion(self, video_id: str, face_id: str) -> Optional[dict]:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM suggestions WHERE video_id=? AND face_id=?",
+                (video_id, face_id)).fetchone()
+        if row is None:
+            return None
+        return {
+            "status": row["status"], "error_code": row["error_code"],
+            "error_message": row["error_message"], "retryable": bool(row["error_retryable"]),
+            "visible": json.loads(row["visible_json"]) if row["visible_json"] else None,
+        }
+
+    def pending_suggestions(self) -> list[tuple[str, str]]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT s.video_id, s.face_id FROM suggestions s JOIN videos v ON v.video_id=s.video_id "
+                "WHERE s.status='pending' AND v.deleted_at IS NULL ORDER BY s.updated_at").fetchall()
+        return [(row["video_id"], row["face_id"]) for row in rows]
+
+    # -- enrollments ---------------------------------------------------------
+    def create_enrollment(self, enrollment_id, video_id, face_id, source_kind, source,
+                          status="pending", *, voiceprint=None, warnings=None, clean_s=None) -> bool:
+        with self._lock:
+            video = self._conn.execute(
+                "SELECT deleted_at FROM videos WHERE video_id=?", (video_id,)).fetchone()
+            if video is None or video["deleted_at"] is not None:
+                return False
+            self._conn.execute(
+                """INSERT INTO enrollments(enrollment_id, video_id, face_id, source_kind,
+                       source_json, status, warnings_json, voiceprint_json, clean_s, created_at)
+                   VALUES(?,?,?,?,?,?,?,?,?,?)""",
+                (enrollment_id, video_id, face_id, source_kind, json.dumps(source), status,
+                 json.dumps(warnings or []),
+                 json.dumps(voiceprint) if voiceprint is not None else None, clean_s, time.time()),
+            )
+            return True
+
+    def finish_enrollment(self, enrollment_id, status, *, voiceprint=None, warnings=None,
+                          clean_s=None, error_code=None, error_message=None,
+                          retryable=False) -> bool:
+        with self._lock:
+            cur = self._conn.execute(
+                """UPDATE enrollments SET status=?, voiceprint_json=?, warnings_json=?, clean_s=?,
+                       error_code=?, error_message=?, error_retryable=?
+                   WHERE enrollment_id=?""",
+                (status, json.dumps(voiceprint) if voiceprint is not None else None,
+                 json.dumps(warnings or []), clean_s, error_code, error_message,
+                 1 if retryable else 0, enrollment_id),
+            )
+            return cur.rowcount == 1
+
+    def get_enrollment(self, enrollment_id: str) -> Optional[dict]:
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT * FROM enrollments WHERE enrollment_id=?", (enrollment_id,)).fetchone()
+        if row is None:
+            return None
+        return {
+            "enrollment_id": row["enrollment_id"], "video_id": row["video_id"],
+            "face_id": row["face_id"], "source_kind": row["source_kind"],
+            "source": json.loads(row["source_json"] or "{}"), "status": row["status"],
+            "error_code": row["error_code"], "error_message": row["error_message"],
+            "retryable": bool(row["error_retryable"]),
+            "warnings": json.loads(row["warnings_json"] or "[]"),
+            "voiceprint": json.loads(row["voiceprint_json"]) if row["voiceprint_json"] else None,
+            "clean_s": row["clean_s"],
+        }
+
+    def pending_enrollments(self) -> list[str]:
+        with self._lock:
+            rows = self._conn.execute(
+                "SELECT e.enrollment_id FROM enrollments e JOIN videos v ON v.video_id=e.video_id "
+                "WHERE e.status='pending' AND v.deleted_at IS NULL ORDER BY e.created_at").fetchall()
+        return [row["enrollment_id"] for row in rows]
+
+    def voice_row_counts(self, video_id: str) -> dict:
+        with self._lock:
+            return {t: int(self._conn.execute(
+                f"SELECT COUNT(*) AS n FROM {t} WHERE video_id=?", (video_id,)).fetchone()["n"])
+                for t in ("enrollments", "suggestions", "analyses")}
 
     def clear_media_paths(self, video_id: str) -> None:
         with self._lock:
@@ -395,6 +598,7 @@ class SqliteRepository:
                     "transcript_status=?, wav_path=?, duration_ms=?, source_offset_ms=?, "
                     "audio_warnings=?, transcript_segments=?, error_code=?, "
                     "error_message=?, error_retryable=?, queue_position=?, updated_at=?, "
+                    "enrollment_id=?, follow_periods=?, "
                     "revision=revision+1 WHERE job_id=? AND revision=?"
                 )
                 params = values + (job.job_id, revision)
@@ -434,9 +638,9 @@ class SqliteRepository:
                     status, stage, audio_status, transcript_status, wav_path,
                     duration_ms, source_offset_ms, audio_warnings,
                     transcript_segments, error_code, error_message,
-                    error_retryable, queue_position, updated_at, job_id,
-                    created_at, revision
-                ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
+                    error_retryable, queue_position, updated_at, enrollment_id,
+                    follow_periods, job_id, created_at, revision
+                ) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,1)
                 """,
                 values + (job.job_id, stamp),
             )
@@ -585,6 +789,8 @@ def _row_to_job(row: sqlite3.Row) -> Job:
         transcript_segments=segments,
         error=error,
         queue_position=row["queue_position"] or 0,
+        enrollment_id=row["enrollment_id"],
+        follow_periods=json.loads(row["follow_periods"] or "[]"),
     )
     # Revision/status are transport metadata for the compare-and-set save(); they
     # are copied with the Job dataclass and never exposed on the wire.
@@ -625,4 +831,6 @@ def _job_values(job: Job) -> tuple:
         1 if error and error.retryable else 0,
         job.queue_position,
         time.time(),
+        job.enrollment_id,
+        json.dumps(list(job.follow_periods)),
     )

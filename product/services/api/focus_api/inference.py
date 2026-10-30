@@ -3,7 +3,9 @@ from __future__ import annotations
 
 import base64
 import os
+import subprocess
 import tempfile
+import threading
 from pathlib import Path
 
 from services.worker import errors as worker_errors
@@ -40,13 +42,42 @@ def decode_faces(items):
     return faces
 
 
+def extract_audio_wav(ffmpeg: str, source: str, target: str, duration_ms: int | None = None) -> None:
+    """16 kHz mono PCM16 track of any media file. Video, if any, is dropped here:
+    everything the audio-only engine receives is derived from this file."""
+    command = [ffmpeg, "-nostdin", "-y", "-v", "error", "-i", str(source), "-vn", "-map", "0:a:0",
+               "-ac", "1", "-ar", "16000", "-c:a", "pcm_s16le"]
+    if duration_ms:
+        command += ["-af", "apad", "-t", f"{duration_ms / 1000:.3f}"]
+    tmp = f"{target}.part.wav"
+    try:
+        result = subprocess.run(command + [tmp], capture_output=True, timeout=300)
+        if result.returncode != 0 or not os.path.isfile(tmp):
+            raise ProviderError("the video has no usable audio track", code="NO_AUDIO", retryable=False)
+        os.replace(tmp, target)
+    except subprocess.SubprocessError as exc:
+        raise ProviderError("audio extraction failed", retryable=True) from exc
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
+
+
+def voice_sample_path(settings, video_id: str, index: int) -> Path:
+    return settings.media_dir / f"{video_id}.sample{index}.wav"
+
+
 class InferenceProviders:
     """One instance used by both dispatcher seams, preserving serialization."""
     def __init__(self, settings, repo, *, bridge=None, engine=None):
         self.settings, self.repo = settings, repo
         self.bridge, self.engine = bridge, engine
+        self._canon_lock = threading.Lock()  # detection and analysis start together
 
     def _canonical(self, video_id, source):
+        with self._canon_lock:
+            return self._canonical_locked(video_id, source)
+
+    def _canonical_locked(self, video_id, source):
         from focus_ml.config import AdapterConfig
         from focus_ml.normalize import normalize_input
 
@@ -104,7 +135,156 @@ class InferenceProviders:
                 retryable=getattr(exc, "retryable", True),
             ) from exc
 
+    # -- audio-only engine ---------------------------------------------------
+    def _live_video(self, video_id):
+        video = self.repo.get_video(video_id)
+        if video is None or video.deleted:
+            raise ProviderError("media was deleted", retryable=False)
+        return video
+
+    def audio_path(self, video_id, source=None) -> str:
+        """The video's audio track, extracted once and reused by every audio task."""
+        video = self._live_video(video_id)
+        target = self.settings.media_dir / f"{video_id}.audio.wav"
+        if target.is_file():
+            return str(target)
+        canonical = self._canonical(video_id, source or video.canonical_path or video.original_path)
+        extract_audio_wav(self.settings.ffmpeg_path, canonical, str(target), video.duration_ms)
+        if not self.repo.get_video(video_id) or self.repo.get_video(video_id).deleted:
+            target.unlink(missing_ok=True)
+            raise ProviderError("media was deleted", retryable=False)
+        return str(target)
+
+    def _wrap(self, what, fn):
+        try:
+            return fn()
+        except ProviderError:
+            raise
+        except Exception as exc:
+            raise ProviderError(
+                f"{what} failed; check the model runtime",
+                code=getattr(exc, "code", "PROCESSING_FAILED"),
+                retryable=getattr(exc, "retryable", True),
+            ) from exc
+
+    def analyze(self, *, video_id, video_path=None):
+        """Diarization + voiceprints + sample clips for one video (audio only)."""
+        from .remote_inference import validate_analysis
+
+        def run():
+            video = self._live_video(video_id)
+            audio = self.audio_path(video_id, video_path)
+            raw = (self.bridge.call(kind="analyze", video_id=video_id, video_path=audio,
+                                    timeout_s=900.0)
+                   if self.bridge else self.engine.analyze_audio(audio))
+            return validate_analysis(raw, video.duration_ms)
+        return self._wrap("audio analysis", run)
+
+    def enroll_range(self, *, video_id, diarization, start_ms, end_ms):
+        return self._enroll(video_id, {"mode": "range", "start_ms": start_ms, "end_ms": end_ms,
+                                       "diarization": diarization}, None)
+
+    def enroll_file(self, *, video_id, wav_path):
+        return self._enroll(video_id, {"mode": "file"}, wav_path)
+
+    def _enroll(self, video_id, payload, wav_path):
+        from .remote_inference import validate_enrollment
+
+        def run():
+            self._live_video(video_id)
+            audio = wav_path or self.audio_path(video_id)
+            if self.bridge:
+                raw = self.bridge.call(kind="enroll", video_id=video_id, video_path=audio,
+                                       payload=payload, timeout_s=600.0)
+            else:
+                from focus_ml.voice.errors import EnrollmentError
+                try:
+                    if payload["mode"] == "range":
+                        raw = self.engine.enroll_audio_range(
+                            audio, payload["diarization"], payload["start_ms"] / 1000,
+                            payload["end_ms"] / 1000)
+                    else:
+                        raw = self.engine.enroll_audio_file(audio)
+                except EnrollmentError as exc:
+                    raw = {"refused": str(getattr(exc, "message", exc))}
+            return validate_enrollment(raw)
+        return self._wrap("voice enrollment", run)
+
+    def visibility(self, *, video_id, face):
+        """On-screen spans of the chosen face. Enrollment-time hint only."""
+        from .remote_inference import validate_visibility
+
+        def run():
+            video = self._live_video(video_id)
+            canonical = self._canonical(video_id, video.canonical_path or video.original_path)
+            payload = {"bbox": list(face.bbox), "frame_size": list(face.frame_size)}
+            if self.bridge:
+                raw = self.bridge.call(kind="visibility", video_id=video_id, video_path=canonical,
+                                       face_id=face.face_id, payload=payload, timeout_s=600.0)
+            else:
+                raw = {"visible": self.engine.face_visibility(canonical, face.bbox, face.frame_size)}
+            return validate_visibility(raw, video.duration_ms)
+        return self._wrap("face visibility", run)
+
+    def _extract_audio_only(self, job, job_dir, on_progress):
+        """Audio + enrollment only. Nothing from the video reaches this call."""
+        from .remote_inference import validate_regions
+        enrollment = self.repo.get_enrollment(job.enrollment_id or "")
+        analysis = self.repo.get_analysis(job.video_id)
+        video = self.repo.get_video(job.video_id)
+        if video is None or video.deleted or not enrollment or enrollment["status"] != "ready" \
+                or enrollment["video_id"] != job.video_id or not analysis or not analysis["result"]:
+            raise worker_errors.ProcessingError("the voice enrollment is no longer available",
+                                                retryable=False)
+        audio = self.audio_path(job.video_id)
+        diarization = analysis["result"]["diarization"]
+        voiceprint = enrollment["voiceprint"]
+        on_progress("matching", 0.0)
+        if self.bridge:
+            data, duration, engine, regions = self.bridge.call(
+                kind="isolate", video_id=job.video_id, video_path=audio,
+                payload={"voiceprint": voiceprint, "diarization": diarization},
+                timeout_s=max(1800.0, video.duration_ms / 1000 * 10))
+            path = Path(job_dir) / "isolated.wav"
+            path.write_bytes(data)
+        else:
+            result = self.engine.isolate_audio(audio, voiceprint, diarization, job_dir, on_progress)
+            from focus_ml.voice.engine import regions_to_wire
+            from .remote_inference import validate_wav
+            path = Path(result.wav_path)
+            duration = validate_wav(path.read_bytes(), video.duration_ms, self.settings.max_audio_s)
+            engine = "audio_only"
+            regions = validate_regions({"regions": regions_to_wire(result.details["regions"])},
+                                       video.duration_ms)
+        on_progress("separating", 1.0)
+        periods = [
+            {"start_ms": r["start_ms"], "end_ms": r["end_ms"],
+             "state": "voice_follow" if r["label"] == "target" else "uncertain",
+             "reason": "voice_match" if r["label"] == "target" else "uncertain_voice",
+             "output_allowed": r["label"] == "target"}
+            for r in regions
+        ]
+        warnings = [ENGINE_WARNING + engine]
+        if not any(r["label"] == "target" for r in regions):
+            warnings.append("The enrolled voice was not found in the audio; the result is silent.")
+        return TargetRunResult(str(path), duration, source_offset_ms=0, warnings=warnings,
+                               follow_periods=periods)
+
     def extract(self, job, job_dir, on_progress):
+        if job.enrollment_id:
+            try:
+                return self._extract_audio_only(job, job_dir, on_progress)
+            except worker_errors.WorkerError:
+                raise
+            except ProviderError as exc:
+                error_type = next((c for c in (
+                    worker_errors.NoAudioError, worker_errors.LimitExceededError,
+                    worker_errors.GpuBusyError) if c.code == exc.code), worker_errors.ProcessingError)
+                raise error_type(exc.message, retryable=exc.retryable) from exc
+            except Exception as exc:
+                raise worker_errors.ProcessingError(
+                    "voice isolation failed; check the inference computer",
+                    retryable=getattr(exc, "retryable", True)) from exc
         try:
             video = self.repo.get_video(job.video_id)
             face = self.repo.get_face(job.video_id, job.face_id)
@@ -164,12 +344,18 @@ def build_inference(settings, repo):
         return None, None
     if settings.inference_mode == "remote":
         from .remote_inference import RemoteBridge
-        bridge = RemoteBridge(settings.worker_token or "", repo)
+        bridge = RemoteBridge(settings.worker_token or "", repo, max_audio_s=settings.max_audio_s)
         return InferenceProviders(settings, repo, bridge=bridge), bridge
     if settings.inference_mode == "local":
         from focus_ml.config import AdapterConfig
         from focus_ml.runtime import LocalEngine
+        import os
+        env = dict(os.environ)
+        # audio_only is an API-level engine; the lip adapter keeps a lip engine for
+        # face detection and never runs it for enrollment jobs.
+        if env.get("FOCUS_ISOLATION_ENGINE", "").strip() == "audio_only":
+            env["FOCUS_ISOLATION_ENGINE"] = "dolphin"
         return InferenceProviders(
-            settings, repo, engine=LocalEngine(AdapterConfig.from_env())
+            settings, repo, engine=LocalEngine(AdapterConfig.from_env(env))
         ), None
     raise ValueError("FOCUS_INFERENCE_MODE must be unavailable, local or remote")

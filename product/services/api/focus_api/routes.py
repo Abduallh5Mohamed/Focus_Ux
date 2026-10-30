@@ -11,7 +11,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, File, Request, UploadFile
+from fastapi import FastAPI, File, Form, Request, UploadFile
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
@@ -31,7 +31,7 @@ from .interfaces import (
     UnavailableExtractionRunner,
 )
 from .lock import DispatcherLock
-from .schemas import CreateJobRequest, ExportRequest
+from .schemas import CreateJobRequest, EnrollmentRequest, ExportRequest, SuggestionRequest
 from .service import ApiService
 from .storage import Storage
 
@@ -306,12 +306,57 @@ def create_app(
         path, media_type = service.thumbnail_file(video_id, face_id, session_id)
         return _file_response(request, path, media_type)
 
+    @app.get("/config")
+    def get_config():
+        return service.config_response()
+
+    @app.get("/videos/{video_id}/analysis")
+    def get_analysis(video_id: str, request: Request):
+        return service.analysis_response(video_id, _required_session(request, service))
+
+    @app.post("/videos/{video_id}/analysis/retry", status_code=202)
+    def retry_analysis(video_id: str, request: Request):
+        return service.retry_analysis(video_id, _required_session(request, service))
+
+    @app.get("/videos/{video_id}/analysis/voices/{voice_id}/sample")
+    def get_voice_sample(video_id: str, voice_id: str, request: Request):
+        session_id = _required_session(request, service)
+        path, media_type = service.voice_sample_file(video_id, voice_id, session_id)
+        return _file_response(request, path, media_type)
+
+    @app.post("/videos/{video_id}/voice-suggestions", status_code=202)
+    def post_suggestion(video_id: str, payload: SuggestionRequest, request: Request):
+        session_id = _required_session(request, service)
+        return service.request_suggestion(video_id, payload.face_id, session_id)
+
+    @app.get("/videos/{video_id}/voice-suggestions/{face_id}")
+    def get_suggestion(video_id: str, face_id: str, request: Request):
+        session_id = _required_session(request, service)
+        return service.suggestion_response(video_id, face_id, session_id)
+
+    @app.post("/videos/{video_id}/enrollments", status_code=202)
+    def post_enrollment(video_id: str, payload: EnrollmentRequest, request: Request):
+        session_id = _required_session(request, service)
+        return service.create_enrollment(video_id, session_id, payload.model_dump())
+
+    @app.post("/videos/{video_id}/enrollments/upload", status_code=202)
+    def post_enrollment_upload(video_id: str, request: Request, face_id: str = Form(...),
+                               file: UploadFile = File(...)):
+        session_id = _required_session(request, service)
+        return service.create_voice_file_enrollment(video_id, session_id, face_id, file.file)
+
+    @app.get("/videos/{video_id}/enrollments/{enrollment_id}")
+    def get_enrollment(video_id: str, enrollment_id: str, request: Request):
+        session_id = _required_session(request, service)
+        return service.enrollment_response(video_id, enrollment_id, session_id)
+
     @app.post("/jobs", status_code=202)
     def post_job(payload: CreateJobRequest, request: Request):
         session_id = _required_session(request, service)
         job_id, _created = service.create_job(
             video_id=payload.video_id,
             face_id=payload.face_id,
+            enrollment_id=payload.enrollment_id,
             client_request_id=payload.client_request_id,
             session_id=session_id,
         )

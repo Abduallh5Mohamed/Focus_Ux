@@ -11,7 +11,7 @@
 |---|---|---|
 | POST /videos | multipart file | 201 video_id, session_token إن جديد, metadata, faces_status |
 | GET /videos/{id}/faces | auth | pending/ready/failed، face_id, thumbnail_url, bbox, timestamp_ms, frame_size |
-| POST /jobs | video_id, face_id, client_request_id | 202 job_id؛ منع تكرار نفس الطلب |
+| POST /jobs | video_id, client_request_id + face_id (محركات الشفاه) أو enrollment_id (audio_only، الافتراضي؛ 409 ENROLLMENT_REQUIRED بدونه) | 202 job_id؛ منع تكرار نفس الطلب |
 | GET /jobs/{id} | auth | حالة الطلب والمراحل والنتائج |
 | GET /jobs/{id}/audio | auth | WAV، يدعم وصول المشغل عبر fetch/blob |
 | GET /jobs/{id}/transcript | auth | segments أو pending/failed |
@@ -20,6 +20,14 @@
 | POST /jobs/{id}/exports | voice_level 0..2, others_level 0..1, noise_reduction off/light/strong | 202 export_id, status=rendering؛ 409 MIX_UNRELIABLE لو others_level>0 والطرح غير موثوق |
 | GET /jobs/{id}/exports/{export_id} | auth | rendering / ready / failed (+ error) |
 | GET /jobs/{id}/exports/{export_id}/file | auth | video/mp4: نفس صورة الفيديو بدون إعادة ترميز + الصوت الجديد |
+| GET /config | بدون auth | engine, max_video_ms, max_upload_bytes, voice_file_max_ms, min_enrollment_ms |
+| GET /videos/{id}/analysis | auth | pending/ready/failed + voices: voice_id, clean_s, overlap_fraction, usable, refusal, warnings, sample, sample_url (لا vectors أبدًا) |
+| POST /videos/{id}/analysis/retry | auth | يعيد التحليل لو فشل |
+| GET /videos/{id}/analysis/voices/{voice_id}/sample | auth | WAV قصير (عيّنة نظيفة) |
+| POST /videos/{id}/voice-suggestions · GET …/{face_id} | face_id | ترتيب الأصوات للوجه المختار: candidates (rank, suggested), evidence=on_screen\|talk_time_only, note (اقتراح فقط) |
+| POST /videos/{id}/enrollments | face_id + source=voice (voice_id) أو range (start_ms,end_ms) | 202/200 enrollment_id, status, warnings؛ 422 ENROLLMENT_REFUSED لو العيّنة أقل من 4 ثواني نظيفة أو أطول من 60 ث |
+| POST /videos/{id}/enrollments/upload | multipart face_id + file | نفس الرد؛ الملف يُحذف بعد التسجيل |
+| GET /videos/{id}/enrollments/{eid} | auth | pending/ready/failed + error |
 | DELETE /videos/{id} | auth | 202 deletion_pending أو 204 بعد الحذف |
 
 ### ميكس الصوت وتصدير الفيديو (الخادم فقط، بدون تغيير للـ worker)
@@ -39,7 +47,8 @@
 }
 ```
 status: queued / processing / completed / failed / cancelled.
-stage: validating / preparing / tracking / separating / transcribing / ready.
+stage: validating / preparing / matching (audio_only) / tracking / separating / transcribing / ready.
+`transcript_enabled=false` لمحرك audio_only: لا تفريغ نص. `result.follow_periods`: voice_follow (الهدف) و uncertain (output_allowed=false، تُكتم في الصوت المعزول).
 audio_status: pending / ready / failed. transcript_status: pending / processing / ready / failed.
 يجوز تشغيل الصوت أثناء transcribing؛ status النهائي completed حتى لو transcript_status=failed والصوت ناجح.
 
@@ -62,3 +71,10 @@ Dev 2 يحدد DB schema وclaim ذري للطلب. worker واحد يقرأ que
 
 ## Mocks
 احفظوا responses متفقًا عليها في contracts/fixtures. تعرض الواجهة تنبيه dev mock في التطوير؛ builds العرض الحقيقية لا تستخدم نتائج وهمية. المثال الجاهز مسمى بوضوح.
+
+
+## محرك audio_only وبروتوكول الـ worker
+- الافتراضي `FOCUS_ISOLATION_ENGINE=audio_only`؛ محركات الشفاه (dolphin…) متاحة ويبقى حدها 15 ث (يُفرض عند إنشاء الطلب). حد الرفع الافتراضي 180000ms و200MB (`FOCUS_MAX_VIDEO_MS`, `FOCUS_MAX_UPLOAD_BYTES`).
+- بعد التحويل يعمل كشف الوجوه وتحليل الصوت (diarization + voiceprints + عيّنات نظيفة) بالتوازي؛ النتيجة تُخزن لكل فيديو وتُستخدم في التسجيل والاستخراج. voiceprint للطلب فقط ويُحذف مع الفيديو.
+- مهام الـ worker الجديدة (نفس مفتاح الـ worker وحدود الحجم والتحقق): `analyze` → POST /worker/tasks/{id}/analysis؛ `enroll` → …/enrollment (voiceprint أو refused)؛ `visibility` → …/visibility (يستلم الفيديو وقت التسجيل فقط)؛ `isolate` → …/regions ثم …/audio (header `X-Focus-Engine: audio_only`). مهام analyze/enroll/isolate تنقل صوتًا فقط: لا إطارات ولا وجوه ولا بيانات شفاه بعد التسجيل. مهمة واحدة لكل نوع في نفس الوقت.
+- الاقتراح من ظهور الوجه على الشاشة وقت التسجيل فقط، ولا يؤكد الهوية؛ المستخدم يؤكد بالاستماع.

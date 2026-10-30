@@ -159,7 +159,9 @@ function savePersisted(videos: Map<string, MockVideo>, jobs: Map<string, MockJob
   }
 }
 
-export function createMockApi(options: { latencyMs?: number; facesReadyMs?: number } = {}): MockApi {
+export function createMockApi(
+  options: { latencyMs?: number; facesReadyMs?: number; engine?: string } = {},
+): MockApi {
   const latency = options.latencyMs ?? 350;
   const facesReadyMs = options.facesReadyMs ?? 1_600;
   const initial = loadPersisted();
@@ -267,7 +269,7 @@ export function createMockApi(options: { latencyMs?: number; facesReadyMs?: numb
       jobs.set(id, {
         id,
         videoId: input.video_id,
-        faceId: input.face_id,
+        faceId: input.face_id ?? '',
         createdAt: Date.now(),
         clientRequestId: input.client_request_id,
       });
@@ -346,6 +348,74 @@ export function createMockApi(options: { latencyMs?: number; facesReadyMs?: numb
 
     async fetchExport() {
       return new Blob(['mock'], { type: 'video/mp4' });
+    },
+
+    async getConfig() {
+      return {
+        engine: options.engine ?? 'dolphin',
+        max_video_ms: 180_000,
+        max_upload_bytes: 200 * 1024 * 1024,
+        voice_file_max_ms: 120_000,
+        min_enrollment_ms: 4_000,
+      };
+    },
+
+    async getAnalysis() {
+      await sleep(latency);
+      const voice = (i: number, clean: number, usable = true) => ({
+        voice_id: `voice-${i}`,
+        speech_s: clean + 1,
+        clean_s: clean,
+        overlap_fraction: 0.05,
+        usable,
+        refusal: usable ? null : 'سمعنا أقل من ٤ ثواني نضيفة من الصوت ده.',
+        warnings: [],
+        sample: usable ? { start_ms: 1_000, end_ms: 4_000 } : null,
+        sample_url: usable ? `data:audio/wav;base64,${'UklGRg=='}` : null,
+      });
+      return {
+        status: 'ready' as const,
+        voices: [voice(0, 9), voice(1, 14), voice(2, 1.5, false)],
+        warnings: [],
+        duration_ms: 9_000,
+        error: null,
+      };
+    },
+
+    async retryAnalysis() {},
+
+    async requestSuggestion() {},
+
+    async getSuggestion() {
+      await sleep(latency);
+      return {
+        status: 'ready' as const,
+        evidence: 'on_screen' as const,
+        note: 'ده اقتراح من ظهور الوجه على الشاشة، مش تأكيد.',
+        error: null,
+        candidates: [
+          { voice_id: 'voice-1', rank: 1, suggested: true, talk_s: 14, visible_talk_s: 12 },
+          { voice_id: 'voice-0', rank: 2, suggested: false, talk_s: 9, visible_talk_s: 2 },
+          { voice_id: 'voice-2', rank: 3, suggested: false, talk_s: 1.5, visible_talk_s: 0 },
+        ],
+      };
+    },
+
+    async createEnrollment(_videoId, input) {
+      await sleep(latency);
+      return { enrollment_id: randomId('enr'), status: 'ready' as const, face_id: input.face_id,
+        source: input.source, warnings: [], clean_s: 8, error: null };
+    },
+
+    async createVoiceFileEnrollment(_videoId, faceId) {
+      await sleep(latency);
+      return { enrollment_id: randomId('enr'), status: 'ready' as const, face_id: faceId,
+        source: 'voice_file', warnings: [], clean_s: 8, error: null };
+    },
+
+    async getEnrollment(_videoId, enrollmentId) {
+      return { enrollment_id: enrollmentId, status: 'ready' as const, face_id: '', source: 'voice',
+        warnings: [], clean_s: 8, error: null };
     },
 
     async deleteVideo(videoId) {

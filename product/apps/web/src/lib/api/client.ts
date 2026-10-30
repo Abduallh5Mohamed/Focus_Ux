@@ -9,6 +9,8 @@
  *   GET    /jobs/{id}/audio
  *   GET    /jobs/{id}/transcript
  *   DELETE /videos/{id}
+ *   GET    /config, /videos/{id}/analysis, POST /videos/{id}/voice-suggestions,
+ *   POST   /videos/{id}/enrollments[/upload]
  *   GET    /jobs/{id}/mix, /jobs/{id}/mix/{voice|others}
  *   POST   /jobs/{id}/exports, GET /jobs/{id}/exports/{export_id}[/file]
  *
@@ -17,6 +19,11 @@
 
 import { ApiError, apiErrorFromStatus, isApiError } from './errors';
 import type {
+  AnalysisResponse,
+  AppConfig,
+  EnrollmentRequest,
+  EnrollmentState,
+  SuggestionResponse,
   BBox,
   CreateJobRequest,
   CreateJobResponse,
@@ -54,6 +61,17 @@ export interface FocusApi {
    */
   fetchOriginal(videoId: VideoId, signal?: AbortSignal): Promise<Blob>;
   deleteVideo(videoId: VideoId): Promise<DeleteVideoResponse>;
+  /** Public server settings: engine and limits. */
+  getConfig(signal?: AbortSignal): Promise<AppConfig>;
+  /** Cached audio analysis (voices with clean sample clips). */
+  getAnalysis(videoId: VideoId, signal?: AbortSignal): Promise<AnalysisResponse>;
+  retryAnalysis(videoId: VideoId): Promise<void>;
+  /** Ranks voices for the chosen face using on-screen evidence. A suggestion only. */
+  requestSuggestion(videoId: VideoId, faceId: string): Promise<void>;
+  getSuggestion(videoId: VideoId, faceId: string, signal?: AbortSignal): Promise<SuggestionResponse>;
+  createEnrollment(videoId: VideoId, input: EnrollmentRequest): Promise<EnrollmentState>;
+  createVoiceFileEnrollment(videoId: VideoId, faceId: string, file: File): Promise<EnrollmentState>;
+  getEnrollment(videoId: VideoId, enrollmentId: string, signal?: AbortSignal): Promise<EnrollmentState>;
   /** Alignment facts and whether the "other voices" track is reliable. */
   getMixInfo(jobId: string, signal?: AbortSignal): Promise<MixInfo>;
   /** Voice (aligned, level-matched) or other-voices WAV on the original timeline. */
@@ -299,6 +317,60 @@ export function createHttpApi(options: HttpApiOptions): FocusApi {
     fetchExport(jobId, exportId, signal) {
       return requestBlob(
         `/jobs/${encodeURIComponent(jobId)}/exports/${encodeURIComponent(exportId)}/file`,
+        signal,
+      );
+    },
+
+    getConfig(signal) {
+      return request<AppConfig>('/config', {}, signal);
+    },
+
+    getAnalysis(videoId, signal) {
+      return request<AnalysisResponse>(`/videos/${encodeURIComponent(videoId)}/analysis`, {}, signal);
+    },
+
+    async retryAnalysis(videoId) {
+      await request<unknown>(`/videos/${encodeURIComponent(videoId)}/analysis/retry`, { method: 'POST' });
+    },
+
+    async requestSuggestion(videoId, faceId) {
+      await request<unknown>(`/videos/${encodeURIComponent(videoId)}/voice-suggestions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ face_id: faceId }),
+      });
+    },
+
+    getSuggestion(videoId, faceId, signal) {
+      return request<SuggestionResponse>(
+        `/videos/${encodeURIComponent(videoId)}/voice-suggestions/${encodeURIComponent(faceId)}`,
+        {},
+        signal,
+      );
+    },
+
+    createEnrollment(videoId, input) {
+      return request<EnrollmentState>(`/videos/${encodeURIComponent(videoId)}/enrollments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+      });
+    },
+
+    createVoiceFileEnrollment(videoId, faceId, file) {
+      const form = new FormData();
+      form.append('face_id', faceId);
+      form.append('file', file, file.name);
+      return request<EnrollmentState>(`/videos/${encodeURIComponent(videoId)}/enrollments/upload`, {
+        method: 'POST',
+        body: form,
+      });
+    },
+
+    getEnrollment(videoId, enrollmentId, signal) {
+      return request<EnrollmentState>(
+        `/videos/${encodeURIComponent(videoId)}/enrollments/${encodeURIComponent(enrollmentId)}`,
+        {},
         signal,
       );
     },

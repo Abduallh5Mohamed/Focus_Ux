@@ -15,9 +15,15 @@ export const IS_DEV_MOCK = readFlag(import.meta.env.VITE_DEV_MOCK_API) && import
 export const APP_NAME = 'FOCUS';
 
 /** Upload guard rails shown to the user. The server stays the final authority. */
+function readNumber(value: unknown, fallback: number): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
 export const UPLOAD_LIMITS = {
-  maxBytes: 50 * 1024 * 1024,
-  maxDurationMs: 15_000,
+  maxBytes: readNumber(import.meta.env.VITE_MAX_UPLOAD_MB, 200) * 1024 * 1024,
+  /** About 3 minutes; keep in step with FOCUS_MAX_VIDEO_MS on the server. */
+  maxDurationMs: readNumber(import.meta.env.VITE_MAX_VIDEO_SECONDS, 180) * 1000,
   accept: 'video/mp4,video/quicktime,video/webm,video/x-matroska',
 } as const;
 

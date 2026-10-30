@@ -150,6 +150,8 @@ export function ResultView({ job, videoId, onDeleted }: ResultViewProps): JSX.El
   /* ---------- transcript ---------- */
   useEffect(() => {
     const status = job.transcript_status;
+    // The audio-only engine runs no speech recognition; there is nothing to fetch.
+    if (job.transcript_enabled === false) return;
     if (status === 'pending' || status === 'processing') return;
 
     // Deps are primitives, so this only re-runs when the status or an explicit retry
@@ -174,7 +176,7 @@ export function ResultView({ job, videoId, onDeleted }: ResultViewProps): JSX.El
       });
 
     return () => controller.abort();
-  }, [api, job.job_id, job.transcript_status, transcriptReload]);
+  }, [api, job.job_id, job.transcript_status, job.transcript_enabled, transcriptReload]);
 
   /* ---------- default track ---------- */
   useEffect(() => {
@@ -263,16 +265,18 @@ export function ResultView({ job, videoId, onDeleted }: ResultViewProps): JSX.El
       <VoiceMixPanel jobId={job.job_id} videoUrl={originalUrl} audioReady={job.audio_status === 'ready'} />
 
       <div className="grid-2">
-        <TranscriptPanel
-          status={job.transcript_status}
-          transcript={transcript}
-          loading={transcriptLoading && !transcript}
-          error={transcriptError}
-          onRetry={() => setTranscriptReload((value) => value + 1)}
-          currentTime={transport.currentTime}
-          onSeek={handleSeek}
-          onDownload={downloadTranscript}
-        />
+        {job.transcript_enabled === false ? null : (
+          <TranscriptPanel
+            status={job.transcript_status}
+            transcript={transcript}
+            loading={transcriptLoading && !transcript}
+            error={transcriptError}
+            onRetry={() => setTranscriptReload((value) => value + 1)}
+            currentTime={transport.currentTime}
+            onSeek={handleSeek}
+            onDownload={downloadTranscript}
+          />
+        )}
 
         <Card>
           <CardHead title="الملف" hint="نزّل الصوت المعزول أو احذف الطلب بالكامل. تصدير الفيديو بالميكس فوق." />
