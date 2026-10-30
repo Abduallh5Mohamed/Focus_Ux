@@ -76,6 +76,13 @@ class Settings:
     live_max_chunk_bytes: int = 8 * 1024 * 1024
     live_max_queue_depth: int = 3
     live_idle_timeout_s: float = 45.0
+    # Continuous (sliding-window) live path. Experimental, off until the gate passes.
+    live_stream_enabled: bool = False
+    live_stream_window_s: float = 4.0
+    live_stream_hop_s: float = 0.5
+    live_stream_lookahead_s: float = 0.25
+    live_stream_crossfade_ms: float = 20.0
+    live_stream_max_s: float = 600.0
 
     def __post_init__(self) -> None:
         self.storage_root = Path(self.storage_root).expanduser().resolve()
@@ -142,4 +149,9 @@ class Settings:
             worker_token=os.environ.get("FOCUS_WORKER_TOKEN") or None,
             live_enabled=os.environ.get("FOCUS_LIVE_ENABLED", "0") in ("1", "true"),
             live_max_queue_depth=_env_int("FOCUS_LIVE_MAX_QUEUE_DEPTH", 3),
+            live_stream_enabled=os.environ.get("FOCUS_LIVE_STREAM", "0") in ("1", "true"),
+            live_stream_window_s=_env_float("FOCUS_LIVE_STREAM_WINDOW_S", 4.0),
+            live_stream_hop_s=_env_float("FOCUS_LIVE_STREAM_HOP_S", 0.5),
+            live_stream_lookahead_s=_env_float("FOCUS_LIVE_STREAM_LOOKAHEAD_S", 0.25),
+            live_stream_crossfade_ms=_env_float("FOCUS_LIVE_STREAM_CROSSFADE_MS", 20.0),
         )

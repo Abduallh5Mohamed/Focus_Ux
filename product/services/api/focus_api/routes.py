@@ -271,7 +271,13 @@ def create_app(
         }
 
     from .live_routes import add_live_routes
-    add_live_routes(app, live, service, _optional_bearer)
+    from .live_stream import StreamHub
+    stream_hub = StreamHub(settings=settings, manager=live, bridge=bridge)
+    app.state.live_stream = stream_hub
+    if bridge:
+        from .remote_inference import add_stream_worker_routes
+        add_stream_worker_routes(app, bridge, stream_hub)
+    add_live_routes(app, live, service, _optional_bearer, stream_hub)
 
     @app.post("/videos", status_code=201)
     def post_video(request: Request, file: UploadFile = File(...)):

@@ -1,5 +1,6 @@
 import { PageHeader } from '../components/PageHeader';
-import { LiveFlow } from '../features/live';
+import { LiveFlow, LiveStreamFlow } from '../features/live';
+import { LIVE_STREAM } from '../lib/env';
 
 export function LivePage() {
   return (
@@ -9,7 +10,7 @@ export function LivePage() {
         title="سجّل واسمع بتأخير معلن"
         lead="سجّل من الكاميرا، اختار الشخص، واسمع صوته المعزول بعد ثواني. النص بيتعمل بعد ما توقف."
       />
-      <LiveFlow />
+      {LIVE_STREAM ? <LiveStreamFlow /> : <LiveFlow />}
     </>
   );
 }

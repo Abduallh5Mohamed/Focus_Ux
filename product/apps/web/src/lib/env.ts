@@ -23,3 +23,6 @@ export const UPLOAD_LIMITS = {
 
 /** Experimental near-live mode is hidden unless explicitly enabled at build time. */
 export const LIVE_ENABLED = readFlag(import.meta.env.VITE_LIVE_ENABLED);
+
+/** Continuous sliding-window live path (needs FOCUS_LIVE_STREAM on the server). */
+export const LIVE_STREAM = readFlag(import.meta.env.VITE_LIVE_STREAM);

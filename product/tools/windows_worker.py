@@ -133,6 +133,30 @@ class WorkerClient:
                 raise ValueError("server response too large")
             return json.loads(raw) if raw else None
 
+    def stream_poll(self, live_id):
+        if len(live_id) != 32 or any(c not in "0123456789abcdef" for c in live_id):
+            raise ValueError("invalid stream id")
+        with self.request("/worker/stream/" + live_id + "/poll", b"", "application/octet-stream") as r:
+            body = r.read(5 * 1024 * 1024)
+            return body or None
+
+    def stream_out(self, live_id, body):
+        with self.request("/worker/stream/" + live_id + "/out", body, "application/octet-stream") as r:
+            r.read(1024)
+
+    def run_stream(self, task, engine):
+        from focus_ml.live_stream_backend import AccelOptions, DolphinStreamBackend
+        from tools.stream_worker import run_stream
+
+        accel = AccelOptions(
+            fp16=os.environ.get("FOCUS_LIVE_FP16", "1") != "0",
+            compile=os.environ.get("FOCUS_LIVE_COMPILE", "0") == "1",
+        )
+        backend = DolphinStreamBackend(engine, accel)
+        print("Live stream started. Isolating continuously...", flush=True)
+        run_stream(self, task["task_id"], backend, task["config"], accel=backend.accel_report)
+        print("Live stream ended.", flush=True)
+
     def process(self, task, engine):
         task_id = task["task_id"]
         if len(task_id) != 32 or any(c not in "0123456789abcdef" for c in task_id):
@@ -299,7 +323,10 @@ def run(url, focus, *, local_api=False, engine=None):
             if task:
                 print("Processing " + task["kind"] + "...", flush=True)
                 try:
-                    client.process(task, engine)
+                    if task["kind"] == "stream":
+                        client.run_stream(task, engine)
+                    else:
+                        client.process(task, engine)
                 except ConnectionSetupError:
                     raise
                 except Exception as exc:

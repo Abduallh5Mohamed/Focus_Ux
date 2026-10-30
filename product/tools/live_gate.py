@@ -1,6 +1,8 @@
 """Stream a file to the live endpoints at its ORIGINAL speed and print server metrics.
 
     python product/tools/live_gate.py --api http://HOST:PORT --video clip.mp4 [--face-index 0]
+    python product/tools/live_gate.py --stream --api ... --video clip.mp4 \
+        --reference-wav target.wav --upload-wav upload_isolated.wav   # continuous path
 
 The file is re-encoded to a MediaRecorder-like WebM (1 s clusters) and sliced
 mid-cluster every 2 s of wall-clock time. Server-side latency printed here is a LOWER
@@ -37,7 +39,14 @@ def main() -> int:
     ap.add_argument("--face-index", type=int, default=0)
     ap.add_argument("--chunk-s", type=float, default=2.0)
     ap.add_argument("--timeout-s", type=float, default=600)
+    ap.add_argument("--stream", action="store_true",
+                    help="measure the continuous sliding-window path instead of 2 s chunks")
+    ap.add_argument("--reference-wav", help="clean target audio of the clip (16 kHz mono) for SI-SDRi")
+    ap.add_argument("--upload-wav", help="isolated audio the normal upload path produced for the same clip")
     args = ap.parse_args()
+    if args.stream:
+        from stream_gate import run_stream_gate
+        return run_stream_gate(args)
 
     with tempfile.TemporaryDirectory() as tmp:
         webm = Path(tmp) / "s.webm"

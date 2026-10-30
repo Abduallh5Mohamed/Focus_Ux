@@ -27,3 +27,6 @@ chunk metadata: session_id, sequence_id, capture_start_ms, duration_ms, selected
 ## تنفيذ المرحلة 3
 الوضع شبه المباشر متنفّذ كتجريبي (`/live` في الواجهة، `/live/*` في الخادم). القرار الحالي والمعايير
 وإجراء القياس: `06_REALTIME_GATE_REPORT.md`.
+
+## المسار المستمر
+معاييره (RTF ≤ 0.5، تأخير سماع p95 ≤ 1.5 ث، صفر مفقود/مكرر، فرق SI-SDRi ≤ 2 dB) وطريقة القياس في `06_REALTIME_GATE_REPORT.md`. مفعّل بـ `FOCUS_LIVE_STREAM=1` ويفضل تجريبي.

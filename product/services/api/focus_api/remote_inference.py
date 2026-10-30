@@ -67,6 +67,7 @@ class RemoteBridge:
         self._task: RemoteTask | None = None
         self._last_poll = 0.0
         self._closed = False
+        self.stream_source = None  # StreamHub, set when the continuous live path is built
 
     def authorize(self, request: Request):
         # A private Replit preview can reserve Authorization for its own access
@@ -140,6 +141,10 @@ class RemoteBridge:
         with self._condition:
             self._last_poll = time.monotonic()
             task = self._task
+            if self.stream_source is not None and not self._closed:
+                claimed = self.stream_source.claim_pending()
+                if claimed:
+                    return {"task_id": claimed[0], "kind": "stream", "config": claimed[1]}
             if self._closed or task is None or task.claimed:
                 return None
             video = self.repo.get_video(task.video_id)
@@ -317,3 +322,27 @@ def add_remote_routes(app, bridge: RemoteBridge):
             raise ApiError("INVALID_REQUEST", "invalid worker failure", status_code=400) from None
         bridge.fail(task_id, code)
         return {"accepted": True}
+
+
+def add_stream_worker_routes(app, bridge: RemoteBridge, hub) -> None:
+    """Outbound-poll relay for the continuous live path (same worker credential)."""
+    def check_id(live_id: str):
+        if len(live_id) != 32 or any(c not in "0123456789abcdef" for c in live_id):
+            raise not_found("stream task expired or unavailable")
+
+    @app.post("/worker/stream/{live_id}/poll")
+    def stream_poll(live_id: str, request: Request):
+        bridge.authorize(request)
+        check_id(live_id)
+        body = hub.worker_poll(live_id, 0.4)
+        if body is None:
+            return Response(status_code=204)
+        return Response(body, media_type="application/octet-stream",
+                        headers={"Cache-Control": "no-store"})
+
+    @app.post("/worker/stream/{live_id}/out")
+    async def stream_out(live_id: str, request: Request):
+        bridge.authorize(request)
+        check_id(live_id)
+        data = await bounded_body(request, 4 * 1024 * 1024)
+        return hub.worker_out(live_id, data)

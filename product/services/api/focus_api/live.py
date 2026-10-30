@@ -116,6 +116,7 @@ class LiveManager:
         self.dispatcher, self.worker, self.ffmpeg = dispatcher, worker, ffmpeg
         self.sessions: dict[str, LiveSession] = {}
         self._lock = threading.Lock()
+        self.extra_active = lambda: None  # the continuous stream hub registers itself
         dispatcher.live_handler = self.handle
 
     @property
@@ -173,7 +174,7 @@ class LiveManager:
             raise ApiError("LIVE_DISABLED", "live mode is disabled on this server", status_code=403)
         with self._lock:
             self._expire_idle()
-            if self._active() is not None:
+            if self._active() is not None or self.extra_active() is not None:
                 raise ApiError(
                     "GPU_BUSY",
                     "another live session is using the single worker; try again when it ends",

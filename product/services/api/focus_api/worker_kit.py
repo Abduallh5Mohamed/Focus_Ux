@@ -26,7 +26,13 @@ def worker_kit() -> Response:
             "engine_gate.py", "three_speaker_set.py",
         ):
             archive.write(tools / name, "product/tools/" + name)
+        archive.write(tools / "stream_worker.py", "product/tools/stream_worker.py")
         archive.writestr("product/tools/__init__.py", "")
+        # Continuous live path: dependency-free wire format shared with the API.
+        archive.writestr("product/services/__init__.py", "")
+        archive.writestr("product/services/worker/__init__.py", "")
+        archive.write(PRODUCT_ROOT / "services/worker/stream_proto.py",
+                      "product/services/worker/stream_proto.py")
         for path in sorted((PRODUCT_ROOT / "packages/ml/focus_ml").glob("*.py")):
             archive.write(path, str(path.relative_to(PRODUCT_ROOT.parent)))
         archive.writestr(
