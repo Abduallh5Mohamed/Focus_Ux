@@ -74,6 +74,21 @@ with TestClient(app):
 """
 
 
+
+def kill_process_tree(process: subprocess.Popen) -> None:
+    """Hard-kill the owner without running any of its cleanup code.
+
+    On Windows a virtual-environment ``python.exe`` can be a launcher that
+    starts the real interpreter as a child; killing only the launcher leaves
+    the owner alive, and closing its stdin then lets it clean up gracefully.
+    """
+    if os.name == "nt":
+        subprocess.run(
+            ["taskkill", "/F", "/T", "/PID", str(process.pid)],
+            capture_output=True, check=False,
+        )
+    process.kill()
+
 @pytest.mark.parametrize("phase", ["read", "probe", "move", "before-file"])
 @pytest.mark.parametrize("crash", [False, True], ids=["resume", "owner-killed"])
 def test_startup_preserves_paused_owner_and_recovers_after_exit(
@@ -123,7 +138,7 @@ def test_startup_preserves_paused_owner_and_recovers_after_exit(
 
         if crash:
             # No context-manager/finally cleanup is run by the owner.
-            owner.kill()
+            kill_process_tree(owner)
             owner.communicate(timeout=10)
             # Windows refreshes a file's last-write time when the killed
             # owner's write handle is closed, so the file is briefly "recent".
@@ -144,7 +159,7 @@ def test_startup_preserves_paused_owner_and_recovers_after_exit(
         Storage(settings).ensure()
     finally:
         if owner.poll() is None:
-            owner.kill()
+            kill_process_tree(owner)
         owner.communicate(timeout=10)
 
 
