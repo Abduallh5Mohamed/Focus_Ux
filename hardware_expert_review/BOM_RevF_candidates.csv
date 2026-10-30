@@ -1,0 +1,22 @@
+﻿Function,Manufacturer,Part_or_requirement,Quantity,Published_envelope_or_mass,Status,Review_notes
+Capture,Arducam,B0441,1,62x9x6 mm,RevE/F candidate,"USB camera+single mic; exact modes, lens/connector, audio and timing unqualified"
+Host,Espressif,ESP32-P4; exact variant TBD,1,TBD solution area,Discussed candidate; NOT frozen,Confirm silicon revision/memory/rails/concurrent USB/audio/modem support
+USB hub,Microchip,USB2512B candidate,1,TBD solution area,Discussed candidate; NOT frozen,No schematic or qualified camera+modem topology
+Modem,SIMCom,A7670E; revision TBD,1,24x24x2.3 mm bare module,RevF proposed baseline,3.4-4.2V; >=2A burst capability per older hardware design; confirm exact manual/bands
+Nano-SIM socket,GCT,SIM8051-6-0-14-00-A,1,1.35 mm profile; exact XY/keepout per drawing,Candidate,No card detect; reserve insertion travel; footprint not released
+Cellular antenna,Taoglas,FXP40.07.0085A,1,42.6x12.1x0.15 mm +85mm coax,Candidate; band discrepancy OPEN,PDF headline does not establish B7 coverage; head/ground/cell detuning needs review
+Battery cell,Tattu,TAA5001S95JSL / TA-95C-500-1S1P-L-JST,1,58x18x8 mm;14g,Candidate; qualified protected pack TBD,1S500mAh3.7V;4.2V charge; factory protection not established;95C not full-path rating
+Protection,BatterySpace,PCB-S1A6TH / product5080,1,33x5x2 mm;0.45g,Candidate,5A listed continuous;NTC external monitor only; verify aggregate load
+Charger/power path,Texas Instruments,BQ25895,1,4x4 mm IC only,Candidate; no circuit,Default2.048A charge unsafe to assume; hardware CE disabled until configured
+Modem regulator,Texas Instruments,TPS55288,1,4x3.5 mm IC only,Candidate; passives/layout TBD,"3.8V target; qualify low-cell burst response, thermal and input current"
+Digital rails,TBD,3.3V buck-boost + actual host reference rails,TBD,TBD,UNSELECTED,ESP32-P4 not a generic single3V3 rail
+USB VBUS,TBD,5V boost + current-limited switching,TBD,TBD,UNSELECTED,Camera/hub actual consumption unknown; no USB backfeed
+Audio codec/DAC,TBD,TBD,1,TBD,UNSELECTED for RevF,Select I2S/other actual host interface;clocking/output and noise budget
+Audio driver,TBD,TBD; BS08-qualified limiter/mute,TBD,TBD,UNSELECTED for RevF,Do not inherit RevD MAX98306 assumptions without requalification
+Bone transducer,Shenzhen Hearing Technology catalog,BS08,2,13x7.4x5.6 mm;1.7+/-0.1g each,RevE/F candidate; no sample,8ohm;0.8W catalog;contact face/impedance/driver qualification open
+USB-C charge/input,TBD,Connector + CC/input/ESD protection,TBD,TBD,UNSELECTED,Need rated connector/current policy and mechanical strain relief
+Misc PCB/support,TBD,Clock/flash/PSRAM/ESD/matching/load switches/passives,TBD,TBD,UNSELECTED,Full mainboard schematic/BOM/layout absent
+Mechanical,TBD,"Frame, real hinges, nose pads, transducer compliant mounts, insulation, flex/harness",TBD,RevE geometry is form study only,UNSELECTED supplier/material,Battery/modem packaging not present;human fit/force/folding unresolved
+SIM/data,Operator TBD,Physical Nano-SIM + supported data plan/APN,1,Nano-SIM standard,UNSELECTED,Operator/bands/coverage/cloud latency must be tested
+Alternative modem,Quectel,EG915U; regional variant TBD,0 baseline,23.6x19.9x2.4 mm,ALTERNATIVE ONLY,3.3-4.3V; reviewed2.5A supply; separate driver/band qualification
+Alternative battery,BETAFPV,LAVA1S450mAh75C LiHV,0 baseline,61x15.5x6.7 mm;12.2g,ALTERNATIVE ONLY,Different charge chemistry;do not mix with4.2V baseline assumptions

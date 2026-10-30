@@ -1,0 +1,1483 @@
+{
+  "status": "PARTIAL_SUBSYSTEM_SCHEMATIC_UNROUTED_PCB_NOT_MAINBOARD_COMPLETE",
+  "board_mm": [
+    210,
+    180,
+    1.6
+  ],
+  "board_size_purpose": "bench review page, NOT wearable board envelope",
+  "components": [
+    {
+      "ref": "J1",
+      "value": "P4 PDM host OPEN GPIO map",
+      "pins": [
+        [
+          "1",
+          "MIC_3V3",
+          "P"
+        ],
+        [
+          "2",
+          "GND",
+          "P"
+        ],
+        [
+          "3",
+          "PDM_CLK_HOST",
+          "P"
+        ],
+        [
+          "4",
+          "PDM_D01",
+          "P"
+        ],
+        [
+          "5",
+          "PDM_D23",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "MIC_3V3",
+        "2": "GND",
+        "3": "PDM_CLK_HOST",
+        "4": "PDM_D01",
+        "5": "PDM_D23"
+      },
+      "foot": "Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical",
+      "loc": [
+        50,
+        45
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Bench header; production connector MPN and current rating unresolved",
+      "id": "bb282f42-28a0-4615-b216-7f5e1bf8a67b"
+    },
+    {
+      "ref": "R1",
+      "value": "33R clock damping candidate",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "PDM_CLK_HOST",
+        "2": "PDM_CLK"
+      },
+      "foot": "Resistor_SMD:R_0603_1608Metric",
+      "loc": [
+        125,
+        45
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "6a33a39d-18c4-4469-8bd5-0a002c3861a2"
+    },
+    {
+      "ref": "MK1",
+      "value": "IM69D130 4x3x1.2 mm",
+      "pins": [
+        [
+          "1",
+          "DATA",
+          "O"
+        ],
+        [
+          "2",
+          "VDD",
+          "W"
+        ],
+        [
+          "3",
+          "CLOCK",
+          "I"
+        ],
+        [
+          "4",
+          "SELECT",
+          "I"
+        ],
+        [
+          "5",
+          "GND",
+          "W"
+        ]
+      ],
+      "nets": {
+        "1": "PDM_D01",
+        "2": "MIC_3V3",
+        "3": "PDM_CLK",
+        "4": "GND",
+        "5": "GND"
+      },
+      "foot": "Sensor_Audio:Infineon_PG-LLGA-5-1",
+      "loc": [
+        50,
+        85
+      ],
+      "mpn": "IM69D130V01XTSA1",
+      "source": "https://www.infineon.com/assets/row/public/documents/24/49/infineon-im69d130-datasheet-en.pdf",
+      "notes": "Common clock; opposite SELECT within each data pair; bottom acoustic port MUST remain clear",
+      "id": "d108e635-5587-4ad3-8047-5ad13d226811"
+    },
+    {
+      "ref": "C1",
+      "value": "100nF X7R 10V",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "MIC_3V3",
+        "2": "GND"
+      },
+      "foot": "Capacitor_SMD:C_0603_1608Metric",
+      "loc": [
+        50,
+        120
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "8764ce91-583e-47c4-8a55-28a752582f48"
+    },
+    {
+      "ref": "MK2",
+      "value": "IM69D130 4x3x1.2 mm",
+      "pins": [
+        [
+          "1",
+          "DATA",
+          "O"
+        ],
+        [
+          "2",
+          "VDD",
+          "W"
+        ],
+        [
+          "3",
+          "CLOCK",
+          "I"
+        ],
+        [
+          "4",
+          "SELECT",
+          "I"
+        ],
+        [
+          "5",
+          "GND",
+          "W"
+        ]
+      ],
+      "nets": {
+        "1": "PDM_D01",
+        "2": "MIC_3V3",
+        "3": "PDM_CLK",
+        "4": "MIC_3V3",
+        "5": "GND"
+      },
+      "foot": "Sensor_Audio:Infineon_PG-LLGA-5-1",
+      "loc": [
+        140,
+        85
+      ],
+      "mpn": "IM69D130V01XTSA1",
+      "source": "https://www.infineon.com/assets/row/public/documents/24/49/infineon-im69d130-datasheet-en.pdf",
+      "notes": "Common clock; opposite SELECT within each data pair; bottom acoustic port MUST remain clear",
+      "id": "0c9faa99-9342-4899-9a1d-9a3b2a897e25"
+    },
+    {
+      "ref": "C2",
+      "value": "100nF X7R 10V",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "MIC_3V3",
+        "2": "GND"
+      },
+      "foot": "Capacitor_SMD:C_0603_1608Metric",
+      "loc": [
+        140,
+        120
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "5d68d79f-527e-4d3d-aff8-d879fb90871a"
+    },
+    {
+      "ref": "MK3",
+      "value": "IM69D130 4x3x1.2 mm",
+      "pins": [
+        [
+          "1",
+          "DATA",
+          "O"
+        ],
+        [
+          "2",
+          "VDD",
+          "W"
+        ],
+        [
+          "3",
+          "CLOCK",
+          "I"
+        ],
+        [
+          "4",
+          "SELECT",
+          "I"
+        ],
+        [
+          "5",
+          "GND",
+          "W"
+        ]
+      ],
+      "nets": {
+        "1": "PDM_D23",
+        "2": "MIC_3V3",
+        "3": "PDM_CLK",
+        "4": "GND",
+        "5": "GND"
+      },
+      "foot": "Sensor_Audio:Infineon_PG-LLGA-5-1",
+      "loc": [
+        230,
+        85
+      ],
+      "mpn": "IM69D130V01XTSA1",
+      "source": "https://www.infineon.com/assets/row/public/documents/24/49/infineon-im69d130-datasheet-en.pdf",
+      "notes": "Common clock; opposite SELECT within each data pair; bottom acoustic port MUST remain clear",
+      "id": "fbdb19e4-f758-4afd-869d-65c0e6d6b936"
+    },
+    {
+      "ref": "C3",
+      "value": "100nF X7R 10V",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "MIC_3V3",
+        "2": "GND"
+      },
+      "foot": "Capacitor_SMD:C_0603_1608Metric",
+      "loc": [
+        230,
+        120
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "dae2b69b-6258-480e-b029-63ee58c657f2"
+    },
+    {
+      "ref": "MK4",
+      "value": "IM69D130 4x3x1.2 mm",
+      "pins": [
+        [
+          "1",
+          "DATA",
+          "O"
+        ],
+        [
+          "2",
+          "VDD",
+          "W"
+        ],
+        [
+          "3",
+          "CLOCK",
+          "I"
+        ],
+        [
+          "4",
+          "SELECT",
+          "I"
+        ],
+        [
+          "5",
+          "GND",
+          "W"
+        ]
+      ],
+      "nets": {
+        "1": "PDM_D23",
+        "2": "MIC_3V3",
+        "3": "PDM_CLK",
+        "4": "MIC_3V3",
+        "5": "GND"
+      },
+      "foot": "Sensor_Audio:Infineon_PG-LLGA-5-1",
+      "loc": [
+        320,
+        85
+      ],
+      "mpn": "IM69D130V01XTSA1",
+      "source": "https://www.infineon.com/assets/row/public/documents/24/49/infineon-im69d130-datasheet-en.pdf",
+      "notes": "Common clock; opposite SELECT within each data pair; bottom acoustic port MUST remain clear",
+      "id": "a66e1311-e4d8-4b5b-9f5c-442e675c246c"
+    },
+    {
+      "ref": "C4",
+      "value": "100nF X7R 10V",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "MIC_3V3",
+        "2": "GND"
+      },
+      "foot": "Capacitor_SMD:C_0603_1608Metric",
+      "loc": [
+        320,
+        120
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "66ff6c96-c473-4089-94d3-ef488cf85df6"
+    },
+    {
+      "ref": "J2",
+      "value": "External regulated AMP rail 3.0V",
+      "pins": [
+        [
+          "1",
+          "AMP_3V0",
+          "P"
+        ],
+        [
+          "2",
+          "GND",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "AMP_3V0",
+        "2": "GND"
+      },
+      "foot": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+      "loc": [
+        50,
+        160
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Bench header; production connector MPN and current rating unresolved",
+      "id": "11dc7f92-e7f2-48f1-82d1-90cba7eeb290"
+    },
+    {
+      "ref": "J3",
+      "value": "External DAC differential analog",
+      "pins": [
+        [
+          "1",
+          "DAC_LP",
+          "P"
+        ],
+        [
+          "2",
+          "DAC_LN",
+          "P"
+        ],
+        [
+          "3",
+          "DAC_RP",
+          "P"
+        ],
+        [
+          "4",
+          "DAC_RN",
+          "P"
+        ],
+        [
+          "5",
+          "GND",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "DAC_LP",
+        "2": "DAC_LN",
+        "3": "DAC_RP",
+        "4": "DAC_RN",
+        "5": "GND"
+      },
+      "foot": "Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical",
+      "loc": [
+        140,
+        160
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Bench header; production connector MPN and current rating unresolved",
+      "id": "47cfdcfe-b68e-42ca-9590-3e234e996c57"
+    },
+    {
+      "ref": "J4",
+      "value": "Host control 3V3; watchdog OPEN",
+      "pins": [
+        [
+          "1",
+          "CTRL_3V3",
+          "P"
+        ],
+        [
+          "2",
+          "GND",
+          "P"
+        ],
+        [
+          "3",
+          "SCL",
+          "P"
+        ],
+        [
+          "4",
+          "SDA",
+          "P"
+        ],
+        [
+          "5",
+          "HOST_AUDIO_ENABLE",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "CTRL_3V3",
+        "2": "GND",
+        "3": "SCL",
+        "4": "SDA",
+        "5": "HOST_AUDIO_ENABLE"
+      },
+      "foot": "Connector_PinHeader_2.54mm:PinHeader_1x05_P2.54mm_Vertical",
+      "loc": [
+        230,
+        160
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Bench header; production connector MPN and current rating unresolved",
+      "id": "d5ef67ee-022a-4311-9081-f562936f44bd"
+    },
+    {
+      "ref": "U1",
+      "value": "TPA2016D2RTJR REVIEW RTJ pad drawing",
+      "pins": [
+        [
+          "1",
+          "INL+",
+          "I"
+        ],
+        [
+          "2",
+          "INL-",
+          "I"
+        ],
+        [
+          "3",
+          "AGND",
+          "W"
+        ],
+        [
+          "4",
+          "PVDDL",
+          "W"
+        ],
+        [
+          "5",
+          "PVDDL",
+          "W"
+        ],
+        [
+          "6",
+          "OUTL+",
+          "O"
+        ],
+        [
+          "7",
+          "OUTL-",
+          "O"
+        ],
+        [
+          "8",
+          "PGND",
+          "W"
+        ],
+        [
+          "9",
+          "OUTR-",
+          "O"
+        ],
+        [
+          "10",
+          "OUTR+",
+          "O"
+        ],
+        [
+          "11",
+          "PVDDR",
+          "W"
+        ],
+        [
+          "12",
+          "PVDDR",
+          "W"
+        ],
+        [
+          "13",
+          "AVDD",
+          "W"
+        ],
+        [
+          "14",
+          "INR-",
+          "I"
+        ],
+        [
+          "15",
+          "INR+",
+          "I"
+        ],
+        [
+          "16",
+          "REVIEW_UNSPECIFIED",
+          "P"
+        ],
+        [
+          "17",
+          "SCL",
+          "I"
+        ],
+        [
+          "18",
+          "SDZ",
+          "I"
+        ],
+        [
+          "19",
+          "SDA",
+          "B"
+        ],
+        [
+          "20",
+          "REVIEW_UNSPECIFIED",
+          "P"
+        ],
+        [
+          "21",
+          "EP_VERIFY_PAD",
+          "W"
+        ]
+      ],
+      "nets": {
+        "1": "IN_LP",
+        "2": "IN_LN",
+        "3": "GND",
+        "4": "AMP_3V0",
+        "5": "AMP_3V0",
+        "6": "OUT_LP",
+        "7": "OUT_LN",
+        "8": "GND",
+        "9": "OUT_RN",
+        "10": "OUT_RP",
+        "11": "AMP_3V0",
+        "12": "AMP_3V0",
+        "13": "AMP_3V0",
+        "14": "IN_RN",
+        "15": "IN_RP",
+        "17": "SCL",
+        "18": "AMP_SDZ",
+        "19": "SDA",
+        "21": "GND"
+      },
+      "foot": "Package_DFN_QFN:QFN-20-1EP_4x4mm_P0.5mm_EP2.5x2.5mm",
+      "loc": [
+        410,
+        160
+      ],
+      "mpn": "TPA2016D2RTJR",
+      "source": "https://www.ti.com/lit/ds/symlink/tpa2016d2.pdf",
+      "notes": "Pins16/20 unresolved and intentionally OPEN. EP footprint provisional pending RTJ manufacturer land pattern; NOT RELEASED",
+      "id": "1b554a5e-77fd-4603-819f-127a5dbdf0cb"
+    },
+    {
+      "ref": "R10",
+      "value": "100k 1% attenuation",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "DAC_LP",
+        "2": "ATT_LP"
+      },
+      "foot": "Resistor_SMD:R_0603_1608Metric",
+      "loc": [
+        50,
+        240
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "1773f9d5-dba9-43c9-bfc1-903d9a07b83f"
+    },
+    {
+      "ref": "R11",
+      "value": "1k 1% attenuation",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "ATT_LP",
+        "2": "GND"
+      },
+      "foot": "Resistor_SMD:R_0603_1608Metric",
+      "loc": [
+        50,
+        265
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "6dae810b-94d7-4cba-b5c1-b24620bb5dc8"
+    },
+    {
+      "ref": "C10",
+      "value": "1uF X7R 10V AC coupling",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "ATT_LP",
+        "2": "IN_LP"
+      },
+      "foot": "Capacitor_SMD:C_0603_1608Metric",
+      "loc": [
+        50,
+        290
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "869fe380-5c75-44f3-9b89-be2bdf54acbb"
+    },
+    {
+      "ref": "R12",
+      "value": "100k 1% attenuation",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "DAC_LN",
+        "2": "ATT_LN"
+      },
+      "foot": "Resistor_SMD:R_0603_1608Metric",
+      "loc": [
+        140,
+        240
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "c73c6125-a659-4f0e-93c1-ddd4d1eade48"
+    },
+    {
+      "ref": "R13",
+      "value": "1k 1% attenuation",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "ATT_LN",
+        "2": "GND"
+      },
+      "foot": "Resistor_SMD:R_0603_1608Metric",
+      "loc": [
+        140,
+        265
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "629d51a9-180b-40d7-8ec8-53c7e3e129f3"
+    },
+    {
+      "ref": "C11",
+      "value": "1uF X7R 10V AC coupling",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "ATT_LN",
+        "2": "IN_LN"
+      },
+      "foot": "Capacitor_SMD:C_0603_1608Metric",
+      "loc": [
+        140,
+        290
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "b40b9792-7290-4e89-9cb4-fc825b0caf41"
+    },
+    {
+      "ref": "R14",
+      "value": "100k 1% attenuation",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "DAC_RP",
+        "2": "ATT_RP"
+      },
+      "foot": "Resistor_SMD:R_0603_1608Metric",
+      "loc": [
+        230,
+        240
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "053c937a-c6fc-4a58-a3d1-2f3e8897d291"
+    },
+    {
+      "ref": "R15",
+      "value": "1k 1% attenuation",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "ATT_RP",
+        "2": "GND"
+      },
+      "foot": "Resistor_SMD:R_0603_1608Metric",
+      "loc": [
+        230,
+        265
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "89fd10b5-af77-4a14-8a02-b78a576f38dc"
+    },
+    {
+      "ref": "C12",
+      "value": "1uF X7R 10V AC coupling",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "ATT_RP",
+        "2": "IN_RP"
+      },
+      "foot": "Capacitor_SMD:C_0603_1608Metric",
+      "loc": [
+        230,
+        290
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "d71ca93b-355e-4baa-93a1-5a01554a1b13"
+    },
+    {
+      "ref": "R16",
+      "value": "100k 1% attenuation",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "DAC_RN",
+        "2": "ATT_RN"
+      },
+      "foot": "Resistor_SMD:R_0603_1608Metric",
+      "loc": [
+        320,
+        240
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "76e4c755-0099-42ff-858a-908f0e528321"
+    },
+    {
+      "ref": "R17",
+      "value": "1k 1% attenuation",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "ATT_RN",
+        "2": "GND"
+      },
+      "foot": "Resistor_SMD:R_0603_1608Metric",
+      "loc": [
+        320,
+        265
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "d042c983-3711-4db3-bfb4-ccf586dbea74"
+    },
+    {
+      "ref": "C13",
+      "value": "1uF X7R 10V AC coupling",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "ATT_RN",
+        "2": "IN_RN"
+      },
+      "foot": "Capacitor_SMD:C_0603_1608Metric",
+      "loc": [
+        320,
+        290
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "d2e6d3cd-4156-4a79-82cc-b9f7f460033e"
+    },
+    {
+      "ref": "C20",
+      "value": "10uF X7R 10V",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "AMP_3V0",
+        "2": "GND"
+      },
+      "foot": "Capacitor_SMD:C_0603_1608Metric",
+      "loc": [
+        50,
+        330
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "926bca36-4909-4d79-9ac2-72ed16a2d94f"
+    },
+    {
+      "ref": "C21",
+      "value": "100nF X7R 10V",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "AMP_3V0",
+        "2": "GND"
+      },
+      "foot": "Capacitor_SMD:C_0603_1608Metric",
+      "loc": [
+        140,
+        330
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "88868f1a-a16f-42a4-8f6f-c0ac14d0d78e"
+    },
+    {
+      "ref": "C22",
+      "value": "100nF X7R 10V",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "AMP_3V0",
+        "2": "GND"
+      },
+      "foot": "Capacitor_SMD:C_0603_1608Metric",
+      "loc": [
+        230,
+        330
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "f1ea9a1a-2806-4fc6-bb33-1da2a7417488"
+    },
+    {
+      "ref": "R20",
+      "value": "4k7 candidate I2C pullup",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "CTRL_3V3",
+        "2": "SCL"
+      },
+      "foot": "Resistor_SMD:R_0603_1608Metric",
+      "loc": [
+        320,
+        330
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "7ddcf659-2271-4a82-bfe4-af134524cf18"
+    },
+    {
+      "ref": "R21",
+      "value": "4k7 candidate I2C pullup",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "CTRL_3V3",
+        "2": "SDA"
+      },
+      "foot": "Resistor_SMD:R_0603_1608Metric",
+      "loc": [
+        410,
+        330
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "3407a95f-f6a8-4b2a-90e8-5f5c4d9f3d51"
+    },
+    {
+      "ref": "R22",
+      "value": "10k host enable isolation",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "HOST_AUDIO_ENABLE",
+        "2": "AMP_SDZ"
+      },
+      "foot": "Resistor_SMD:R_0603_1608Metric",
+      "loc": [
+        50,
+        375
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "debdb6d5-8357-48d4-9c73-1826218b4e65"
+    },
+    {
+      "ref": "R23",
+      "value": "47k DEFAULT MUTE pulldown",
+      "pins": [
+        [
+          "1",
+          "1",
+          "P"
+        ],
+        [
+          "2",
+          "2",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "AMP_SDZ",
+        "2": "GND"
+      },
+      "foot": "Resistor_SMD:R_0603_1608Metric",
+      "loc": [
+        140,
+        375
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Value specified; manufacturer MPN/tolerance procurement OPEN",
+      "id": "48460e92-0dc0-4512-a992-979d7df40793"
+    },
+    {
+      "ref": "J5",
+      "value": "HARD MUTE dry-contact switch",
+      "pins": [
+        [
+          "1",
+          "AMP_SDZ",
+          "P"
+        ],
+        [
+          "2",
+          "GND",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "AMP_SDZ",
+        "2": "GND"
+      },
+      "foot": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+      "loc": [
+        230,
+        375
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Bench header; production connector MPN and current rating unresolved",
+      "id": "864b05ca-a406-42ee-b314-0b4fd1b301ab"
+    },
+    {
+      "ref": "J6",
+      "value": "EXTERNAL open drain supervisor",
+      "pins": [
+        [
+          "1",
+          "AMP_SDZ",
+          "P"
+        ],
+        [
+          "2",
+          "GND",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "AMP_SDZ",
+        "2": "GND"
+      },
+      "foot": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+      "loc": [
+        320,
+        375
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Bench header; production connector MPN and current rating unresolved",
+      "id": "9e07f6a5-48aa-46ce-a6a0-1600fe82373c"
+    },
+    {
+      "ref": "J7",
+      "value": "Left BTL floating pair",
+      "pins": [
+        [
+          "1",
+          "OUT_LP",
+          "P"
+        ],
+        [
+          "2",
+          "OUT_LN",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "OUT_LP",
+        "2": "OUT_LN"
+      },
+      "foot": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+      "loc": [
+        500,
+        175
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Bench header; production connector MPN and current rating unresolved",
+      "id": "edf6ee4c-bd04-4846-87a4-9f32598b75ca"
+    },
+    {
+      "ref": "J8",
+      "value": "Right BTL floating pair",
+      "pins": [
+        [
+          "1",
+          "OUT_RP",
+          "P"
+        ],
+        [
+          "2",
+          "OUT_RN",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "OUT_RP",
+        "2": "OUT_RN"
+      },
+      "foot": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+      "loc": [
+        500,
+        205
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Bench header; production connector MPN and current rating unresolved",
+      "id": "68d4d9ed-2d1f-4727-928c-94de536b93dd"
+    },
+    {
+      "ref": "TP1",
+      "value": "MIC_3V3",
+      "pins": [
+        [
+          "1",
+          "TEST",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "MIC_3V3"
+      },
+      "foot": "TestPoint:TestPoint_Pad_D1.0mm",
+      "loc": [
+        50,
+        425
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Probe pad; test instrument loading must be considered",
+      "id": "f784ed34-adb6-4e7a-a1aa-e398948aa537"
+    },
+    {
+      "ref": "TP2",
+      "value": "PDM_CLK",
+      "pins": [
+        [
+          "1",
+          "TEST",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "PDM_CLK"
+      },
+      "foot": "TestPoint:TestPoint_Pad_D1.0mm",
+      "loc": [
+        120,
+        425
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Probe pad; test instrument loading must be considered",
+      "id": "bef1dc4f-5779-4131-807e-19c6b17b731b"
+    },
+    {
+      "ref": "TP3",
+      "value": "PDM_D01",
+      "pins": [
+        [
+          "1",
+          "TEST",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "PDM_D01"
+      },
+      "foot": "TestPoint:TestPoint_Pad_D1.0mm",
+      "loc": [
+        190,
+        425
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Probe pad; test instrument loading must be considered",
+      "id": "bd9cee78-c1af-439d-9bb1-544c056e551f"
+    },
+    {
+      "ref": "TP4",
+      "value": "PDM_D23",
+      "pins": [
+        [
+          "1",
+          "TEST",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "PDM_D23"
+      },
+      "foot": "TestPoint:TestPoint_Pad_D1.0mm",
+      "loc": [
+        260,
+        425
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Probe pad; test instrument loading must be considered",
+      "id": "25635fcb-55c5-4b02-a8c4-ae6d0658d55c"
+    },
+    {
+      "ref": "TP5",
+      "value": "AMP_3V0",
+      "pins": [
+        [
+          "1",
+          "TEST",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "AMP_3V0"
+      },
+      "foot": "TestPoint:TestPoint_Pad_D1.0mm",
+      "loc": [
+        330,
+        425
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Probe pad; test instrument loading must be considered",
+      "id": "192e6ecc-c92f-4fec-93df-cc378ca30aea"
+    },
+    {
+      "ref": "TP6",
+      "value": "AMP_SDZ",
+      "pins": [
+        [
+          "1",
+          "TEST",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "AMP_SDZ"
+      },
+      "foot": "TestPoint:TestPoint_Pad_D1.0mm",
+      "loc": [
+        400,
+        425
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Probe pad; test instrument loading must be considered",
+      "id": "d26cafa4-3bff-489a-b466-3811cb6312ff"
+    },
+    {
+      "ref": "TP7",
+      "value": "GND",
+      "pins": [
+        [
+          "1",
+          "TEST",
+          "P"
+        ]
+      ],
+      "nets": {
+        "1": "GND"
+      },
+      "foot": "TestPoint:TestPoint_Pad_D1.0mm",
+      "loc": [
+        470,
+        425
+      ],
+      "mpn": "UNSELECTED",
+      "source": "",
+      "notes": "Probe pad; test instrument loading must be considered",
+      "id": "d4925eb3-d79f-4a5b-baab-afaa847abc4c"
+    }
+  ]
+}

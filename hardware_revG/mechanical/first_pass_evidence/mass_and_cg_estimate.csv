@@ -1,0 +1,30 @@
+part,category,mass_g,mass_basis,cx_mm,cy_mm,cz_mm
+Front_Brow_And_Rims,mechanical,24.451530882124448,assumed density 1.15 g/cm3,-1.25294023250411e-15,-3.206131572011455,24.94501830185104
+Camera_B0441_Source_Envelope,source,UNKNOWN,UNKNOWN; excluded from subtotal,-6.661338147750939e-16,-3.599999999999999,26.5
+Left_Removable_Temple_Tray,mechanical,19.64798910575911,assumed density 1.15 g/cm3,-83.50000000000021,77.50000000000013,15.91330536170374
+Left_Service_Lid,mechanical,5.927466365791247,assumed density 1.15 g/cm3,-83.5,77.5,31.900000000000002
+Left_Wire_Clearance_Envelope,wire,UNKNOWN,UNKNOWN; excluded from subtotal,-70.7,77.5,26.999999999999996
+Left_BS08_Source_Envelope,source,1.7,supplier catalog,-63.199999999999996,97.49999999999999,17.7
+Left_BC_Insulating_Carrier,mechanical,1.1597060000000001,assumed density 1.15 g/cm3,-63.70067430883345,97.5,17.366217127444376
+Left_Root_Wire_Bend_Reservation,wire,UNKNOWN,UNKNOWN; excluded from subtotal,-74.0,5.5,26.000000000000004
+Right_Removable_Temple_Tray,mechanical,21.8456391057591,assumed density 1.15 g/cm3,87.00000000000009,77.49999999999993,15.466014692804354
+Right_Service_Lid,mechanical,7.2702063657912515,assumed density 1.15 g/cm3,86.99999999999999,77.50000000000001,31.900000000000002
+Right_Wire_Clearance_Envelope,wire,UNKNOWN,UNKNOWN; excluded from subtotal,70.7,77.5,26.999999999999996
+Right_BS08_Source_Envelope,source,1.7,supplier catalog,63.199999999999996,97.49999999999999,17.7
+Right_BC_Insulating_Carrier,mechanical,1.1597060000000006,assumed density 1.15 g/cm3,63.70067430883346,97.49999999999999,17.36621712744437
+Right_Root_Wire_Bend_Reservation,wire,UNKNOWN,UNKNOWN; excluded from subtotal,74.0,5.5,26.000000000000004
+Battery_Protected_Pack_Allowance,reservation,UNKNOWN,UNKNOWN; excluded from subtotal,-84.0,102.5,17.0
+Tattu_500mAh_Reference_Only,nested,14,supplier catalog,-84.0,101.99999999999999,16.0
+Power_Audio_PCB_Solution_Allowance,reservation,UNKNOWN,UNKNOWN; excluded from subtotal,-82.99999999999999,36.0,16.0
+Modem_PCB_Solution_Allowance,reservation,UNKNOWN,UNKNOWN; excluded from subtotal,88.0,36.0,15.0
+A7670E_Bare_Module_Source,nested,UNKNOWN,UNKNOWN; excluded from subtotal,88.00000000000001,32.0,14.150000000000002
+NanoSIM_Access_Allowance,reservation,UNKNOWN,UNKNOWN; excluded from subtotal,91.0,52.5,21.5
+NanoSIM_Insertion_Travel,service,UNKNOWN,UNKNOWN; excluded from subtotal,91.0,52.5,26.9
+Host_PCB_Solution_Allowance,reservation,UNKNOWN,UNKNOWN; excluded from subtotal,85.99999999999999,94.0,16.0
+RF_Antenna_Keepout,keepout,UNKNOWN,UNKNOWN; excluded from subtotal,81.5,133.5,19.0
+Host_Thermal_Clearance,thermal,UNKNOWN,UNKNOWN; excluded from subtotal,86.0,93.99999999999999,24.0
+Mic_FL_PCB_Allowance,reservation,UNKNOWN,UNKNOWN; excluded from subtotal,-60.00000000000001,-7.0,27.000000000000004
+Mic_FR_PCB_Allowance,reservation,UNKNOWN,UNKNOWN; excluded from subtotal,60.00000000000001,-7.0,27.000000000000004
+Mic_TL_PCB_Allowance,reservation,UNKNOWN,UNKNOWN; excluded from subtotal,-93.99999999999999,61.99999999999999,27.000000000000004
+Mic_TR_PCB_Allowance,reservation,UNKNOWN,UNKNOWN; excluded from subtotal,99.00000000000001,61.99999999999999,27.000000000000004
+Battery_Larger_Scenario_Not_Fitted,alternative,UNKNOWN,UNKNOWN; excluded from subtotal,-136.0,102.5,15.0

@@ -1,0 +1,1683 @@
+{
+  "revision": "G compact shell direction screening; still not wearable validated",
+  "native_validity": [
+    {
+      "part": "Front_Brow_And_Rims",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Camera_B0441_Source_Envelope",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Left_Removable_Temple_Tray",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Left_Service_Lid",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Left_Wire_Clearance_Envelope",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Left_BS08_Source_Envelope",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Left_BC_Insulating_Carrier",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Left_Root_Wire_Bend_Reservation",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Right_Removable_Temple_Tray",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Right_Service_Lid",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Right_Wire_Clearance_Envelope",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Right_BS08_Source_Envelope",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Right_BC_Insulating_Carrier",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Right_Root_Wire_Bend_Reservation",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Battery_Protected_Pack_Allowance",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Tattu_500mAh_Reference_Only",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Power_Audio_PCB_Solution_Allowance",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Modem_PCB_Solution_Allowance",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "A7670E_Bare_Module_Source",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "NanoSIM_Access_Allowance",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "NanoSIM_Insertion_Travel",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Host_PCB_Solution_Allowance",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "RF_Antenna_Keepout",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Host_Thermal_Clearance",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Mic_FL_PCB_Allowance",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Mic_FR_PCB_Allowance",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Mic_TL_PCB_Allowance",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Mic_TR_PCB_Allowance",
+      "valid": true,
+      "solids": 1
+    },
+    {
+      "part": "Battery_Larger_Scenario_Not_Fitted",
+      "valid": true,
+      "solids": 1
+    }
+  ],
+  "static_collisions": [],
+  "fold_sweep": [
+    {
+      "mode": "left_only",
+      "angle_deg": 0,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 5,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 10,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 15,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 20,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 25,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 30,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 35,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 40,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 45,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 50,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 55,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 60,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 65,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 70,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 75,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 80,
+      "new_collisions": []
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 85,
+      "new_collisions": [
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_Removable_Temple_Tray",
+          "overlap_mm3": 15.721
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_Service_Lid",
+          "overlap_mm3": 2.358
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_BS08_Source_Envelope",
+          "overlap_mm3": 49.281
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_BC_Insulating_Carrier",
+          "overlap_mm3": 98.44
+        },
+        {
+          "a": "Camera_B0441_Source_Envelope",
+          "b": "Left_BC_Insulating_Carrier",
+          "overlap_mm3": 7.083
+        }
+      ]
+    },
+    {
+      "mode": "left_only",
+      "angle_deg": 90,
+      "new_collisions": [
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_Removable_Temple_Tray",
+          "overlap_mm3": 1220.597
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_Service_Lid",
+          "overlap_mm3": 161.552
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_BS08_Source_Envelope",
+          "overlap_mm3": 101.92
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_BC_Insulating_Carrier",
+          "overlap_mm3": 173.264
+        },
+        {
+          "a": "Camera_B0441_Source_Envelope",
+          "b": "Left_BC_Insulating_Carrier",
+          "overlap_mm3": 102.0
+        }
+      ]
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 0,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 5,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 10,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 15,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 20,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 25,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 30,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 35,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 40,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 45,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 50,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 55,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 60,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 65,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 70,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 75,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 80,
+      "new_collisions": []
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 85,
+      "new_collisions": [
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 49.281
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 130.696
+        }
+      ]
+    },
+    {
+      "mode": "right_only",
+      "angle_deg": 90,
+      "new_collisions": [
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 101.92
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 332.656
+        }
+      ]
+    },
+    {
+      "mode": "both",
+      "angle_deg": 0,
+      "new_collisions": []
+    },
+    {
+      "mode": "both",
+      "angle_deg": 5,
+      "new_collisions": []
+    },
+    {
+      "mode": "both",
+      "angle_deg": 10,
+      "new_collisions": []
+    },
+    {
+      "mode": "both",
+      "angle_deg": 15,
+      "new_collisions": []
+    },
+    {
+      "mode": "both",
+      "angle_deg": 20,
+      "new_collisions": []
+    },
+    {
+      "mode": "both",
+      "angle_deg": 25,
+      "new_collisions": []
+    },
+    {
+      "mode": "both",
+      "angle_deg": 30,
+      "new_collisions": []
+    },
+    {
+      "mode": "both",
+      "angle_deg": 35,
+      "new_collisions": [
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 399.238
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 1.219
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 537.313
+        },
+        {
+          "a": "Left_Service_Lid",
+          "b": "Right_Service_Lid",
+          "overlap_mm3": 254.087
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 1.361
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 1.559
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 6.096
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 144.372
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 2.007
+        }
+      ]
+    },
+    {
+      "mode": "both",
+      "angle_deg": 40,
+      "new_collisions": [
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 1480.715
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 1.995
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 102.967
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 177.351
+        },
+        {
+          "a": "Left_Service_Lid",
+          "b": "Right_Service_Lid",
+          "overlap_mm3": 907.454
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 1.298
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 1.487
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 3.737
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 3.737
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 51.934
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 402.109
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 3076.086
+        }
+      ]
+    },
+    {
+      "mode": "both",
+      "angle_deg": 45,
+      "new_collisions": [
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 1580.97
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 3.137
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 34.471
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 360.0
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 360.0
+        },
+        {
+          "a": "Left_Service_Lid",
+          "b": "Right_Service_Lid",
+          "overlap_mm3": 1142.4
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 3.27
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 1.465
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 232.064
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 89.021
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 89.021
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 340.619
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 396.0
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 2003.567
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 1737.325
+        }
+      ]
+    },
+    {
+      "mode": "both",
+      "angle_deg": 50,
+      "new_collisions": [
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 1605.359
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 3.185
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 63.119
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 75.243
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 365.554
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 363.493
+        },
+        {
+          "a": "Left_Service_Lid",
+          "b": "Right_Service_Lid",
+          "overlap_mm3": 1160.023
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 3.32
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 1.487
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 63.119
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 208.849
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 77.927
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 75.243
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 77.927
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 398.195
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 122.999
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 804.218
+        },
+        {
+          "a": "Right_BS08_Source_Envelope",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 21.174
+        },
+        {
+          "a": "Right_BC_Insulating_Carrier",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 213.598
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 4447.491
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 125.976
+        }
+      ]
+    },
+    {
+      "mode": "both",
+      "angle_deg": 55,
+      "new_collisions": [
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 1682.433
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 3.338
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 66.149
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 78.856
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 677.824
+        },
+        {
+          "a": "Left_Service_Lid",
+          "b": "Right_Service_Lid",
+          "overlap_mm3": 1215.717
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 3.48
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 1.559
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 66.149
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 20.839
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 146.287
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 78.856
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 20.839
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 91.345
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 290.641
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 842.829
+        },
+        {
+          "a": "Right_BS08_Source_Envelope",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 198.745
+        },
+        {
+          "a": "Right_BC_Insulating_Carrier",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 430.851
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 5612.412
+        }
+      ]
+    },
+    {
+      "mode": "both",
+      "angle_deg": 60,
+      "new_collisions": [
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 1825.547
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 3.623
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 68.574
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 87.894
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 831.384
+        },
+        {
+          "a": "Left_Service_Lid",
+          "b": "Right_Service_Lid",
+          "overlap_mm3": 1319.13
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 3.775
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 1.691
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 71.776
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 247.618
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 85.563
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 388.213
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 914.523
+        },
+        {
+          "a": "Right_BS08_Source_Envelope",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 309.618
+        },
+        {
+          "a": "Right_BC_Insulating_Carrier",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 569.358
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 6096.819
+        }
+      ]
+    },
+    {
+      "mode": "both",
+      "angle_deg": 65,
+      "new_collisions": [
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 2063.809
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 3.978
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 43.409
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 88.792
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Modem_PCB_Solution_Allowance",
+          "overlap_mm3": 0.212
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 752.357
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Mic_TR_PCB_Allowance",
+          "overlap_mm3": 8.204
+        },
+        {
+          "a": "Left_Service_Lid",
+          "b": "Right_Service_Lid",
+          "overlap_mm3": 1491.297
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 4.271
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 1.912
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Mic_TR_PCB_Allowance",
+          "overlap_mm3": 6.507
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 79.793
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 209.355
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 97.596
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 259.437
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 952.442
+        },
+        {
+          "a": "Right_BS08_Source_Envelope",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 275.367
+        },
+        {
+          "a": "Right_BC_Insulating_Carrier",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 396.815
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 6806.785
+        }
+      ]
+    },
+    {
+      "mode": "both",
+      "angle_deg": 70,
+      "new_collisions": [
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 2459.552
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 4.881
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 48.472
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 88.366
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Modem_PCB_Solution_Allowance",
+          "overlap_mm3": 210.278
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "NanoSIM_Access_Allowance",
+          "overlap_mm3": 68.474
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 692.69
+        },
+        {
+          "a": "Left_Service_Lid",
+          "b": "Right_Service_Lid",
+          "overlap_mm3": 1777.259
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 5.086
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 2.279
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 90.757
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 15.581
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 107.836
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 87.21
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 908.386
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Power_Audio_PCB_Solution_Allowance",
+          "overlap_mm3": 15.869
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Mic_TL_PCB_Allowance",
+          "overlap_mm3": 0.78
+        },
+        {
+          "a": "Right_BS08_Source_Envelope",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 37.926
+        },
+        {
+          "a": "Right_BC_Insulating_Carrier",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 148.749
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Modem_PCB_Solution_Allowance",
+          "overlap_mm3": 234.994
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "NanoSIM_Access_Allowance",
+          "overlap_mm3": 54.834
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 6774.926
+        }
+      ]
+    },
+    {
+      "mode": "both",
+      "angle_deg": 75,
+      "new_collisions": [
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 3107.78
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 6.277
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 85.444
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 107.587
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Modem_PCB_Solution_Allowance",
+          "overlap_mm3": 438.99
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "NanoSIM_Access_Allowance",
+          "overlap_mm3": 70.262
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 633.397
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 141.625
+        },
+        {
+          "a": "Left_Service_Lid",
+          "b": "Right_Service_Lid",
+          "overlap_mm3": 2267.061
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 2.557
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 2.929
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 123.713
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 136.842
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Modem_PCB_Solution_Allowance",
+          "overlap_mm3": 23.642
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 0.968
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 792.0
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Power_Audio_PCB_Solution_Allowance",
+          "overlap_mm3": 264.356
+        },
+        {
+          "a": "Right_BC_Insulating_Carrier",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 17.424
+        },
+        {
+          "a": "Right_BC_Insulating_Carrier",
+          "b": "Power_Audio_PCB_Solution_Allowance",
+          "overlap_mm3": 47.71
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Modem_PCB_Solution_Allowance",
+          "overlap_mm3": 1511.875
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "NanoSIM_Access_Allowance",
+          "overlap_mm3": 394.669
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 6163.164
+        },
+        {
+          "a": "Power_Audio_PCB_Solution_Allowance",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 208.24
+        },
+        {
+          "a": "Power_Audio_PCB_Solution_Allowance",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 19.671
+        }
+      ]
+    },
+    {
+      "mode": "both",
+      "angle_deg": 80,
+      "new_collisions": [
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 4044.076
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 3.35
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 148.743
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 127.536
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Modem_PCB_Solution_Allowance",
+          "overlap_mm3": 616.518
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "NanoSIM_Access_Allowance",
+          "overlap_mm3": 0.761
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 603.984
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 584.534
+        },
+        {
+          "a": "Left_Service_Lid",
+          "b": "Right_Service_Lid",
+          "overlap_mm3": 2987.68
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 3.738
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 4.282
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 88.087
+        },
+        {
+          "a": "Left_BS08_Source_Envelope",
+          "b": "Modem_PCB_Solution_Allowance",
+          "overlap_mm3": 2.018
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 152.916
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Modem_PCB_Solution_Allowance",
+          "overlap_mm3": 46.368
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 582.718
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Power_Audio_PCB_Solution_Allowance",
+          "overlap_mm3": 600.316
+        },
+        {
+          "a": "Right_BS08_Source_Envelope",
+          "b": "Power_Audio_PCB_Solution_Allowance",
+          "overlap_mm3": 15.591
+        },
+        {
+          "a": "Right_BC_Insulating_Carrier",
+          "b": "Power_Audio_PCB_Solution_Allowance",
+          "overlap_mm3": 95.912
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Modem_PCB_Solution_Allowance",
+          "overlap_mm3": 3324.015
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "NanoSIM_Access_Allowance",
+          "overlap_mm3": 680.643
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 5429.954
+        },
+        {
+          "a": "Power_Audio_PCB_Solution_Allowance",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 953.029
+        },
+        {
+          "a": "Power_Audio_PCB_Solution_Allowance",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 767.889
+        }
+      ]
+    },
+    {
+      "mode": "both",
+      "angle_deg": 85,
+      "new_collisions": [
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_Removable_Temple_Tray",
+          "overlap_mm3": 15.721
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_Service_Lid",
+          "overlap_mm3": 2.358
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_BS08_Source_Envelope",
+          "overlap_mm3": 49.281
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_BC_Insulating_Carrier",
+          "overlap_mm3": 98.44
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 49.281
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 130.696
+        },
+        {
+          "a": "Camera_B0441_Source_Envelope",
+          "b": "Left_BC_Insulating_Carrier",
+          "overlap_mm3": 7.083
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 5234.668
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 6.599
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 33.268
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 200.287
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Modem_PCB_Solution_Allowance",
+          "overlap_mm3": 909.346
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 692.428
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 515.243
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Mic_TR_PCB_Allowance",
+          "overlap_mm3": 12.185
+        },
+        {
+          "a": "Left_Service_Lid",
+          "b": "Right_Service_Lid",
+          "overlap_mm3": 3767.769
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 7.363
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 8.435
+        },
+        {
+          "a": "Left_BC_Insulating_Carrier",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 77.856
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Battery_Protected_Pack_Allowance",
+          "overlap_mm3": 72.967
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Power_Audio_PCB_Solution_Allowance",
+          "overlap_mm3": 798.018
+        },
+        {
+          "a": "Right_BC_Insulating_Carrier",
+          "b": "Power_Audio_PCB_Solution_Allowance",
+          "overlap_mm3": 37.607
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Modem_PCB_Solution_Allowance",
+          "overlap_mm3": 5126.242
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "NanoSIM_Access_Allowance",
+          "overlap_mm3": 719.916
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 4722.79
+        },
+        {
+          "a": "Power_Audio_PCB_Solution_Allowance",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 1988.375
+        },
+        {
+          "a": "Power_Audio_PCB_Solution_Allowance",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 2746.271
+        }
+      ]
+    },
+    {
+      "mode": "both",
+      "angle_deg": 90,
+      "new_collisions": [
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_Removable_Temple_Tray",
+          "overlap_mm3": 1220.597
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_Service_Lid",
+          "overlap_mm3": 161.552
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_BS08_Source_Envelope",
+          "overlap_mm3": 101.92
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Left_BC_Insulating_Carrier",
+          "overlap_mm3": 173.264
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Right_BS08_Source_Envelope",
+          "overlap_mm3": 101.92
+        },
+        {
+          "a": "Front_Brow_And_Rims",
+          "b": "Right_BC_Insulating_Carrier",
+          "overlap_mm3": 332.656
+        },
+        {
+          "a": "Camera_B0441_Source_Envelope",
+          "b": "Left_BC_Insulating_Carrier",
+          "overlap_mm3": 102.0
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 5302.776
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 3.522
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Modem_PCB_Solution_Allowance",
+          "overlap_mm3": 509.176
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "NanoSIM_Access_Allowance",
+          "overlap_mm3": 67.5
+        },
+        {
+          "a": "Left_Removable_Temple_Tray",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 720.0
+        },
+        {
+          "a": "Left_Service_Lid",
+          "b": "Right_Service_Lid",
+          "overlap_mm3": 4172.143
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Removable_Temple_Tray",
+          "overlap_mm3": 0.285
+        },
+        {
+          "a": "Left_Wire_Clearance_Envelope",
+          "b": "Right_Wire_Clearance_Envelope",
+          "overlap_mm3": 167.243
+        },
+        {
+          "a": "Right_Removable_Temple_Tray",
+          "b": "Power_Audio_PCB_Solution_Allowance",
+          "overlap_mm3": 636.47
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Modem_PCB_Solution_Allowance",
+          "overlap_mm3": 5632.0
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "NanoSIM_Access_Allowance",
+          "overlap_mm3": 540.0
+        },
+        {
+          "a": "Battery_Protected_Pack_Allowance",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 4200.0
+        },
+        {
+          "a": "Power_Audio_PCB_Solution_Allowance",
+          "b": "Host_PCB_Solution_Allowance",
+          "overlap_mm3": 3150.0
+        },
+        {
+          "a": "Power_Audio_PCB_Solution_Allowance",
+          "b": "RF_Antenna_Keepout",
+          "overlap_mm3": 3450.0
+        }
+      ]
+    }
+  ],
+  "sweep_step_deg": 5,
+  "continuous_motion_proven": false,
+  "selected_architecture": "rigid removable temples; folding unsupported",
+  "mass_subtotal_g": 90.5084184673081,
+  "subtotal_cg_mm": [
+    -10.98555334206783,
+    60.751841283058496,
+    19.865695509959718
+  ],
+  "mass_scope": "compact screen; polymer assumed1.15g/cm3 + catalog BS08 pair and reference500mAh only. ALL PCBs/camera/fasteners/wires/lenses/pads/antenna UNKNOWN; not complete product mass or CG",
+  "antenna_fit": "FAIL: rear keepout cannot contain historical42.6x12.1 flex flat",
+  "battery_runtime_verified": false,
+  "physical_comfort_verified": false,
+  "manufacturing_ready": false
+}
