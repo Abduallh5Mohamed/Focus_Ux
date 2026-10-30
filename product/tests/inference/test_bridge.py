@@ -125,7 +125,7 @@ def test_claim_media_result_and_replay_rejection(remote, tmp_path):
         assert response.headers["cache-control"] == "private, no-store"
         payload = wav_bytes()
         assert client.post(prefix + "/audio", content=payload, headers=AUTH).status_code == 200
-        assert future.result(timeout=2) == (payload, 1000)
+        assert future.result(timeout=2) == (payload, 1000, "dolphin")
         assert client.post(prefix + "/audio", content=payload, headers=AUTH).status_code == 404
         assert client.get(prefix + "/media", headers=AUTH).status_code == 404
     finally:

@@ -22,6 +22,12 @@ export interface ResultViewProps {
   onDeleted: () => void;
 }
 
+const ENGINE_LABELS: Record<string, string> = {
+  dolphin: 'Dolphin',
+  av_mossformer2: 'AV-MossFormer2',
+  separate_select: 'فصل ثم اختيار المتكلم',
+};
+
 export function ResultView({ job, videoId, onDeleted }: ResultViewProps): JSX.Element {
   const api = useApi();
 
@@ -290,6 +296,12 @@ export function ResultView({ job, videoId, onDeleted }: ResultViewProps): JSX.El
                   {audioFailed ? 'فشل' : isolatedReady ? 'جاهز' : 'بيتجهز'}
                 </dd>
               </div>
+              {job.result?.engine ? (
+                <div className="facts__item">
+                  <dt className="facts__key">محرك العزل</dt>
+                  <dd className="facts__val mono">{ENGINE_LABELS[job.result.engine] ?? job.result.engine}</dd>
+                </div>
+              ) : null}
             </dl>
 
             <div className="row">

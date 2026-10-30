@@ -13,8 +13,8 @@ from pathlib import Path
 
 from .adapter import LegacyDolphinAdapter
 from .config import AdapterConfig
+from .isolation_engines import build_engine
 from .errors import MediaError, ModelUnavailableError
-from .types import TargetSelection
 
 
 @contextmanager
@@ -42,6 +42,7 @@ class LocalEngine:
         self.config = config
         self.adapter = LegacyDolphinAdapter(config)
         self.models = None
+        self.isolation = build_engine(config, self.adapter, lambda: self.models)
 
     def initialize(self):
         if self.models is not None:
@@ -55,6 +56,8 @@ class LocalEngine:
             raise ModelUnavailableError("the original Dolphin source or mean-face asset is missing")
         if not self.config.model_cache or not cache.is_dir():
             raise ModelUnavailableError("the original populated model cache is missing")
+        # Fail before loading the GPU if the chosen extra engine lacks weights.
+        self.isolation.check_ready()
         with offline_inference():
             self.models = self.adapter.load_models(self.config)
 
@@ -94,7 +97,4 @@ class LocalEngine:
     def extract(self, video_id, video_path, face_id, job_dir, on_progress=None):
         self.initialize()
         with offline_inference():
-            return self.adapter.extract_target(
-                video_path, TargetSelection(face_id=face_id), job_dir,
-                self.models, on_progress, video_id=video_id,
-            )
+            return self.isolation.run(video_id, video_path, face_id, job_dir, on_progress)

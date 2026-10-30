@@ -94,6 +94,8 @@ export interface JobResult {
   sample_rate?: number;
   source_offset_ms?: number;
   warnings?: string[];
+  /** Isolation engine that produced the audio (dolphin | av_mossformer2 | separate_select). */
+  engine?: string;
 }
 
 export interface JobState {

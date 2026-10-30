@@ -26,6 +26,7 @@ from dataclasses import dataclass
 
 
 TRACKING_MODES = ("reference", "adaptive")
+ISOLATION_ENGINES = ("dolphin", "av_mossformer2", "separate_select")
 
 
 def _optional_str(env, name: str) -> str | None:
@@ -57,6 +58,11 @@ class AdapterConfig:
     # "reference" = legacy cadence (the validated default). "adaptive" is opt-in
     # until it passes the A/B quality gate on the GPU machine.
     tracking_mode: str = "reference"
+    # Which isolation engine runs behind the worker. Dolphin stays the default
+    # until the user picks another after the listening comparison.
+    isolation_engine: str = "dolphin"
+    # Separate environment/cache for the optional ClearerVoice engines.
+    clearervoice_dir: str | None = None
     adaptive_min_confidence: float = 0.6
     adaptive_max_interval: int = 32
     adaptive_edge_interval: int = 8
@@ -64,6 +70,11 @@ class AdapterConfig:
     adaptive_max_hold_frames: int = 12
 
     def __post_init__(self) -> None:
+        if self.isolation_engine not in ISOLATION_ENGINES:
+            raise ValueError(
+                f"isolation_engine must be one of {ISOLATION_ENGINES}, "
+                f"got {self.isolation_engine!r}"
+            )
         if self.tracking_mode not in TRACKING_MODES:
             raise ValueError(
                 f"tracking_mode must be one of {TRACKING_MODES}, got {self.tracking_mode!r}"
@@ -78,6 +89,8 @@ class AdapterConfig:
             max_video_seconds=_forced_int(sources, "FOCUS_MAX_VIDEO_SECONDS", 15),
             max_upload_mb=_forced_int(sources, "FOCUS_MAX_UPLOAD_MB", 50),
             tracking_mode=_optional_str(sources, "FOCUS_TRACKING_MODE") or "reference",
+            isolation_engine=_optional_str(sources, "FOCUS_ISOLATION_ENGINE") or "dolphin",
+            clearervoice_dir=_optional_str(sources, "FOCUS_CLEARERVOICE_DIR"),
         )
 
     @classmethod

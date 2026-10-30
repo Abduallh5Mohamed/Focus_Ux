@@ -36,6 +36,15 @@ class ExtractionResult:
 
 
 @dataclass
+class EngineResult(ExtractionResult):
+    """ExtractionResult plus which isolation engine produced it (the base
+    contract type stays unchanged)."""
+
+    engine: str = "dolphin"
+    details: dict = field(default_factory=dict)
+
+
+@dataclass
 class ModelBundle:
     dolphin: object | None = None
     face_alignment: object | None = None

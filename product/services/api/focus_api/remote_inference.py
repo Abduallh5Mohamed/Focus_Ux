@@ -36,6 +36,7 @@ ERROR_MESSAGES = {
     "TIMEOUT": "the connected computer timed out",
 }
 NON_RETRYABLE = ("INVALID_MEDIA", "NO_AUDIO", "LIMIT_EXCEEDED", "MODEL_UNAVAILABLE")
+KNOWN_ENGINES = ("dolphin", "av_mossformer2", "separate_select")
 MAX_TRANSCRIPT_SEGMENTS = 500
 MAX_SEGMENT_CHARS = 2000
 MAX_AUDIO_BYTES = 2 * 1024 * 1024  # 15 s, mono PCM16 @ 16k is < 0.5 MB
@@ -281,7 +282,10 @@ def add_remote_routes(app, bridge: RemoteBridge):
             expected = bridge._current(task_id, kind="extract").duration_ms
         data = await bounded_body(request, MAX_AUDIO_BYTES)
         duration = validate_wav(data, expected)
-        bridge.complete(task_id, (data, duration), kind="extract")
+        engine = request.headers.get("x-focus-engine", "dolphin")
+        if engine not in KNOWN_ENGINES:
+            raise ApiError("INVALID_REQUEST", "unknown isolation engine", status_code=400)
+        bridge.complete(task_id, (data, duration, engine), kind="extract")
         return {"accepted": True}
 
     @app.post("/worker/tasks/{task_id}/transcript")

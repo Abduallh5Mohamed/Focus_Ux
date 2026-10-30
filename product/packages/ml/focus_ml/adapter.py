@@ -704,6 +704,7 @@ class LegacyDolphinAdapter:
             return {
                 "faces_bgr": faces_bgr, "landmarks": landmarks,
                 "warnings": stage_warnings, "report": report,
+                "boxes": list(boxes_history[speaker_slot]),
             }
         ref_stats = {"mode": "reference", "frames": len(frames), "full_detects": 1,
                      "light_tracks": 0, "hold_frames": 0, "detect_s": 0.0,
@@ -745,6 +746,7 @@ class LegacyDolphinAdapter:
         return {
             "faces_bgr": faces_bgr, "landmarks": landmarks,
             "warnings": stage_warnings, "report": ref_stats,
+            "boxes": list(boxes_history[speaker_slot]),
         }
 
     def _adaptive_boxes(self, backend, frames, first_box, cfg) -> tuple[list, dict, list]:

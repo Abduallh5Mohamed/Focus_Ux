@@ -54,6 +54,8 @@ Remaining requirements for that test:
    returned protected WAV is listened to for identity, quality and alignment.
    Check another session cannot fetch its video, thumbnails or isolated audio.
 
+Optional stronger isolation engines (Dolphin stays the default): see [ISOLATION_ENGINES.md](ISOLATION_ENGINES.md).
+
 ## Simple operator setup
 
 1. After merge, download `/api/worker-kit.zip` from the **main app preview**. This is source

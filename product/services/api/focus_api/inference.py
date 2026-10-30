@@ -13,6 +13,8 @@ from .identity import make_face_id
 from .interfaces import DetectedFace, ProviderError
 from .media_probe import probe_video
 
+ENGINE_WARNING = "engine: "  # marker stored with the job's audio warnings
+
 
 def decode_faces(items):
     if not isinstance(items, list) or len(items) > 20:
@@ -112,7 +114,7 @@ class InferenceProviders:
             if expected != job.face_id or job.video_path != video.canonical_path:
                 raise worker_errors.FaceNotFoundError("selected face does not match canonical media")
             if self.bridge:
-                data, duration = self.bridge.call(
+                data, duration, engine = self.bridge.call(
                     kind="extract", video_id=job.video_id,
                     video_path=job.video_path, face_id=job.face_id,
                 )
@@ -121,7 +123,8 @@ class InferenceProviders:
                 path.write_bytes(data)
                 return TargetRunResult(
                     str(path), duration, source_offset_ms=0,
-                    warnings=["real inference returned by the operator's connected computer"],
+                    warnings=[ENGINE_WARNING + engine,
+                              "real inference returned by the operator's connected computer"],
                 )
             result = self.engine.extract(
                 job.video_id, job.video_path, job.face_id, job_dir, on_progress
@@ -133,7 +136,10 @@ class InferenceProviders:
             duration = validate_wav(output.read_bytes(), video.duration_ms)
             if abs(duration - result.duration_ms) > 1:
                 raise worker_errors.ProcessingError("audio metadata disagrees with actual samples")
-            return TargetRunResult(**vars(result))
+            fields = {k: v for k, v in vars(result).items() if k not in ("engine", "details")}
+            fields["warnings"] = [ENGINE_WARNING + getattr(result, "engine", "dolphin"),
+                                  *fields["warnings"]]
+            return TargetRunResult(**fields)
         except worker_errors.WorkerError:
             raise
         except Exception as exc:

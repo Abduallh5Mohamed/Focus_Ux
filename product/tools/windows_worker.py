@@ -65,7 +65,7 @@ class WorkerClient:
         self.preview_token = preview_token
         self.opener = build_opener(NoRedirect())
 
-    def request(self, path, data=None, content_type="application/json"):
+    def request(self, path, data=None, content_type="application/json", extra_headers=None):
         # Relative paths are constructed here, never supplied by task payloads.
         request = Request(
             self.url + path, data=data,
@@ -74,6 +74,7 @@ class WorkerClient:
                 "X-Focus-Worker-Token": self.token,
                 "Content-Type": content_type,
                 "Cache-Control": "no-store",
+                **(extra_headers or {}),
             },
         )
         return self.opener.open(request, timeout=60)
@@ -165,7 +166,8 @@ class WorkerClient:
                     if result.source_offset_ms != 0 or wav.stat().st_size > 2 * 1024 * 1024:
                         raise ValueError("engine output is oversized or shifted")
                     with self.request(
-                        prefix + "/audio", wav.read_bytes(), "audio/wav"
+                        prefix + "/audio", wav.read_bytes(), "audio/wav",
+                        {"X-Focus-Engine": getattr(result, "engine", "dolphin")},
                     ) as response:
                         response.read(1024)
                 elif task["kind"] == "transcribe":
@@ -255,7 +257,10 @@ def single_worker():
             yield
 
 
-def run(url, focus, *, local_api=False):
+CLEARERVOICE_DIR = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "FocusClearerVoice"
+
+
+def run(url, focus, *, local_api=False, engine=None):
     client = saved_client(url, local_api=True) if local_api else saved_client(url)
     print("Checking website connection before loading models...", flush=True)
     client.preflight()
@@ -268,6 +273,15 @@ def run(url, focus, *, local_api=False):
         "FOCUS_MODEL_CACHE": str(focus / "cache" / "hf"),
         "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1",
     })
+    engine_name = engine or os.environ.get("FOCUS_ISOLATION_ENGINE") or "dolphin"
+    os.environ["FOCUS_ISOLATION_ENGINE"] = engine_name
+    if engine_name != "dolphin":
+        # Extra engines live in a separate folder. It is appended LAST on
+        # sys.path so the original environment's packages always win.
+        clearervoice = Path(os.environ.get("FOCUS_CLEARERVOICE_DIR") or CLEARERVOICE_DIR)
+        os.environ["FOCUS_CLEARERVOICE_DIR"] = str(clearervoice)
+        sys.path.append(str(clearervoice / "site"))
+    print("Isolation engine: " + engine_name, flush=True)
     from focus_ml.config import AdapterConfig
     from focus_ml.runtime import LocalEngine
 
@@ -319,6 +333,8 @@ def main():
     parser.add_argument("--setup", action="store_true")
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--preview-access", action="store_true")
+    parser.add_argument("--engine", choices=("dolphin", "av_mossformer2", "separate_select"),
+                        help="Isolation engine (default: FOCUS_ISOLATION_ENGINE or dolphin)")
     parser.add_argument("--url")
     parser.add_argument("--focus", default="A:/focus")
     parser.add_argument("--local-api", action="store_true",
@@ -343,7 +359,7 @@ def main():
     else:
         url = args.url or input("Website HTTPS address: ").strip()
         with single_worker():
-            run(url, args.focus, local_api=args.local_api)
+            run(url, args.focus, local_api=args.local_api, engine=args.engine)
 
 
 if __name__ == "__main__":

@@ -282,8 +282,13 @@ class ApiService:
                 "duration_ms": job.duration_ms,
                 "source_offset_ms": job.source_offset_ms,
             }
+            engine = next((w[len("engine: "):] for w in job.audio_warnings
+                           if w.startswith("engine: ")), None)
+            if engine:
+                result["engine"] = engine
             if job.audio_warnings:
-                result["warnings"] = list(job.audio_warnings)
+                result["warnings"] = [w for w in job.audio_warnings
+                                      if not w.startswith("engine: ")]
         return {
             "job_id": job.job_id,
             "status": job.status.value,

@@ -1,0 +1,52 @@
+# محركات العزل: Dolphin، AV-MossFormer2، فصل ثم اختيار
+
+الافتراضي **Dolphin** (من غير أي تغيير). المحركين التانيين اختياريين وللحالات الصعبة
+(3 أشخاص بيتكلموا مع بعض). القرار بيتاخد بالسمع والأرقام على نفس الكليب، مش باسم الموديل.
+
+| الاسم في الإعداد | الفكرة |
+|---|---|
+| `dolphin` | المحرك الحالي (صوت + حركة الشفايف). |
+| `av_mossformer2` | AV-MossFormer2 TSE 16k من ClearerVoice-Studio (Apache-2.0): بيستخرج صوت الشخص المختار من صوت وصورة وشه. بياخد قصّة من الفيديو حوالين الوش المختار بس. |
+| `separate_select` | بيفصل كل الأصوات (MossFormer2_SS_16K) وبعدين يختار الصوت الأكثر تزامنًا مع شفايف الوش المختار. الشفايف بتختار المتكلم بس، مش بتعمل العزل. لو الثقة ضعيفة بيظهر تحذير، وكل مصدر وسكوره بيتسجل. |
+
+## 1) التحميل مرة واحدة (بعد موافقتك)
+
+على Windows، من فولدر الحزمة، اضغط **Setup-ClearerVoice.cmd** واكتب `yes`.
+- بيستخدم Python الأصلية من غير تعديل بيئتها، ويحط الحزم الناقصة فقط والأوزان في
+  `%LOCALAPPDATA%\FocusClearerVoice` (بيئة وكاش منفصلين عن `A:\focus`).
+- لو ClearerVoice محتاج نسخة تانية من torch أو numpy بيقف ويقولك، من غير ما يغيّر حاجة.
+- بعد كده التشغيل offline. لو وزن ناقص بيظهر خطأ واضح يقولك تشغّل الإعداد، مش بيحمّل في السر.
+
+## 2) قارن على نفس الكليب الصعب
+
+```powershell
+& 'A:\focus\.venv\Scripts\python.exe' product\tools\engine_compare.py --video C:\TrialMedia\hard.mp4 --face 2 --out compare-out
+```
+`--face` رقم الوش من الشمال في أول فريم. لو معاك مرجع نضيف (مثل gt5) أضف `--reference clean.wav`.
+افتح `compare-out\compare.html`: مشغّل صوت لكل محرك جنب الخلطة الأصلية، وزمن كل مرحلة،
+وSI-SDRi لو فيه مرجع.
+
+## 3) مجموعة 3 متكلمين وبوابة الاختيار
+
+سجّل 3 فيديوهات نضيفة أو أكتر (15 ثانية، كل شخص لوحده) في فولدر، وبعدين:
+
+```powershell
+$py = 'A:\focus\.venv\Scripts\python.exe'
+& $py product\tools\three_speaker_set.py --clips C:\TrialMedia\people --out mixes
+& $py product\tools\engine_gate.py --set mixes --listening listening.json --out gate-out
+```
+`listening.json` بتكتبه إنت بعد السمع على الكليب الحقيقي الصعب، مثلًا `{"av_mossformer2": true, "dolphin": false}`.
+المحرك الكسبان لازم: median SI-SDRi ≥ 10 dB على الـ3 متكلمين، وينجح في السماع، ويخلّص كليب 15 ثانية في ≤ 5 ثواني بعد التسخين.
+`gate-out\gate.html` بيقول النتيجة؛ ولو مفيش محرك عدّى بيكتب ده بوضوح مع أقرب محرك.
+
+## 4) اختار الافتراضي
+
+بإعداد واحد قبل تشغيل العامل: `setx FOCUS_ISOLATION_ENGINE av_mossformer2` (افتح نافذة جديدة)،
+أو `--engine av_mossformer2` مع `windows_worker.py`. الرجوع: `dolphin`.
+النتيجة في الواجهة بتعرض «محرك العزل» المستخدم.
+
+## حدود
+
+- الكود ما اتجربش على أوزان حقيقية أو GPU هنا؛ التجارب والبوابة بتتعمل على جهازك.
+- الوضع شبه المباشر يفضل على Dolphin لحد القياس على الجهاز الحقيقي.
+- مفيش تدريب أو fine-tuning.

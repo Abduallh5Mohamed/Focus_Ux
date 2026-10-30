@@ -16,11 +16,16 @@ def worker_kit() -> Response:
     with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED) as archive:
         for name in (
             "Setup-Key.cmd", "Start-Worker.cmd", "Check-Connection.cmd",
-            "Setup-Preview-Access.cmd",
+            "Setup-Preview-Access.cmd", "Setup-ClearerVoice.cmd",
         ):
             archive.write(tools / name, name)
         archive.write(tools / "windows_worker.py", "product/tools/windows_worker.py")
         archive.write(tools / "asr_engine.py", "product/tools/asr_engine.py")
+        for name in (
+            "setup_clearervoice.py", "engine_harness.py", "engine_compare.py",
+            "engine_gate.py", "three_speaker_set.py",
+        ):
+            archive.write(tools / name, "product/tools/" + name)
         archive.writestr("product/tools/__init__.py", "")
         for path in sorted((PRODUCT_ROOT / "packages/ml/focus_ml").glob("*.py")):
             archive.write(path, str(path.relative_to(PRODUCT_ROOT.parent)))
@@ -36,6 +41,11 @@ def worker_kit() -> Response:
             "5. AFTER the task is merged, run Start-Worker.cmd. Enter the MAIN\n"
             "   app HTTPS URL shown in Networking, not the isolated task preview.\n"
             "6. Keep the window open. Models must load before uploading a clip.\n\n"
+            "Optional stronger isolation engines (off by default; Dolphin stays the default):\n"
+            "Run Setup-ClearerVoice.cmd once and type yes. It uses its own folder\n"
+            "(%LOCALAPPDATA%\\FocusClearerVoice), not A:\\focus. Then compare engines with\n"
+            "product/tools/engine_compare.py and choose one with FOCUS_ISOLATION_ENGINE\n"
+            "(dolphin, av_mossformer2 or separate_select). Details: docs/ISOLATION_ENGINES.md.\n\n"
             "If the connection fails:\n"
             "Run Check-Connection.cmd first; it does NOT load any GPU models.\n"
             "A task preview and the main Networking URL are different hosts.\n"
