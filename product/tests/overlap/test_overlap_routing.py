@@ -106,6 +106,18 @@ def test_blocked_extractor_is_reported_and_falls_back_to_strict():
     assert r.last_report["overlap_extraction"] == "failed" and r.last_report["overlap_error"]["kind"] == "missing_weights"
 
 
+def test_blocked_extractor_in_continuity_uses_labelled_fallback_not_isolation():
+    class Blocked(ToneExtractor):
+        def check_ready(self):
+            raise BlockedError("no weights", "missing_weights", "x")
+    r = RoutedExtractor(hyb(Blocked()), RoutingConfig(mode=CONTINUITY))
+    out = r.extract(X, REGS)
+    rep = r.last_report
+    assert rep["overlap_extraction"] == "failed" and rep["fallback_used"] is True
+    assert rep["isolation_claim"] == "not_isolation" and CONTINUITY_NOTICE in rep["notices"]
+    assert 0 < np.abs(out[5 * SR:7 * SR]).max() < 0.98
+
+
 # ---- engine integration
 TURNS = [("A", 0.0, 6.0), ("B", 6.0, 12.0), ("A", 12.0, 16.0), ("A", 16.0, 18.0), ("B", 16.0, 18.0)]
 
@@ -182,3 +194,18 @@ def test_acceptance_metrics_distinguish_good_and_wrong_output():
     assert b[1] is None and score_case("B", o, b[0], None, b[2], 1, None)["target_retention"] is None
     with pytest.raises(ValueError):
         build_case("D", t, [o])
+
+
+def test_e2e_success_requires_real_overlap_windows_and_kept_piece():
+    import importlib.util
+    from pathlib import Path
+    spec = importlib.util.spec_from_file_location("overlap_e2e", Path(__file__).parents[2] / "tools" / "overlap_e2e.py")
+    m = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(m)
+    ok = {"overlap_extraction": "ran", "hybrid": {"overlap_seconds": 3.0, "windows": 1,
+                                                  "pieces": [{"status": "extracted"}]}}
+    assert m.routing_proved_extraction(ok)[0]
+    assert not m.routing_proved_extraction({**ok, "hybrid": {"overlap_seconds": 0, "windows": 0, "pieces": []}})[0]
+    assert not m.routing_proved_extraction({**ok, "hybrid": {"overlap_seconds": 3.0, "windows": 1,
+                                                             "pieces": [{"status": "muted"}]}})[0]
+    assert not m.routing_proved_extraction({"overlap_extraction": "failed"})[0]

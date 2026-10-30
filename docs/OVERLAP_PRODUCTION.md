@@ -10,6 +10,54 @@ laptop. The preflight run here reports exactly that (`NOT ready: pytorch, gpu_mo
 dependencies, checkpoint`). The Windows worker may or may not be able to run the model; that is unknown until
 `Overlap-Preflight.cmd` is run on it.
 
+## Real GPU validation status (WeSep BSRNN, RTX 3050)
+| Part | Status |
+|---|---|
+| A. Preparation (run kit) | **Done: preparation only, not a validation result** |
+| B. Real one-mixture GPU run | **Not run** |
+| C. End-to-end FOCUS run (pyannote + enrollment + WeSep) | **Not run** (requires B to succeed first) |
+
+### Part A, preparation (what exists now)
+Reviewed and reused unchanged: the WeSep adapter and checkpoint config (`overlap/candidates.py`, `overlap/weights.py`),
+`overlap/preflight.py`, `tools/overlap_minimal_infer.py`, `HybridExtractor` and the routing. No blocker to real
+execution was found in them by reading and by the tone-fake tests (they cannot show real-weights behaviour).
+Added: `product\tools\Overlap-Validate.cmd` (preflight, then one-mixture GPU test, then the end-to-end test, stopping at the first
+failure) and `product\tools\overlap_e2e.py` (real pyannote diarization, `enroll_file` on the separate enrollment clip, and
+`AudioOnlyEngine.isolate` with the extractor enabled by an explicit constructor argument, in strict and continuity modes;
+the global default and environment are untouched). Added one test: a blocked extractor in continuity mode uses the
+reduced-volume fallback and reports `fallback_used=true`, `isolation_claim="not_isolation"` and the notice (the existing
+strict test already covers the muted fallback). Verified by the unit suite (56 overlap tests pass), not on real models.
+
+### Part B, real GPU run: NOT RUN
+This Replit workspace has no NVIDIA GPU, no PyTorch, no checkpoints and no route to the laptop, so nothing was
+measured. No GPU time, peak VRAM or SI-SDRi exists. No CPU experiment was repeated.
+On the laptop (after `Setup-Overlap.cmd`, approving the download):
+
+    product\tools\Overlap-Validate.cmd target_enroll.wav two_speakers_5to10s.wav meeting_with_overlap.wav
+
+Expected files in `validation-out\`: `preflight\preflight.json`; `minimal\mixture.wav`, `enrollment.wav`,
+`extracted_target.wav`, `gpu_log.txt`, `report.json` (inference seconds, peak VRAM MiB, silent %, cosine to enrollment).
+SI-SDRi needs clean ground truth: build the mixture from two clean recordings, or run `overlap_acceptance.py` (it sums
+clean files and reports SI-SDRi). Listen to `extracted_target.wav` before continuing.
+
+### Part C, end-to-end run: NOT RUN
+Same script, third step. Expected: `e2e\diarization.json`, `enrollment.json`, `strict\isolated.wav`,
+`continuity\isolated.wav`, `e2e_report.json`. Pass criteria in the report: `overlap_extraction == "ran"` with
+`windows > 0` and overlap seconds > 0 in `routing.hybrid` (proof that overlap went to WeSep rather than being muted),
+pieces with `status: extracted`; any piece muted shows its reason. If extraction fails the report shows
+`overlap_extraction: "failed"` plus the error, and in continuity mode `fallback_used: true`, `isolation_claim: "not_isolation"`.
+
+### Verdict
+`FOCUS_OVERLAP_EXTRACTOR` **must NOT be enabled**: no real run has happened. Enable only after B and C are Done
+and the output was listened to. It stays unset (disabled) as the global default.
+Unresolved regardless of results: the WeSep checkpoint has no explicit licence (commercial use), one mixture is not
+an acceptance test, and the extractor stays resident in VRAM after first use.
+
+### Next steps
+1. Run `Overlap-Validate.cmd` on the RTX 3050 and return `validation-out\`.
+2. Record GPU seconds, peak VRAM and SI-SDRi here; mark B and C Done or Failed.
+3. Run `overlap_acceptance.py` cases A-D, then decide on enabling; resolve the checkpoint licence.
+
 ## Routing (`focus_ml/voice/routing.py`, wired in `voice/engine.py`)
 | Region | Strict (default) | Continuity (opt-in) |
 |---|---|---|
