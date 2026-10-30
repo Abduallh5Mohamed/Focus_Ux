@@ -60,3 +60,12 @@ runs/before/<clip_id>/<speaker>.txt   النص الناتج (اختياري؛ غ
 - **SI-SDRi:** SI-SDR للناتج ناقص SI-SDR للخلطة، كلاهما بعد محاذاة زمنية ±50ms (مأخوذ من `legacy_snapshot/tools/align_eval.py`). `lag_edge` يعني أن الإزاحة على حد نافذة البحث والنتيجة غير موثوقة.
 
 حدود: SI-SDR يقارن بالمراجع النظيفة، فيفترض أن المراجع على نفس التوقيت ونفس مستوى الإعداد المستخدم في بناء الخلطة. أرقام اختبار الوحدات مبنية على إشارات اصطناعية ولا تثبت أداء النموذج.
+
+## وسوم إضافية للحالات الحدّية
+`whisper`, `shout`, `noise`, `reverb`, `no_solo_enrollment`: مقاطع حقيقية لقسم "القيود" في التقرير النهائي. غيابها يظهر كـ `no_clips` وليس كنجاح.
+
+## التقييم النهائي بأمر واحد
+```bash
+python product/tools/final_eval.py --dataset product/datasets/egyptian_eval --out reports/final --listening-seed 7
+```
+على لابتوب RTX 3050 فقط. التفاصيل في `docs/SPEED_AND_FINAL_EVALUATION.md`.

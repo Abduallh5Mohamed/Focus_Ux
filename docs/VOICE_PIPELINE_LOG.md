@@ -135,3 +135,33 @@ byte-identical output through ffmpeg extraction + `AudioOnlyEngine`, with tone t
 API routes, enrollment validation, voiceprint deletion, bridge protocol validation, Windows worker handlers, web screens.
 **Not measured:** real-model quality, Egyptian Arabic, RTX 3050 time/VRAM for a 3-minute clip, real-camera visibility
 suggestion accuracy. ECAPA thresholds remain calibrated on non-Egyptian speech.
+
+
+## Speed tuning and final evaluation (phase 4)
+Details: `docs/SPEED_AND_FINAL_EVALUATION.md`, limitations chapter: `docs/LIMITATIONS.md`.
+
+**Implemented:** `voice/profile.py` (stage profiler: CPU, RAM, GPU utilisation, VRAM, idle label; residency policy and
+planner; supported-length rule), decode cache + `prefetch_decoded` in `voice/preprocess.py`, optional `log` and
+`residency` on `AudioOnlyEngine`, `tools/{profile_pipeline,speed_tune,final_eval,eval_runner}.py`, `Profile-Speed.cmd`,
+`Final-Evaluation.cmd`, `focus_eval/{final_report,listening,stress}.py` and CLI commands `final-report`, `listening-kit`,
+`listening-summary`, `evaluate(dropout_blocks=False)` for the final report only, new dataset tags for the limitation
+scenarios, measured-limit support (`FOCUS_API_SPEED_LIMITS`, refusal message states the limit and its source),
+`FOCUS_WORKER_MAX_OUTPUT_MB`.
+
+**Models and libraries:** unchanged; no new dependency. Versions are written into each report from the machine that ran it
+(pyannote.audio 4.0.7 MIT, speechbrain 1.1.2 Apache-2.0, torch BSD-3, pyannote community-1 weights CC-BY-4.0, ECAPA
+weights Apache-2.0 as in the table above).
+
+**Tests run here (no GPU, tone fakes):** voice 38, ml 105, eval 46, overlap 30, worker 35, api 238 (+1 skipped),
+inference 58, new final 26 - all passed.
+
+**Results obtained:** none on the RTX 3050 laptop and none on Egyptian speech. Only a CPU micro-measurement of the decode
+cache (600 s clip, 3 reads: 1.78 s -> 0.58 s). No optimisation was adopted on a speed claim; defaults are unchanged
+except the quality-neutral decode cache.
+
+**Remaining work:** run the profile on the laptop (1, 3 and 10 min), `speed_tune.py` for prefetch / residency / chunk
+size, install the measured `speed_limits.json`, record the Egyptian dataset (incl. 3-speaker, whisper, shout, noise,
+reverb and no-solo-enrollment clips), recalibrate thresholds, run `Final-Evaluation.cmd`, run the listening test with
+real raters, and fill the numbers into `docs/LIMITATIONS.md`.
+
+**Review fixes (limits calculation):** (1) failed profiling runs keep their audio length and still end the supported range; unknown length or no runs give an uninstallable file. (2) The supported-length RTF is end-to-end wall-clock time, not the sum of stage times. Regression tests: `tests/final/test_profiling.py` (failed short + successful long, failure in the middle, unknown length, sleep outside stages). Re-run: final 31, voice 38, ml 105, eval 46, overlap 30, worker 35, inference 58, api 240 (+1 skipped), all passed. Upload limit unchanged at 180 s until an RTX 3050 limits file is installed.

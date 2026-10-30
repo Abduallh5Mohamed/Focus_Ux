@@ -17,7 +17,9 @@ from pathlib import Path
 
 from . import SCHEMA_VERSION
 
-KNOWN_TAGS = ("head_motion", "face_disappears", "similar_voices", "overlap", "baseline")
+KNOWN_TAGS = ("head_motion", "face_disappears", "similar_voices", "overlap", "baseline",
+              # limitation scenarios (real recordings), reported in their own section
+              "whisper", "shout", "noise", "reverb", "no_solo_enrollment")
 VERIFIED = "human_verified"
 PROVISIONAL = "provisional_asr"
 TRANSCRIPT_STATUSES = (VERIFIED, PROVISIONAL)

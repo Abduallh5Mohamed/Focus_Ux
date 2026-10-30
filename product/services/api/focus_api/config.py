@@ -39,6 +39,27 @@ def _env_path(name: str) -> Path | None:
     return Path(raw).expanduser().resolve()
 
 
+def load_speed_limit(path: str) -> tuple[int, str]:
+    """Measured limit from product/tools/profile_pipeline.py (--limits-out).
+
+    A file that is missing, unreadable or without a measured length fails at
+    startup: a mistyped path must not silently fall back to an unmeasured limit.
+    """
+    import json
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+        seconds = data["supported_audio_s"]
+        device = str(data.get("device") or "unknown device")
+        when = str(data.get("measured_at") or "unknown date")
+    except (OSError, ValueError, KeyError) as exc:
+        raise ValueError(f"FOCUS_API_SPEED_LIMITS {path!r} is not a usable speed-limits file: {exc}") from exc
+    if data.get("measured_on_target_laptop") is not True or "3050" not in device:
+        raise ValueError(f"FOCUS_API_SPEED_LIMITS {path!r} was not measured on the RTX 3050 demo laptop")
+    if data.get("format") != "focus-speed-limits/1" or not isinstance(seconds, (int, float)) or seconds <= 0:
+        raise ValueError(f"FOCUS_API_SPEED_LIMITS {path!r} has no measured supported length")
+    return int(seconds * 1000), f"the longest length measured on {device} on {when} that met the speed target"
+
+
 def _env_int(name: str, default: int) -> int:
     raw = os.environ.get(name)
     if raw is None or raw.strip() == "":
@@ -67,6 +88,8 @@ class Settings:
     ui_origins: tuple[str, ...] = DEFAULT_UI_ORIGINS
     max_upload_bytes: int = DEFAULT_MAX_UPLOAD_BYTES
     max_video_ms: int = DEFAULT_MAX_VIDEO_MS
+    # Where max_video_ms came from, shown in the refusal message.
+    limit_source: str = "the default limit; it has not been measured on the demo laptop"
     api_host: str = "127.0.0.1"
     api_port: int = 8000
     # When set, thumbnail_url is absolute (trusted API origin). Otherwise it is
@@ -160,13 +183,21 @@ class Settings:
         max_upload_mb = _env_int(
             "FOCUS_API_MAX_UPLOAD_MB", DEFAULT_MAX_UPLOAD_BYTES // (1024 * 1024)
         )
+        max_video_ms, limit_source = DEFAULT_MAX_VIDEO_MS, cls.limit_source
+        limits_file = os.environ.get("FOCUS_API_SPEED_LIMITS")
+        if limits_file:
+            max_video_ms, limit_source = load_speed_limit(limits_file)
+        if os.environ.get("FOCUS_API_MAX_VIDEO_MS"):
+            max_video_ms = _env_int("FOCUS_API_MAX_VIDEO_MS", DEFAULT_MAX_VIDEO_MS)
+            limit_source = "a limit set by the operator"
         return cls(
             storage_root=storage,
             db_path=_env_path("FOCUS_API_DB_PATH"),
             lock_path=_env_path("FOCUS_API_LOCK_PATH"),
             ui_origins=origins or DEFAULT_UI_ORIGINS,
             max_upload_bytes=max_upload_mb * 1024 * 1024,
-            max_video_ms=_env_int("FOCUS_API_MAX_VIDEO_MS", DEFAULT_MAX_VIDEO_MS),
+            max_video_ms=max_video_ms,
+            limit_source=limit_source,
             api_host=os.environ.get("FOCUS_API_HOST", "127.0.0.1"),
             api_port=_env_int("FOCUS_API_PORT", 8000),
             public_base_url=os.environ.get("FOCUS_API_PUBLIC_BASE_URL") or None,

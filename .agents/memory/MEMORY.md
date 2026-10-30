@@ -11,3 +11,4 @@
 - [Voice pipeline POC](voice-pipeline.md) — audio-only pipeline quirks: SpeechBrain needs pretrained_path override, HF secret not in forked shell, numbers are non-Egyptian only.
 - [Overlap extraction](overlap-extraction.md) — candidates unrun on real weights; REAL-TSE only on Google Drive; blind separators never called voice-conditioned.
 - [Audio-only engine](audio-only-engine.md) — enrollment-based default engine: audio-only tasks, visibility fallback, test layout.
+- [Speed and final evaluation](speed-final-eval.md) — tooling done, nothing measured on the laptop; decode cache read-only; dropout policy split; limits must be raised together.

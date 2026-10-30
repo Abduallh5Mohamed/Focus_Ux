@@ -143,6 +143,23 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--max-far", type=float, default=0.01)
     p.add_argument("--out")
 
+    p = sub.add_parser("final-report", help="final evaluation report from a run written by tools/final_eval.py")
+    p.add_argument("--dataset", required=True)
+    p.add_argument("--run", required=True)
+    p.add_argument("--out", required=True, help="writes <out>.json and <out>.md")
+
+    p = sub.add_parser("listening-kit", help="build a blind listening kit from a run")
+    p.add_argument("--dataset", required=True)
+    p.add_argument("--run", required=True)
+    p.add_argument("--out", required=True)
+    p.add_argument("--seed", type=int, required=True)
+    p.add_argument("--controls", type=int, default=2)
+
+    p = sub.add_parser("listening-summary", help="summarise filled scoring sheets")
+    p.add_argument("--key", required=True)
+    p.add_argument("--sheets", nargs="+", required=True)
+    p.add_argument("--out")
+
     p = sub.add_parser("init-template", help="write a 10-clip template manifest")
     p.add_argument("--out", required=True, help="dataset directory to create")
 
@@ -158,6 +175,29 @@ def main(argv: list[str] | None = None) -> int:
                 json.dumps(make_template(), ensure_ascii=False, indent=1), encoding="utf-8")
             print(f"wrote {out / 'manifest.json'}")
             return 0
+        if a.cmd == "final-report":
+            from .final_report import build_report, render_markdown
+            rep = build_report(load_dataset(a.dataset), a.run)
+            _write_json(a.out + ".json", rep)
+            Path(a.out + ".md").write_text(render_markdown(rep), encoding="utf-8")
+            print(render_markdown(rep))
+            return 0
+        if a.cmd == "listening-kit":
+            from .listening import build_kit
+            ds, run = load_dataset(a.dataset), Path(a.run)
+            pairs = [{"clip_id": c.id, "target": t, "original": str(ds.path(c.mix_audio)), "reference": str(ds.path(c.speaker(t).ref_audio)),
+                      "processed": str(run / c.id / f"{t}.wav")}
+                     for c in ds.clips if c.status == "ready" for t in c.targets
+                     if (run / c.id / f"{t}.wav").is_file()]
+            res = build_kit(pairs, a.out, seed=a.seed, controls=a.controls)
+            print(json.dumps(res, indent=1))
+            return 0
+        if a.cmd == "listening-summary":
+            from .listening import summarize_answers
+            res = summarize_answers(a.key, a.sheets)
+            _write_json(a.out, res)
+            print(json.dumps(res, indent=1, ensure_ascii=False))
+            return 1 if res["problems"] else 0
         if a.cmd == "voice-eval":
             from .voice_eval import evaluate_voice_run
             rep = evaluate_voice_run(a.mixes, a.run)
@@ -211,7 +251,7 @@ def main(argv: list[str] | None = None) -> int:
             _write_json(a.out, cmp)
             print(render_compare(cmp))
             return {"pass": 0, "regression": 1, "inconclusive": 3}[cmp["status"]]
-    except (DatasetError, FileNotFoundError, KeyError) as exc:
+    except (DatasetError, FileNotFoundError, FileExistsError, KeyError, ValueError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     return 2

@@ -46,7 +46,8 @@ def _dropout_fraction(est, ref) -> float:
     return float((active & silent).sum() / active.sum())
 
 
-def _score_row(ds: Dataset, clip: Clip, target: str, run: Path, mix, refs, margin_db: float) -> dict:
+def _score_row(ds: Dataset, clip: Clip, target: str, run: Path, mix, refs, margin_db: float,
+               dropout_blocks: bool = True) -> dict:
     speaker = clip.speaker(target)
     row: dict = {
         "clip_id": clip.id,
@@ -72,7 +73,7 @@ def _score_row(ds: Dataset, clip: Clip, target: str, run: Path, mix, refs, margi
         else:
             drop = _dropout_fraction(est, refs[target])
             row["dropout_fraction"] = round(drop, 4)
-            if drop > DROPOUT_MAX_FRACTION:
+            if drop > DROPOUT_MAX_FRACTION and dropout_blocks:
                 problem = f"output is silent in {drop:.2%} of the frames where the target speaks"
         if problem:
             row["audio_status"] = "truncated"
@@ -168,7 +169,11 @@ def summarize(rows: list[dict]) -> dict:
     }
 
 
-def evaluate(ds: Dataset, run_dir: str | Path, ambiguous_margin_db: float = DEFAULT_AMBIGUOUS_MARGIN_DB) -> dict:
+def evaluate(ds: Dataset, run_dir: str | Path, ambiguous_margin_db: float = DEFAULT_AMBIGUOUS_MARGIN_DB,
+             dropout_blocks: bool = True) -> dict:
+    """``dropout_blocks=False`` (final report only) still records ``dropout_fraction`` per row but
+    scores the target instead of marking it truncated. The gated baseline mutes overlap on purpose,
+    so the strict adoption policy would hide every overlap clip. Never use it for speed gating."""
     run = Path(run_dir)
     if not run.is_dir():
         raise FileNotFoundError(f"run directory not found: {run}")
@@ -185,7 +190,7 @@ def evaluate(ds: Dataset, run_dir: str | Path, ambiguous_margin_db: float = DEFA
         mix = load_audio(ds.path(clip.mix_audio))
         refs = {s.id: load_audio(ds.path(s.ref_audio)) for s in clip.speakers}
         for target in clip.targets:
-            rows.append(_score_row(ds, clip, target, run, mix, refs, ambiguous_margin_db))
+            rows.append(_score_row(ds, clip, target, run, mix, refs, ambiguous_margin_db, dropout_blocks))
 
     fingerprint = ds.fingerprint()
     tags = sorted({t for r in rows for t in r["tags"]})
@@ -194,7 +199,7 @@ def evaluate(ds: Dataset, run_dir: str | Path, ambiguous_margin_db: float = DEFA
         bench = json.loads(meta.read_text(encoding="utf-8")).get("bench_by_clip")
     return {
         "schema_version": SCHEMA_VERSION,
-        "evaluation_policy": EVALUATION_POLICY,
+        "evaluation_policy": EVALUATION_POLICY if dropout_blocks else EVALUATION_POLICY + "+dropout-reported",
         "bench_by_clip": bench,
         "dataset_id": ds.dataset_id,
         "dataset_fingerprint": fingerprint,

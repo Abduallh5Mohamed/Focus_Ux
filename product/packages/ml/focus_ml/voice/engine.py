@@ -31,6 +31,7 @@ from .enroll import (
 from .errors import EnrollmentError
 from .extractor import Extractor, GatedBaseline
 from .match import MatchConfig, classify_regions
+from .profile import ResidencyPolicy
 from .preprocess import load_canonical, slice_samples
 from .segments import total
 from .types import SAMPLE_RATE, TARGET, UNCERTAIN, Diarization, Segment, Voiceprint
@@ -55,8 +56,13 @@ class AudioOnlyEngine:
 
     def __init__(self, diarizer: Diarizer, embedder: Embedder, *,
                  match: MatchConfig | None = None, extractor: Extractor | None = None,
-                 enrollment: EnrollmentConfig | None = None):
+                 enrollment: EnrollmentConfig | None = None,
+                 residency: ResidencyPolicy | None = None, log=None):
         self.diarizer, self.embedder = diarizer, embedder
+        # Default residency unloads every model between stages (the validated
+        # behaviour). A policy built from measured VRAM may keep some loaded.
+        self.residency = residency or ResidencyPolicy()
+        self.log = log   # optional StageLog/StageProfiler; None = no profiling
         self.match = match or MatchConfig.for_embedder(embedder.name)
         self.extractor = extractor or GatedBaseline()
         self.enrollment = enrollment or EnrollmentConfig()
@@ -68,6 +74,13 @@ class AudioOnlyEngine:
         from .embedder import build_embedder
         source = os.environ if env is None else env
         return cls(PyannoteDiarizer(), build_embedder(source.get("FOCUS_VOICE_EMBEDDER") or "ecapa"))
+
+    def _stage(self, name: str):
+        import contextlib
+        return self.log.stage(name) if self.log is not None else contextlib.nullcontext()
+
+    def _release(self, which: str) -> None:
+        self.residency.release(which, self.diarizer if which == "diarizer" else self.embedder)
 
     # -- analysis -----------------------------------------------------------
     def _speaker_quality(self, samples, diar: Diarization, speaker: str):
@@ -100,37 +113,40 @@ class AudioOnlyEngine:
         """Diarization, one voiceprint per speaker, the best clean sample span
         and its audio clip. Computed once per video; the app caches it."""
         t0 = time.perf_counter()
-        samples = load_canonical(audio_path)
-        diar = self.diarizer.diarize(samples)
-        self.diarizer.unload()
+        with self._stage("decode"):
+            samples = load_canonical(audio_path)
+        with self._stage("diarize"):
+            diar = self.diarizer.diarize(samples)
+        self._release("diarizer")
         if on_progress:
             on_progress("analyzing", 0.5)
         best = best_clean_spans(diar)
         by_speech = sorted(diar.speakers, key=lambda s: -total([t for t in diar.turns if t.speaker == s]))
         kept = by_speech[:MAX_SPEAKERS]
         speakers = []
-        for speaker in kept:
-            clean_s, speech_s, overlap, refusal, warnings = self._speaker_quality(samples, diar, speaker)
-            voiceprint, sample, clip = None, best.get(speaker), None
-            if refusal is None:
-                spans, _, _ = _clean_spans(diar, speaker)
-                spans = [s for s in spans if s.duration >= self.enrollment.min_span_s]
-                vec, used = embed_segments(self.embedder, samples, spans)
-                if vec is None:
-                    refusal = "The clean speech fragments are too short to measure a voice."
-                else:
-                    voiceprint = Voiceprint(
-                        [float(v) for v in vec], self.embedder.name, used,
-                        {"kind": "speaker_label", "speaker": speaker}, warnings).as_dict()
-            if sample is not None:
-                clip = _wav_b64(slice_samples(samples, Segment(sample["start"], sample["end"])))
-            speakers.append({
-                "speaker": speaker, "speech_s": round(speech_s, 3), "clean_s": round(clean_s, 3),
-                "overlap_fraction": round(overlap, 4), "usable": refusal is None,
-                "refusal": refusal, "warnings": warnings, "sample": sample,
-                "sample_wav_b64": clip, "voiceprint": voiceprint,
-            })
-        self.embedder.unload()
+        with self._stage("speaker_embeddings"):
+            for speaker in kept:
+                clean_s, speech_s, overlap, refusal, warnings = self._speaker_quality(samples, diar, speaker)
+                voiceprint, sample, clip = None, best.get(speaker), None
+                if refusal is None:
+                    spans, _, _ = _clean_spans(diar, speaker)
+                    spans = [s for s in spans if s.duration >= self.enrollment.min_span_s]
+                    vec, used = embed_segments(self.embedder, samples, spans)
+                    if vec is None:
+                        refusal = "The clean speech fragments are too short to measure a voice."
+                    else:
+                        voiceprint = Voiceprint(
+                            [float(v) for v in vec], self.embedder.name, used,
+                            {"kind": "speaker_label", "speaker": speaker}, warnings).as_dict()
+                if sample is not None:
+                    clip = _wav_b64(slice_samples(samples, Segment(sample["start"], sample["end"])))
+                speakers.append({
+                    "speaker": speaker, "speech_s": round(speech_s, 3), "clean_s": round(clean_s, 3),
+                    "overlap_fraction": round(overlap, 4), "usable": refusal is None,
+                    "refusal": refusal, "warnings": warnings, "sample": sample,
+                    "sample_wav_b64": clip, "voiceprint": voiceprint,
+                })
+        self._release("embedder")
         warnings = []
         if len(diar.speakers) > MAX_SPEAKERS:
             warnings.append(f"{len(diar.speakers)} voices were found; the {MAX_SPEAKERS} who speak most are listed.")
@@ -145,19 +161,22 @@ class AudioOnlyEngine:
     # -- enrollment (manual range / separate recording) --------------------
     def enroll_range(self, audio_path: str, diarization: dict, start_s: float, end_s: float) -> dict:
         samples = load_canonical(audio_path)
-        vp = enroll_from_range(samples, Diarization.from_dict(diarization), start_s, end_s,
-                               self.embedder, self.enrollment)
-        self.embedder.unload()
+        with self._stage("enroll"):
+            vp = enroll_from_range(samples, Diarization.from_dict(diarization), start_s, end_s,
+                                   self.embedder, self.enrollment)
+        self._release("embedder")
         return {"voiceprint": vp.as_dict(), "warnings": vp.warnings}
 
     def enroll_file(self, audio_path: str, name: str = "") -> dict:
         samples = load_canonical(audio_path)
-        diar = self.diarizer.diarize(samples)
-        self.diarizer.unload()
+        with self._stage("enroll_diarize"):
+            diar = self.diarizer.diarize(samples)
+        self._release("diarizer")
         if not diar.turns:
             raise EnrollmentError("No speech was found in the recording.")
-        vp = enroll_from_file(samples, diar, self.embedder, self.enrollment, name)
-        self.embedder.unload()
+        with self._stage("enroll"):
+            vp = enroll_from_file(samples, diar, self.embedder, self.enrollment, name)
+        self._release("embedder")
         return {"voiceprint": vp.as_dict(), "warnings": vp.warnings}
 
     # -- isolation -----------------------------------------------------------
@@ -171,12 +190,14 @@ class AudioOnlyEngine:
         diar = Diarization.from_dict(diarization)
         if on_progress:
             on_progress("matching", 0.0)
-        regions = classify_regions(samples, diar, enrollment, self.embedder, self.match)
-        self.embedder.unload()
+        with self._stage("match"):
+            regions = classify_regions(samples, diar, enrollment, self.embedder, self.match)
+        self._release("embedder")
         if on_progress:
             on_progress("matching", 1.0)
             on_progress("separating", 0.0)
-        out = self.extractor.extract(samples, regions)
+        with self._stage("extract"):
+            out = self.extractor.extract(samples, regions)
         path = os.path.join(str(job_dir), "isolated.wav")
         write_wav(path, out, SAMPLE_RATE)
         if on_progress:

@@ -133,7 +133,8 @@ class ApiService:
                     raise invalid_media(exc.message) from exc
                 if probe.duration_ms > self.settings.max_video_ms:
                     raise limit_exceeded(
-                        f"video exceeds the {self.settings.max_video_ms / 1000:g}s limit"
+                        f"video exceeds the {self.settings.max_video_ms / 1000:g}s limit "
+                        f"({self.settings.limit_source})"
                     )
                 extension = VIDEO_EXTENSIONS.get(probe.mime_type)
                 if extension is None:

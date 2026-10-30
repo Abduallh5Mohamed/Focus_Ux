@@ -29,7 +29,9 @@ LOCAL_TOKEN_FILE = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "FocusLoc
 PREVIEW_TOKEN_FILE = TOKEN_FILE.parent / "preview-access-token"
 # A 3-minute canonical clip is tens of MB. Configurable, still bounded.
 MAX_MEDIA_BYTES = int(os.environ.get("FOCUS_WORKER_MAX_MEDIA_MB", "250")) * 1024 * 1024
-MAX_OUTPUT_AUDIO_BYTES = 8 * 1024 * 1024  # 3 min mono PCM16 @ 16 kHz is about 5.8 MB
+# 3 min mono PCM16 @ 16 kHz is about 5.8 MB; 10 min is about 19 MB. Raise this (and
+# FOCUS_WORKER_MAX_MEDIA_MB) together with a measured length limit, never alone.
+MAX_OUTPUT_AUDIO_BYTES = int(os.environ.get("FOCUS_WORKER_MAX_OUTPUT_MB", "8")) * 1024 * 1024
 AUDIO_TASKS = ("transcribe", "analyze", "enroll", "isolate")  # media is audio, not video
 ENGINES = ("audio_only", "dolphin", "av_mossformer2", "separate_select")
 
