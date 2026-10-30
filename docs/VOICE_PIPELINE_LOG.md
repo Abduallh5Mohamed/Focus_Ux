@@ -76,3 +76,34 @@ on held-out clean mixes, pyannote slightly higher retention. `ecapa` stays the C
 2. Egyptian recordings per `product/datasets/egyptian_voice/RECORDING_GUIDE.md` with signed consents (≥5 speakers, solo in several volumes/distances/noise/rooms, 2- and 3+-person overlap with annotations, leave-frame clips).
    Then: EER/FAR/FRR, calibration, DER, wrong-person, retention on Egyptian data; choose the embedder.
 3. Next task (overlap extraction) can start: the `Extractor` interface, labelled timeline and ground-truth mixes are ready.
+
+## Overlap extraction comparison (task: voice-guided extraction on overlap)
+Details and decision rule: `docs/OVERLAP_EXTRACTION.md`.
+
+**Implemented:** `focus_ml/overlap/` (one extractor interface, hybrid scheduler with seam crossfades, length fitting,
+post-extraction voiceprint check, OOM back-off, six candidate adapters, metrics + decision, HTML/JSON report with blind
+players), `focus_eval/overlap_mix.py`, `product/tools/{overlap_set,overlap_bakeoff,setup_overlap}.py` + `Setup-Overlap.cmd`,
+non-gating `overlap_extractors` section in the readiness report, `product/tests/overlap/` (30 tests, fakes only).
+
+**Candidates, versions, licences:** see the table in `docs/OVERLAP_EXTRACTION.md`. Blind separators (MossFormer2,
+SepFormer libri3mix, pyannote PixIT) are "blind separation followed by voiceprint selection", never voice-conditioned.
+
+**Results actually obtained: none on real models.** This workspace has no GPU, no torch, no extractor weights and no
+Egyptian recordings, so all six candidates are reported blocked (`missing_weights`). The adapters follow each
+project's public inference code but were never executed against real weights; expect first-run fixes. There are
+no SI-SDRi, wrong-person, retention, RTF or VRAM numbers for any candidate, and no default was chosen: the gated
+baseline stays the default. The fakes (tone-based) only prove the scheduling, crossfade, muting, batching, scoring
+and decision logic.
+
+**Limitations, especially 3+ overlap:** WSJ0-2mix models (USEF, SpEx+, MossFormer2) are two-speaker models; with three
+voices in a window one separated source necessarily holds a mix, and a target-conditioned model must suppress two
+interferers it never saw together. SepFormer libri3mix (8 kHz) and PixIT (AMI meetings) are English-trained. All models
+are English-trained and untested on Egyptian Arabic. REAL-TSE's checkpoint has no explicit licence and lives on Google
+Drive; its requirements pin an old numpy that the setup refuses to install. The post-check threshold is the ECAPA value
+calibrated on non-Egyptian speech. Oracle regions hide diarizer errors. Batch sizes come from rough estimates.
+
+**Tests run:** overlap 30 passed; voice 29, ml 105, eval 46, worker 30, api 211 (+1 skipped), inference 40 passed.
+
+**Needs from the team:** run `Setup-Overlap.cmd` (HF read token with the pyannote ami terms accepted; approval for
+downloads), Egyptian solo recordings (>= 3 speakers, >= 25 s each) and MUSAN noise, optionally real overlap clips with
+annotations; run the bake-off on the RTX 3050 laptop and send `report.json`.

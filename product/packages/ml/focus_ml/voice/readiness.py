@@ -51,6 +51,14 @@ def worker_connection(url: str | None, local_api: bool = False) -> dict:
         return {"checked": True, "ok": False, "detail": str(exc)}
 
 
+def extractor_status() -> dict:
+    """Overlap-extraction candidates: weights/code present or the blocker. Read-only,
+    informational: the gated baseline works without them, so they do not gate
+    ``ready_for_gpu``."""
+    from ..overlap.candidates import candidate_status
+    return candidate_status()
+
+
 def collect(url: str | None = None, local_api: bool = False, min_vram_mib: int = 3500) -> dict:
     gpu = gpu_info()
     weights = weight_status()
@@ -61,6 +69,9 @@ def collect(url: str | None = None, local_api: bool = False, min_vram_mib: int =
         "weights_present": all(weights.values()),
     }
     conn = worker_connection(url, local_api)
+    extractors = extractor_status()
     return {"python": sys.version.split()[0], "voice_home": str(voice_home()), "gpu": gpu,
-            "weights": weights, "worker": conn, "checks": checks,
+            "weights": weights, "worker": conn,
+            "overlap_extractors": extractors,
+            "overlap_extractors_ready": sorted(n for n, v in extractors.items() if v["ready"]), "checks": checks,
             "ready_for_gpu": all(checks.values()) and (not conn["checked"] or conn.get("ok", False))}
