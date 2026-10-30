@@ -30,6 +30,7 @@ from .enroll import (
 )
 from .errors import EnrollmentError
 from .extractor import Extractor, GatedBaseline
+from .routing import RoutedExtractor, RoutingConfig, routing_from_env
 from .match import MatchConfig, classify_regions
 from .profile import ResidencyPolicy
 from .preprocess import load_canonical, slice_samples
@@ -57,14 +58,20 @@ class AudioOnlyEngine:
     def __init__(self, diarizer: Diarizer, embedder: Embedder, *,
                  match: MatchConfig | None = None, extractor: Extractor | None = None,
                  enrollment: EnrollmentConfig | None = None,
-                 residency: ResidencyPolicy | None = None, log=None):
+                 residency: ResidencyPolicy | None = None, log=None,
+                 routing: RoutingConfig | None = None, overlap_extractor=None):
         self.diarizer, self.embedder = diarizer, embedder
         # Default residency unloads every model between stages (the validated
         # behaviour). A policy built from measured VRAM may keep some loaded.
         self.residency = residency or ResidencyPolicy()
         self.log = log   # optional StageLog/StageProfiler; None = no profiling
         self.match = match or MatchConfig.for_embedder(embedder.name)
+        # An explicit ``extractor`` is used as given. Otherwise isolate() routes by
+        # ``routing``; ``overlap_extractor`` (an overlap.OverlapExtractor) is None = disabled.
         self.extractor = extractor or GatedBaseline()
+        self._explicit_extractor = extractor is not None
+        self.routing = routing or RoutingConfig()
+        self.overlap_extractor = overlap_extractor
         self.enrollment = enrollment or EnrollmentConfig()
 
     @classmethod
@@ -73,7 +80,14 @@ class AudioOnlyEngine:
         from .diarizer import PyannoteDiarizer
         from .embedder import build_embedder
         source = os.environ if env is None else env
-        return cls(PyannoteDiarizer(), build_embedder(source.get("FOCUS_VOICE_EMBEDDER") or "ecapa"))
+        embedder = build_embedder(source.get("FOCUS_VOICE_EMBEDDER") or "ecapa")
+        routing, overlap_name = routing_from_env(source)
+        overlap = None
+        if overlap_name:   # opt-in only; never the default (docs/OVERLAP_PRODUCTION.md)
+            from ..overlap.candidates import build_candidate
+            from .gpu import resolve_device
+            overlap = build_candidate(overlap_name, device=resolve_device("auto"), embedder=embedder)
+        return cls(PyannoteDiarizer(), embedder, routing=routing, overlap_extractor=overlap)
 
     def _stage(self, name: str):
         import contextlib
@@ -180,10 +194,40 @@ class AudioOnlyEngine:
         return {"voiceprint": vp.as_dict(), "warnings": vp.warnings}
 
     # -- isolation -----------------------------------------------------------
+    def _enrollment_audio(self, samples, enrollment: Voiceprint, path: str | None, diar=None):
+        """Clean enrollment audio for target-conditioned models: a separate recording
+        if given, else the clean spans the voiceprint was made from (same audio)."""
+        from ..overlap.base import trim_enrollment
+        if path:
+            return trim_enrollment(load_canonical(path))
+        src = enrollment.source or {}
+        if src.get("kind") == "voice_file":
+            return None
+        spans = [Segment(float(s["start"]), float(s["end"])) for s in src.get("clean_spans") or []]
+        if not spans and src.get("kind") == "speaker_label" and diar is not None:
+            spans = [s for s in _clean_spans(diar, src.get("speaker"))[0]
+                     if s.duration >= self.enrollment.min_span_s]
+        return trim_enrollment(np.concatenate([slice_samples(samples, s) for s in spans])) if spans else None
+
+    def _routed(self, samples, enrollment: Voiceprint, enrollment_audio_path: str | None, diar=None):
+        if self._explicit_extractor:
+            return self.extractor
+        routed = RoutedExtractor(None, self.routing)
+        if self.overlap_extractor is not None:
+            ref = self._enrollment_audio(samples, enrollment, enrollment_audio_path, diar)
+            if ref is None:
+                routed.skip_reason = "no clean enrollment audio is available for the target-conditioned model"
+            else:
+                from ..overlap.hybrid import HybridExtractor
+                routed.hybrid = HybridExtractor(self.overlap_extractor, enrollment, ref, self.embedder)
+        return routed
+
     def isolate(self, audio_path: str, voiceprint: dict, diarization: dict, job_dir: str,
-                on_progress=None) -> EngineResult:
+                on_progress=None, enrollment_audio_path: str | None = None) -> EngineResult:
         """Audio + enrollment + the cached diarization in; isolated.wav and the
-        labelled timeline out. Overlap and unmatched speech are muted."""
+        labelled timeline out. Strict mode (default): overlap and unmatched speech are
+        muted unless a validated overlap extractor is enabled. Continuity mode plays the
+        mixture quietly there and says so in ``details['routing']``."""
         t0 = time.perf_counter()
         samples = load_canonical(audio_path)
         enrollment = Voiceprint.from_dict(voiceprint)
@@ -196,21 +240,30 @@ class AudioOnlyEngine:
         if on_progress:
             on_progress("matching", 1.0)
             on_progress("separating", 0.0)
+        extractor = self._routed(samples, enrollment, enrollment_audio_path, diar)
         with self._stage("extract"):
-            out = self.extractor.extract(samples, regions)
+            out = extractor.extract(samples, regions)
+        self._release("embedder")
+        routing = getattr(extractor, "last_report", None) or None
         path = os.path.join(str(job_dir), "isolated.wav")
         write_wav(path, out, SAMPLE_RATE)
         if on_progress:
             on_progress("separating", 1.0)
         warnings = []
         target_s = total([Segment(r.start, r.end) for r in regions if r.label == TARGET])
+        fell_back = bool(routing and routing.get("fallback_used"))
         if target_s <= 0:
-            warnings.append("The enrolled voice was not found in the audio; the result is silent.")
+            warnings.append("The enrolled voice was not found in the audio; "
+                            + ("the result is only the reduced-volume original mix." if fell_back
+                               else "the result is silent."))
+        if routing:
+            warnings += routing["notices"]
         return EngineResult(
             wav_path=path, duration_ms=duration_ms_from_samples(len(samples), SAMPLE_RATE),
             source_offset_ms=0, timings={"total": round(time.perf_counter() - t0, 2)},
             warnings=warnings, engine=ENGINE_NAME,
-            details={"regions": [r.as_dict() for r in regions if r.label in (TARGET, UNCERTAIN)]})
+            details={"regions": [r.as_dict() for r in regions if r.label in (TARGET, UNCERTAIN)],
+                     **({"routing": routing} if routing else {})})
 
 
 def regions_to_wire(regions: list[dict]) -> list[dict]:
