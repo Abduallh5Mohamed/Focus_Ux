@@ -51,6 +51,7 @@ from focus_ml.errors import (
 from focus_ml.identity import make_face_id, select_target_speaker
 from focus_ml.timing import audio_window_to_roi, duration_ms_from_samples, frames_to_ms
 from focus_ml.tracking import DETECT_EVERY, FACE_BOX_SCALE, match_detections
+from focus_ml.windows import merge_windows, normalize_input, normalize_output, plan_windows
 from focus_ml.types import ExtractionResult, FaceCandidate, ModelBundle, TargetSelection
 
 _HEAVY_MODULES = ("torch", "cv2", "face_alignment", "soundfile")
@@ -799,7 +800,7 @@ class LegacyDolphinAdapter:
         frame)."""
         import numpy as np  # lazy execution-time import
 
-        fa = backend["face_alignment"]
+        fa = self._landmarker(backend, cfg)
         from PIL import Image  # lazy execution-time import
 
         target_history = boxes_history[speaker_slot]
@@ -836,6 +837,19 @@ class LegacyDolphinAdapter:
         return faces, landmarks, {
             "landmark_calls": lm_calls, "landmark_s": round(lm_seconds, 4),
         }
+
+    def _landmarker(self, backend: dict, cfg):
+        """face_alignment (reference) or the fast MediaPipe landmarker, which
+        is created once and cached on the adapter."""
+        if cfg.landmark_backend != "mediapipe":
+            return backend["face_alignment"]
+        cached = getattr(self, "_fast_landmarker", None)
+        if cached is None or cached[0] != cfg.landmarker_model:
+            from focus_ml.fast_landmarks import MediaPipeLandmarker  # lazy
+
+            cached = (cfg.landmarker_model, MediaPipeLandmarker(cfg.landmarker_model))
+            self._fast_landmarker = cached
+        return cached[1]
 
     def _mouth_roi(self, inference, faces_bgr, lms, cfg) -> tuple[object, list[str]]:
         """Port of legacy ``crop_patch_frames`` + gray conversion for the
@@ -985,13 +999,15 @@ class LegacyDolphinAdapter:
         prepared_roi = pipelines()["val"](mouth_roi)
         data, sr = sf.read(mix_wav, dtype="float32", always_2d=True)
         device = torch.device(_resolve_device(torch, cfg.device))
-        mix = torch.from_numpy(np.ascontiguousarray(data.mean(axis=1))).to(device)
-        window = int(cfg.window_s * cfg.sample_rate)
-        out = torch.zeros(1, len(mix), device="cpu")
-        start = 0
+        mix_np = np.ascontiguousarray(data.mean(axis=1))
+        if cfg.normalize_audio:
+            mix_np, _gain_db = normalize_input(mix_np)
+        mix = torch.from_numpy(mix_np).to(device)
+        overlap = 0.0 if cfg.merge == "direct" else cfg.window_overlap
+        spans = plan_windows(len(mix), cfg.sample_rate, cfg.window_s, overlap)
+        estimates = []
         forward_ms = 0.0
-        while start < len(mix):
-            end = min(start + window, len(mix))
+        for start, end in spans:
             roi_start, roi_end = audio_window_to_roi(
                 start, end, cfg.sample_rate, cfg.fps, roi_len=len(prepared_roi)
             )
@@ -1010,9 +1026,11 @@ class LegacyDolphinAdapter:
             e1.record()
             torch.cuda.synchronize()
             forward_ms += e0.elapsed_time(e1)
-            out[0, start:end] = est[0, 0, : end - start].detach().cpu()
-            start += window
-        result = out[0].numpy()
+            estimates.append(est[0, 0, : end - start].detach().cpu().numpy())
+        merged = merge_windows(estimates, spans, len(mix))
+        if cfg.normalize_audio:
+            merged, _ = normalize_output(merged)
+        result = merged
         out_wav = os.path.join(os.path.dirname(mix_wav), "target_extract.wav")
         sf.write(out_wav, result, sr, subtype="PCM_16")
         return out_wav, len(mix), sr, forward_ms

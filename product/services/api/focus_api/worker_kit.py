@@ -27,6 +27,7 @@ def worker_kit() -> Response:
         ):
             archive.write(tools / name, "product/tools/" + name)
         archive.write(tools / "stream_worker.py", "product/tools/stream_worker.py")
+        archive.write(tools / "compare_isolation.py", "product/tools/compare_isolation.py")
         archive.writestr("product/tools/__init__.py", "")
         # Continuous live path: dependency-free wire format shared with the API.
         archive.writestr("product/services/__init__.py", "")

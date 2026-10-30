@@ -156,3 +156,30 @@ download-kit allowlisting, no-download failure and actual ffmpeg normalization.
 Its detector and audio responses are explicitly synthetic fixtures. Existing ML
 and worker unit suites likewise do not establish that the user's GPU works.
 The real Windows initialization and listening test above remain external blockers.
+
+## Isolation quality and speed settings (windows, levels, fast landmarks)
+
+Defaults now: 4 s windows with 50% overlap blended with a sin² crossfade (the
+last window is always a full window anchored at the clip end), mixture level
+set to about -23 dBFS RMS before Dolphin and output leveled to about -20 dBFS
+without clipping. Tunable by `FOCUS_WINDOW_S`, `FOCUS_WINDOW_OVERLAP`,
+`FOCUS_NORMALIZE_AUDIO=0`. The legacy 2 s back-to-back behavior is
+`window_s=2`, `merge="direct"`.
+
+Fast landmarks: `FOCUS_LANDMARKS=mediapipe` plus `FOCUS_FACE_LANDMARKER_MODEL`
+(path to a local `face_landmarker.task`; never downloaded). Needs the
+`mediapipe` package in the SEPARATE trial environment only; the original
+Python environment and weights are untouched. `face_alignment` stays the
+default and the reference until the measurements below pass.
+
+### How to compare on Windows (plain steps)
+1. Extract the worker ZIP into a new folder. Open a terminal there.
+2. Use the trial environment, with FOCUS_MODEL_SOURCE and FOCUS_MODEL_CACHE set as for the worker.
+3. Run: `python product\tools\compare_isolation.py --video hard.mp4 --out-dir compare_out --landmarker-model face_landmarker.task`
+   Add `--reference clean_target.wav` (for example a gt5 clean sample) to get SI-SDRi.
+4. Open `compare_out`: `old_2s.wav`, `overlap_4s.wav`, `overlap_4s_fast_lm.wav`, and `report.txt` with the time of each stage.
+
+### Gates and status
+- Speed gate (RTX 3060, 15 s clip, warm): total <= 5 s, landmarks <= 2 s. **Not yet measured; waiting for a GPU run.**
+- Quality gate: gt5 SI-SDRi at least +17.6 dB (A) and +8.4 dB (B); on the 3-speaker synthetic set the new setting must beat the current one. **Not yet measured; waiting for a GPU run.**
+- Because the quality gate is unmeasured, `face_alignment` remains the landmark default; the 4 s/overlap/levels defaults are enabled as the plan specified, and `--only old_2s` reproduces the old output for comparison. Record measured numbers here after the run.

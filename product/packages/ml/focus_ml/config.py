@@ -8,8 +8,8 @@ explicit instead of silently hiding it; cwd side effects are limited to the
 execution body (restored per request), a documented honest compromise.
 
 Deferred/unused config fields THIS MILESTONE:
-- ``merge``: window merge strategy; stored only, separation parity is
-  GPU-pending so no merge mode is honored yet.
+- ``merge``: "crossfade" (default; overlapping windows, sin^2 blend) or
+  "direct" (back-to-back windows, legacy behaviour; overlap ignored).
 - ``downscale``: legacy experiment only, unsupported; detect/track paths
   reject it at runtime (downscaled detection was never geometrically
   validated and must not silently produce wrong boxes).
@@ -26,12 +26,21 @@ from dataclasses import dataclass
 
 
 TRACKING_MODES = ("reference", "adaptive")
+LANDMARK_BACKENDS = ("face_alignment", "mediapipe")
+MERGE_MODES = ("direct", "crossfade")
 ISOLATION_ENGINES = ("dolphin", "av_mossformer2", "separate_select")
 
 
 def _optional_str(env, name: str) -> str | None:
     value = env.get(name)
     return value if value else None
+
+
+def _forced_float(env, name: str, default: float) -> float:
+    try:
+        return float(env[name])
+    except (KeyError, TypeError, ValueError):
+        return default
 
 
 def _forced_int(env, name: str, default: int) -> int:
@@ -47,14 +56,18 @@ class AdapterConfig:
     model_cache: str | None = None
     max_video_seconds: int = 15
     max_upload_mb: int = 50
-    window_s: float = 2.0
+    window_s: float = 4.0
+    window_overlap: float = 0.5
+    normalize_audio: bool = True
+    landmark_backend: str = "face_alignment"
+    landmarker_model: str | None = None
     detect_every: int = 8
     landmark_every: int = 1
     downscale: float | None = None
     device: str = "cuda"
     sample_rate: int = 16000
     fps: int = 25
-    merge: str = "direct"
+    merge: str = "crossfade"
     # "reference" = legacy cadence (the validated default). "adaptive" is opt-in
     # until it passes the A/B quality gate on the GPU machine.
     tracking_mode: str = "reference"
@@ -79,6 +92,16 @@ class AdapterConfig:
             raise ValueError(
                 f"tracking_mode must be one of {TRACKING_MODES}, got {self.tracking_mode!r}"
             )
+        if self.landmark_backend not in LANDMARK_BACKENDS:
+            raise ValueError(
+                f"landmark_backend must be one of {LANDMARK_BACKENDS}, got {self.landmark_backend!r}"
+            )
+        if self.merge not in MERGE_MODES:
+            raise ValueError(f"merge must be one of {MERGE_MODES}, got {self.merge!r}")
+        if self.window_s <= 0:
+            raise ValueError("window_s must be positive")
+        if not 0.0 <= self.window_overlap < 1.0:
+            raise ValueError("window_overlap must be in [0, 1)")
 
     @classmethod
     def from_env(cls, env: "dict | None" = None) -> "AdapterConfig":
@@ -91,6 +114,11 @@ class AdapterConfig:
             tracking_mode=_optional_str(sources, "FOCUS_TRACKING_MODE") or "reference",
             isolation_engine=_optional_str(sources, "FOCUS_ISOLATION_ENGINE") or "dolphin",
             clearervoice_dir=_optional_str(sources, "FOCUS_CLEARERVOICE_DIR"),
+            window_s=_forced_float(sources, "FOCUS_WINDOW_S", 4.0),
+            window_overlap=_forced_float(sources, "FOCUS_WINDOW_OVERLAP", 0.5),
+            normalize_audio=(_optional_str(sources, "FOCUS_NORMALIZE_AUDIO") or "1") != "0",
+            landmark_backend=_optional_str(sources, "FOCUS_LANDMARKS") or "face_alignment",
+            landmarker_model=_optional_str(sources, "FOCUS_FACE_LANDMARKER_MODEL"),
         )
 
     @classmethod
