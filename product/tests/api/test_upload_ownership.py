@@ -125,6 +125,11 @@ def test_startup_preserves_paused_owner_and_recovers_after_exit(
             # No context-manager/finally cleanup is run by the owner.
             owner.kill()
             owner.communicate(timeout=10)
+            # Windows refreshes a file's last-write time when the killed
+            # owner's write handle is closed, so the file is briefly "recent".
+            # Age is a necessary condition, so backdate again after the kill.
+            for path in files:
+                os.utime(path, (1, 1))
             removed = cleaner.app.state.storage.cleanup_stale_temp()
             assert removed == [str(path) for path in files]
             assert not list(settings.media_dir.iterdir())
