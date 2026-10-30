@@ -1,5 +1,11 @@
 # FOCUS coordination - active implementation milestone
 
+## Latest verified audit — 2026-10-30 (supersedes stale readiness claims below)
+
+Real file-paced Live diagnostic also ran: emitted RTF 14.5099, queue depth 3, overload at sequence 3, 3 ready chunks/1 unusable; gate internal_only. Server-ready p95 87.373 s excludes browser playback. Tool labels four chunks as 8 s on a 6 s fixture, so partial-chunk metadata requires correction before precise comparisons. Full log and caveats are in the audit report.
+
+Codex ran current local UI/API/GPU worker together. After AAC-tail and numeric failure-code fixes, real two-face selection, audio generation/download, job completion with failed transcription, and unauthenticated access denial passed. Post-fix upload run took 89.094 s for 6 s of content (extraction interval 77.735 s); not acceptable real-time performance. Live/chunk infrastructure exists; sustained camera-to-play gate remains unverified. Combined worker/tail/timing regression suite: 45 passed. See `docs/REALTIME_STATUS_2026-10-30.md` for evidence, overlapping test counts, limitations and ordered next tasks. No public deployment, real-time acceptance or manufacturing readiness is claimed.
+
 Codex: integration lead, shared contracts, task arbitration and validation. Human owner can work anywhere; coordinate with their active changes.
 
 ## Assigned ownership

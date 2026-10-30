@@ -1,0 +1,405 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="E">
+  <design>
+    <source>A:\Focus_Ux\hardware_revA\electronics\focus_control.kicad_sch</source>
+    <date>2026-10-29T21:18:24</date>
+    <tool>Eeschema 10.0.7</tool>
+    <sheet number="1" name="/" tstamps="/">
+      <title_block>
+        <title/>
+        <company/>
+        <rev/>
+        <date/>
+        <source>focus_control.kicad_sch</source>
+        <comment number="1" value=""/>
+        <comment number="2" value=""/>
+        <comment number="3" value=""/>
+        <comment number="4" value=""/>
+        <comment number="5" value=""/>
+        <comment number="6" value=""/>
+        <comment number="7" value=""/>
+        <comment number="8" value=""/>
+        <comment number="9" value=""/>
+      </title_block>
+    </sheet>
+  </design>
+  <components>
+    <comp ref="D1">
+      <value>Green LED 3mm</value>
+      <footprint>LED_THT:LED_D3.0mm</footprint>
+      <fields>
+        <field name="Footprint">LED_THT:LED_D3.0mm</field>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <libsource lib="Focus" part="LED" description=""/>
+      <property name="Sheetname" value="Root"/>
+      <property name="Sheetfile" value="focus_control.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>4af9a18e-764a-478c-aa2a-9364a07f907b</tstamps>
+      <units>
+        <unit name="A">
+          <pins>
+            <pin num="1"/>
+            <pin num="2"/>
+          </pins>
+        </unit>
+      </units>
+    </comp>
+    <comp ref="J1">
+      <value>Pico physical pins 1-20 bottom row USB-left</value>
+      <footprint>Connector_PinSocket_2.54mm:PinSocket_1x20_P2.54mm_Vertical</footprint>
+      <fields>
+        <field name="Footprint">Connector_PinSocket_2.54mm:PinSocket_1x20_P2.54mm_Vertical</field>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <libsource lib="Focus" part="Header20" description=""/>
+      <property name="Sheetname" value="Root"/>
+      <property name="Sheetfile" value="focus_control.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>999843b5-6744-46fc-97ad-e50551a11b67</tstamps>
+      <units>
+        <unit name="A">
+          <pins>
+            <pin num="1"/>
+            <pin num="2"/>
+            <pin num="3"/>
+            <pin num="4"/>
+            <pin num="5"/>
+            <pin num="6"/>
+            <pin num="7"/>
+            <pin num="8"/>
+            <pin num="9"/>
+            <pin num="10"/>
+            <pin num="11"/>
+            <pin num="12"/>
+            <pin num="13"/>
+            <pin num="14"/>
+            <pin num="15"/>
+            <pin num="16"/>
+            <pin num="17"/>
+            <pin num="18"/>
+            <pin num="19"/>
+            <pin num="20"/>
+          </pins>
+        </unit>
+      </units>
+    </comp>
+    <comp ref="J2">
+      <value>Pico physical pins 40-21 top row USB-left</value>
+      <footprint>Connector_PinSocket_2.54mm:PinSocket_1x20_P2.54mm_Vertical</footprint>
+      <fields>
+        <field name="Footprint">Connector_PinSocket_2.54mm:PinSocket_1x20_P2.54mm_Vertical</field>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <libsource lib="Focus" part="Header20" description=""/>
+      <property name="Sheetname" value="Root"/>
+      <property name="Sheetfile" value="focus_control.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>3a7b8481-5920-4fcb-9ede-70fe4ca007b6</tstamps>
+      <units>
+        <unit name="A">
+          <pins>
+            <pin num="1"/>
+            <pin num="2"/>
+            <pin num="3"/>
+            <pin num="4"/>
+            <pin num="5"/>
+            <pin num="6"/>
+            <pin num="7"/>
+            <pin num="8"/>
+            <pin num="9"/>
+            <pin num="10"/>
+            <pin num="11"/>
+            <pin num="12"/>
+            <pin num="13"/>
+            <pin num="14"/>
+            <pin num="15"/>
+            <pin num="16"/>
+            <pin num="17"/>
+            <pin num="18"/>
+            <pin num="19"/>
+            <pin num="20"/>
+          </pins>
+        </unit>
+      </units>
+    </comp>
+    <comp ref="J3">
+      <value>SELECT dry contact</value>
+      <footprint>Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical</footprint>
+      <fields>
+        <field name="Footprint">Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical</field>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <libsource lib="Focus" part="Header2" description=""/>
+      <property name="Sheetname" value="Root"/>
+      <property name="Sheetfile" value="focus_control.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>1535855d-b26b-47fd-8a86-5c75f36e1985</tstamps>
+      <units>
+        <unit name="A">
+          <pins>
+            <pin num="1"/>
+            <pin num="2"/>
+          </pins>
+        </unit>
+      </units>
+    </comp>
+    <comp ref="J4">
+      <value>STOP dry contact</value>
+      <footprint>Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical</footprint>
+      <fields>
+        <field name="Footprint">Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical</field>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <libsource lib="Focus" part="Header2" description=""/>
+      <property name="Sheetname" value="Root"/>
+      <property name="Sheetfile" value="focus_control.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>b945335a-d78d-4b9c-9345-819924f6f9e5</tstamps>
+      <units>
+        <unit name="A">
+          <pins>
+            <pin num="1"/>
+            <pin num="2"/>
+          </pins>
+        </unit>
+      </units>
+    </comp>
+    <comp ref="R1">
+      <value>1k 1%</value>
+      <footprint>Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal</footprint>
+      <fields>
+        <field name="Footprint">Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal</field>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <libsource lib="Focus" part="Resistor" description=""/>
+      <property name="Sheetname" value="Root"/>
+      <property name="Sheetfile" value="focus_control.kicad_sch"/>
+      <sheetpath names="/" tstamps="/"/>
+      <tstamps>fa7f98cc-4c0f-4c6d-b6a2-26b2aea0a831</tstamps>
+      <units>
+        <unit name="A">
+          <pins>
+            <pin num="1"/>
+            <pin num="2"/>
+          </pins>
+        </unit>
+      </units>
+    </comp>
+  </components>
+  <libparts>
+    <libpart lib="Focus" part="Header2">
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Header2</field>
+        <field name="Footprint"/>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Focus" part="Header20">
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Header20</field>
+        <field name="Footprint"/>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+        <pin num="3" name="3" type="passive"/>
+        <pin num="4" name="4" type="passive"/>
+        <pin num="5" name="5" type="passive"/>
+        <pin num="6" name="6" type="passive"/>
+        <pin num="7" name="7" type="passive"/>
+        <pin num="8" name="8" type="passive"/>
+        <pin num="9" name="9" type="passive"/>
+        <pin num="10" name="10" type="passive"/>
+        <pin num="11" name="11" type="passive"/>
+        <pin num="12" name="12" type="passive"/>
+        <pin num="13" name="13" type="passive"/>
+        <pin num="14" name="14" type="passive"/>
+        <pin num="15" name="15" type="passive"/>
+        <pin num="16" name="16" type="passive"/>
+        <pin num="17" name="17" type="passive"/>
+        <pin num="18" name="18" type="passive"/>
+        <pin num="19" name="19" type="passive"/>
+        <pin num="20" name="20" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Focus" part="LED">
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">LED</field>
+        <field name="Footprint"/>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+    <libpart lib="Focus" part="Resistor">
+      <fields>
+        <field name="Reference">J</field>
+        <field name="Value">Resistor</field>
+        <field name="Footprint"/>
+        <field name="Datasheet"/>
+        <field name="Description"/>
+      </fields>
+      <pins>
+        <pin num="1" name="1" type="passive"/>
+        <pin num="2" name="2" type="passive"/>
+      </pins>
+    </libpart>
+  </libparts>
+  <libraries>
+    <library logical="Focus">
+      <uri>${KIPRJMOD}/Focus.kicad_sym</uri>
+    </library>
+  </libraries>
+  <nets>
+    <net code="1" name="/GND" class="Default">
+      <node ref="D1" pin="1" pinfunction="1_1" pintype="passive"/>
+      <node ref="J1" pin="3" pinfunction="3_3" pintype="passive"/>
+      <node ref="J3" pin="2" pinfunction="2_2" pintype="passive"/>
+      <node ref="J4" pin="2" pinfunction="2_2" pintype="passive"/>
+    </net>
+    <net code="2" name="/LED_A" class="Default">
+      <node ref="D1" pin="2" pinfunction="2_2" pintype="passive"/>
+      <node ref="R1" pin="2" pinfunction="2_2" pintype="passive"/>
+    </net>
+    <net code="3" name="/LED_DRIVE" class="Default">
+      <node ref="J1" pin="6" pinfunction="6_6" pintype="passive"/>
+      <node ref="R1" pin="1" pinfunction="1_1" pintype="passive"/>
+    </net>
+    <net code="4" name="/SELECT_N" class="Default">
+      <node ref="J1" pin="4" pinfunction="4_4" pintype="passive"/>
+      <node ref="J3" pin="1" pinfunction="1_1" pintype="passive"/>
+    </net>
+    <net code="5" name="/STOP_N" class="Default">
+      <node ref="J1" pin="5" pinfunction="5_5" pintype="passive"/>
+      <node ref="J4" pin="1" pinfunction="1_1" pintype="passive"/>
+    </net>
+    <net code="6" name="unconnected-(J1-Pad1)" class="Default">
+      <node ref="J1" pin="1" pinfunction="1_1" pintype="passive+no_connect"/>
+    </net>
+    <net code="7" name="unconnected-(J1-Pad2)" class="Default">
+      <node ref="J1" pin="2" pinfunction="2_2" pintype="passive+no_connect"/>
+    </net>
+    <net code="8" name="unconnected-(J1-Pad7)" class="Default">
+      <node ref="J1" pin="7" pinfunction="7_7" pintype="passive+no_connect"/>
+    </net>
+    <net code="9" name="unconnected-(J1-Pad8)" class="Default">
+      <node ref="J1" pin="8" pinfunction="8_8" pintype="passive+no_connect"/>
+    </net>
+    <net code="10" name="unconnected-(J1-Pad9)" class="Default">
+      <node ref="J1" pin="9" pinfunction="9_9" pintype="passive+no_connect"/>
+    </net>
+    <net code="11" name="unconnected-(J1-Pad10)" class="Default">
+      <node ref="J1" pin="10" pinfunction="10_10" pintype="passive+no_connect"/>
+    </net>
+    <net code="12" name="unconnected-(J1-Pad11)" class="Default">
+      <node ref="J1" pin="11" pinfunction="11_11" pintype="passive+no_connect"/>
+    </net>
+    <net code="13" name="unconnected-(J1-Pad12)" class="Default">
+      <node ref="J1" pin="12" pinfunction="12_12" pintype="passive+no_connect"/>
+    </net>
+    <net code="14" name="unconnected-(J1-Pad13)" class="Default">
+      <node ref="J1" pin="13" pinfunction="13_13" pintype="passive+no_connect"/>
+    </net>
+    <net code="15" name="unconnected-(J1-Pad14)" class="Default">
+      <node ref="J1" pin="14" pinfunction="14_14" pintype="passive+no_connect"/>
+    </net>
+    <net code="16" name="unconnected-(J1-Pad15)" class="Default">
+      <node ref="J1" pin="15" pinfunction="15_15" pintype="passive+no_connect"/>
+    </net>
+    <net code="17" name="unconnected-(J1-Pad16)" class="Default">
+      <node ref="J1" pin="16" pinfunction="16_16" pintype="passive+no_connect"/>
+    </net>
+    <net code="18" name="unconnected-(J1-Pad17)" class="Default">
+      <node ref="J1" pin="17" pinfunction="17_17" pintype="passive+no_connect"/>
+    </net>
+    <net code="19" name="unconnected-(J1-Pad18)" class="Default">
+      <node ref="J1" pin="18" pinfunction="18_18" pintype="passive+no_connect"/>
+    </net>
+    <net code="20" name="unconnected-(J1-Pad19)" class="Default">
+      <node ref="J1" pin="19" pinfunction="19_19" pintype="passive+no_connect"/>
+    </net>
+    <net code="21" name="unconnected-(J1-Pad20)" class="Default">
+      <node ref="J1" pin="20" pinfunction="20_20" pintype="passive+no_connect"/>
+    </net>
+    <net code="22" name="unconnected-(J2-Pad1)" class="Default">
+      <node ref="J2" pin="1" pinfunction="1_1" pintype="passive+no_connect"/>
+    </net>
+    <net code="23" name="unconnected-(J2-Pad2)" class="Default">
+      <node ref="J2" pin="2" pinfunction="2_2" pintype="passive+no_connect"/>
+    </net>
+    <net code="24" name="unconnected-(J2-Pad3)" class="Default">
+      <node ref="J2" pin="3" pinfunction="3_3" pintype="passive+no_connect"/>
+    </net>
+    <net code="25" name="unconnected-(J2-Pad4)" class="Default">
+      <node ref="J2" pin="4" pinfunction="4_4" pintype="passive+no_connect"/>
+    </net>
+    <net code="26" name="unconnected-(J2-Pad5)" class="Default">
+      <node ref="J2" pin="5" pinfunction="5_5" pintype="passive+no_connect"/>
+    </net>
+    <net code="27" name="unconnected-(J2-Pad6)" class="Default">
+      <node ref="J2" pin="6" pinfunction="6_6" pintype="passive+no_connect"/>
+    </net>
+    <net code="28" name="unconnected-(J2-Pad7)" class="Default">
+      <node ref="J2" pin="7" pinfunction="7_7" pintype="passive+no_connect"/>
+    </net>
+    <net code="29" name="unconnected-(J2-Pad8)" class="Default">
+      <node ref="J2" pin="8" pinfunction="8_8" pintype="passive+no_connect"/>
+    </net>
+    <net code="30" name="unconnected-(J2-Pad9)" class="Default">
+      <node ref="J2" pin="9" pinfunction="9_9" pintype="passive+no_connect"/>
+    </net>
+    <net code="31" name="unconnected-(J2-Pad10)" class="Default">
+      <node ref="J2" pin="10" pinfunction="10_10" pintype="passive+no_connect"/>
+    </net>
+    <net code="32" name="unconnected-(J2-Pad11)" class="Default">
+      <node ref="J2" pin="11" pinfunction="11_11" pintype="passive+no_connect"/>
+    </net>
+    <net code="33" name="unconnected-(J2-Pad12)" class="Default">
+      <node ref="J2" pin="12" pinfunction="12_12" pintype="passive+no_connect"/>
+    </net>
+    <net code="34" name="unconnected-(J2-Pad13)" class="Default">
+      <node ref="J2" pin="13" pinfunction="13_13" pintype="passive+no_connect"/>
+    </net>
+    <net code="35" name="unconnected-(J2-Pad14)" class="Default">
+      <node ref="J2" pin="14" pinfunction="14_14" pintype="passive+no_connect"/>
+    </net>
+    <net code="36" name="unconnected-(J2-Pad15)" class="Default">
+      <node ref="J2" pin="15" pinfunction="15_15" pintype="passive+no_connect"/>
+    </net>
+    <net code="37" name="unconnected-(J2-Pad16)" class="Default">
+      <node ref="J2" pin="16" pinfunction="16_16" pintype="passive+no_connect"/>
+    </net>
+    <net code="38" name="unconnected-(J2-Pad17)" class="Default">
+      <node ref="J2" pin="17" pinfunction="17_17" pintype="passive+no_connect"/>
+    </net>
+    <net code="39" name="unconnected-(J2-Pad18)" class="Default">
+      <node ref="J2" pin="18" pinfunction="18_18" pintype="passive+no_connect"/>
+    </net>
+    <net code="40" name="unconnected-(J2-Pad19)" class="Default">
+      <node ref="J2" pin="19" pinfunction="19_19" pintype="passive+no_connect"/>
+    </net>
+    <net code="41" name="unconnected-(J2-Pad20)" class="Default">
+      <node ref="J2" pin="20" pinfunction="20_20" pintype="passive+no_connect"/>
+    </net>
+  </nets>
+</export>

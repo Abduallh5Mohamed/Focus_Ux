@@ -1,0 +1,10 @@
+References,Quantity,Description,MPN_or_requirement,Status
+U_module_external,1,Raspberry Pi Pico H RP2040 module,SC0917,Official original Pico H required; procurement and physical sample pending
+J1 J2,2,1x20 female socket 2.54mm through-hole,Samtec SSW-120-01-G-S candidate,Series drawing and mate depth must be checked against Pico H before purchase; generic KiCad footprint is not supplier-approved
+J3 J4,2,1x02 male header vertical 2.54mm,UNRESOLVED MPN,Choose <=5.08x2.54mm body and verify 1mm plated hole compatibility
+R1,1,1k ohm 1 percent axial resistor 0.25W,UNRESOLVED MPN,Body <=6.3x2.5mm; lead formed to7.62mm; LED current max3.3mA even if LED short
+D1,1,Green3mm through-hole LED,Kingbright WP3A8GD candidate,Verify lead pitch2.54mm and cathode before procurement; no assumed measured brightness
+SW_SELECT SW_STOP,2,Offboard momentary normally-open dry-contact switch,UNRESOLVED MPN,Connect across J3 or J4; do not inject external voltage; enclosure holes not released
+CABLE_CONTROLS,2,Two-wire insulated harness with mating connector,UNRESOLVED MPN,Short internal enclosure harness only; no exposed user electrical contacts
+PCB,1,65x32x1.6mm two-layer FR4 carrier,Custom focus_control RevA,2.4mm NPTH4; minimum design track0.3mm; no battery or USB routing
+FASTENERS,4,M2 fastener sets and insulating standoffs,UNRESOLVED lengths,Select after physical stack measurement; 2.4mm board holes

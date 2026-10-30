@@ -1,0 +1,16 @@
+{
+  "candidate": "BS08",
+  "supplier": "Shenzhen Hearing Technology",
+  "size_mm": [
+    13,
+    7.4,
+    5.6
+  ],
+  "listed_mass_g": 1.7,
+  "mass_tolerance_g": 0.1,
+  "listed_nominal_impedance_ohm": 8,
+  "listed_power_W": 0.8,
+  "source": "https://bonetransducer.com/js/products.js",
+  "retrieved": "2026-10-29",
+  "evidence": "Public manufacturer catalog facts; no purchased sample or controlled mechanical drawing. Catalog SPL is not bone-output safety/efficacy evidence."
+}

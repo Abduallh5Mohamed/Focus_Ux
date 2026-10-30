@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Button } from '../../components/Button';
@@ -11,7 +11,7 @@ import { Spinner } from '../../components/Spinner';
 import { useApi } from '../../lib/api/ApiContext';
 import { describeError, isApiError } from '../../lib/api/errors';
 import type { FaceCandidate, FacesResponse } from '../../lib/api/types';
-import { clamp, formatTimestamp } from '../../lib/format';
+import { formatTimestamp } from '../../lib/format';
 import './input.css';
 
 export interface FaceSelectProps {
@@ -381,8 +381,8 @@ function FaceThumbnail({ face }: { face: FaceCandidate }) {
     };
   }, [api, face.thumbnail_url]);
 
-  const aspect = frameAspect(face);
-  const box = bboxStyle(face);
+  // The real API returns a cropped face JPEG, not a full video frame.
+  const aspect = '1';
 
   return (
     <div className="face-card__thumb" style={aspect ? { aspectRatio: aspect } : undefined}>
@@ -393,45 +393,13 @@ function FaceThumbnail({ face }: { face: FaceCandidate }) {
         </div>
       ) : url ? (
         <>
-          <img src={url} alt="" />
-          {box ? <span className="face-card__bbox" style={box} aria-hidden="true" /> : null}
+          <img src={url} alt="" onError={() => setFailed(true)} />
         </>
       ) : (
         <div className="skeleton face-card__skeleton" aria-hidden="true" />
       )}
     </div>
   );
-}
-
-/**
- * The card box mirrors the source frame so the bbox percentages line up. Clamped so a
- * portrait clip cannot produce an unusable column of very tall cards.
- */
-function frameAspect(face: FaceCandidate): string | undefined {
-  const { width, height } = face.frame_size;
-  if (!(width > 0) || !(height > 0)) return undefined;
-  return String(clamp(width / height, 0.6, 2.4));
-}
-
-/** bbox/frame_size as clamped percentages; null when the frame size is unusable. */
-function bboxStyle(face: FaceCandidate): CSSProperties | null {
-  const { width: frameWidth, height: frameHeight } = face.frame_size;
-  if (!(frameWidth > 0) || !(frameHeight > 0)) return null;
-
-  const { x, y, width, height } = face.bbox;
-  if (!(width > 0) || !(height > 0)) return null;
-
-  const left = clamp((x / frameWidth) * 100, 0, 100);
-  const top = clamp((y / frameHeight) * 100, 0, 100);
-  const boxWidth = clamp((width / frameWidth) * 100, 0, 100 - left);
-  const boxHeight = clamp((height / frameHeight) * 100, 0, 100 - top);
-
-  return {
-    left: `${left}%`,
-    top: `${top}%`,
-    width: `${boxWidth}%`,
-    height: `${boxHeight}%`,
-  };
 }
 
 function faceCountLabel(count: number): string {

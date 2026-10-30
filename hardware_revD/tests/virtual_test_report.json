@@ -1,0 +1,348 @@
+{
+  "scope": "Exact-BRep static and sampled kinematic screening only, RevD with complete cradle and transducer envelopes",
+  "interference_threshold_mm3": 0.05,
+  "tests": [
+    {
+      "test": "BRep validity and solids",
+      "status": "PASS",
+      "data": {
+        "part_count": 10
+      }
+    },
+    {
+      "test": "Open-position part interference",
+      "status": "PASS",
+      "data": []
+    },
+    {
+      "test": "Actual manufacturer module overlap",
+      "status": "PASS",
+      "data": [
+        {
+          "part": "Front_Capture_Chassis",
+          "min_clearance_mm": null,
+          "overlap_mm3": 0.0,
+          "note": "Exact minimum-distance solve not completed; this checks overlap only."
+        },
+        {
+          "part": "Right_Service_Door",
+          "min_clearance_mm": null,
+          "overlap_mm3": 0.0,
+          "note": "Exact minimum-distance solve not completed; this checks overlap only."
+        },
+        {
+          "part": "Right_Temples",
+          "min_clearance_mm": null,
+          "overlap_mm3": 0.0,
+          "note": "Exact minimum-distance solve not completed; this checks overlap only."
+        }
+      ]
+    },
+    {
+      "test": "Nominal hinge pin gauge",
+      "status": "PASS",
+      "data": [
+        {
+          "pivot_x_mm": -68,
+          "part": "Front_Capture_Chassis",
+          "gauge_diameter_mm": 2.5,
+          "overlap_mm3": 0.0
+        },
+        {
+          "pivot_x_mm": -68,
+          "part": "Left_Temples",
+          "gauge_diameter_mm": 2.5,
+          "overlap_mm3": 0.0
+        },
+        {
+          "pivot_x_mm": 73,
+          "part": "Front_Capture_Chassis",
+          "gauge_diameter_mm": 2.5,
+          "overlap_mm3": 0.0
+        },
+        {
+          "pivot_x_mm": 73,
+          "part": "Right_Temples",
+          "gauge_diameter_mm": 2.5,
+          "overlap_mm3": 0.0
+        }
+      ]
+    },
+    {
+      "test": "Nominal camera centreline access",
+      "status": "PASS",
+      "data": {
+        "note": "Bounding-geometry centreline only; full FoV not evaluated",
+        "parts": [
+          {
+            "part": "Front_Capture_Chassis",
+            "probe_overlap_mm3": 0.0
+          },
+          {
+            "part": "Right_Service_Door",
+            "probe_overlap_mm3": 0.0
+          }
+        ]
+      }
+    },
+    {
+      "test": "Independent temple fold sweep",
+      "status": "FAIL",
+      "data": [
+        {
+          "side": "Left",
+          "direction_about_z": -1,
+          "samples": [
+            {
+              "fold_deg": 0,
+              "interferences": []
+            },
+            {
+              "fold_deg": 5,
+              "interferences": []
+            },
+            {
+              "fold_deg": 10,
+              "interferences": []
+            },
+            {
+              "fold_deg": 15,
+              "interferences": []
+            },
+            {
+              "fold_deg": 20,
+              "interferences": []
+            },
+            {
+              "fold_deg": 25,
+              "interferences": []
+            },
+            {
+              "fold_deg": 30,
+              "interferences": []
+            },
+            {
+              "fold_deg": 35,
+              "interferences": []
+            },
+            {
+              "fold_deg": 40,
+              "interferences": []
+            },
+            {
+              "fold_deg": 45,
+              "interferences": []
+            },
+            {
+              "fold_deg": 50,
+              "interferences": []
+            },
+            {
+              "fold_deg": 55,
+              "interferences": []
+            },
+            {
+              "fold_deg": 60,
+              "interferences": []
+            },
+            {
+              "fold_deg": 65,
+              "interferences": []
+            },
+            {
+              "fold_deg": 70,
+              "interferences": []
+            },
+            {
+              "fold_deg": 75,
+              "interferences": []
+            },
+            {
+              "fold_deg": 80,
+              "interferences": []
+            },
+            {
+              "fold_deg": 85,
+              "interferences": []
+            },
+            {
+              "fold_deg": 90,
+              "interferences": []
+            }
+          ]
+        },
+        {
+          "side": "Right",
+          "direction_about_z": 1,
+          "samples": [
+            {
+              "fold_deg": 0,
+              "interferences": []
+            },
+            {
+              "fold_deg": 5,
+              "interferences": []
+            },
+            {
+              "fold_deg": 10,
+              "interferences": []
+            },
+            {
+              "fold_deg": 15,
+              "interferences": []
+            },
+            {
+              "fold_deg": 20,
+              "interferences": []
+            },
+            {
+              "fold_deg": 25,
+              "interferences": []
+            },
+            {
+              "fold_deg": 30,
+              "interferences": []
+            },
+            {
+              "fold_deg": 35,
+              "interferences": []
+            },
+            {
+              "fold_deg": 40,
+              "interferences": []
+            },
+            {
+              "fold_deg": 45,
+              "interferences": []
+            },
+            {
+              "fold_deg": 50,
+              "interferences": []
+            },
+            {
+              "fold_deg": 55,
+              "interferences": []
+            },
+            {
+              "fold_deg": 60,
+              "interferences": []
+            },
+            {
+              "fold_deg": 65,
+              "interferences": []
+            },
+            {
+              "fold_deg": 70,
+              "interferences": []
+            },
+            {
+              "fold_deg": 75,
+              "interferences": []
+            },
+            {
+              "fold_deg": 80,
+              "interferences": []
+            },
+            {
+              "fold_deg": 85,
+              "interferences": []
+            },
+            {
+              "fold_deg": 90,
+              "interferences": [
+                {
+                  "obstacle": "chassis",
+                  "overlap_mm3": 8.0
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "test": "Sequential fold left then right",
+      "status": "FAIL",
+      "data": [
+        {
+          "left_deg": 90,
+          "right_deg": 60,
+          "overlap_mm3": 3.488
+        },
+        {
+          "left_deg": 90,
+          "right_deg": 65,
+          "overlap_mm3": 45.23
+        },
+        {
+          "left_deg": 90,
+          "right_deg": 70,
+          "overlap_mm3": 284.228
+        },
+        {
+          "left_deg": 90,
+          "right_deg": 75,
+          "overlap_mm3": 700.725
+        },
+        {
+          "left_deg": 90,
+          "right_deg": 80,
+          "overlap_mm3": 715.422
+        },
+        {
+          "left_deg": 90,
+          "right_deg": 85,
+          "overlap_mm3": 406.386
+        },
+        {
+          "left_deg": 90,
+          "right_deg": 90,
+          "overlap_mm3": 923.03
+        }
+      ]
+    },
+    {
+      "test": "Transducer envelope packaging overlap",
+      "status": "PASS",
+      "data": []
+    },
+    {
+      "test": "Nominal outward escape blocked by cover",
+      "status": "PASS",
+      "data": {
+        "note": "Geometric blocking only; fastener/material/force not validated",
+        "sides": [
+          {
+            "side": "Left",
+            "outward_translation_mm": 1.1,
+            "blocking_overlap_mm3": 331.1
+          },
+          {
+            "side": "Right",
+            "outward_translation_mm": 1.1,
+            "blocking_overlap_mm3": 331.1
+          }
+        ]
+      }
+    },
+    {
+      "test": "Material volume screening",
+      "status": "INFO",
+      "data": {
+        "solid_part_volume_cm3": 36.805,
+        "mass_formula": "mass_g = actual_material_density_g_cm3 * solid_volume_cm3; infill, supports, electronics and fasteners not included",
+        "measured_weight": false
+      }
+    }
+  ],
+  "physical_validation": false,
+  "not_tested": [
+    "full FoV and optical performance",
+    "dynamic continuous collision between sampled angles",
+    "mechanical stress, fatigue, fastener preload and drop",
+    "RF/antenna, temperature and battery current",
+    "real video/audio transport, extraction quality and capture-to-ear delay",
+    "comfort, retention and human fit"
+  ],
+  "overall": "FAIL"
+}

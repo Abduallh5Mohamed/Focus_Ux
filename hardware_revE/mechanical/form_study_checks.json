@@ -1,0 +1,27 @@
+{
+  "revision": "E - wearability architecture and form STUDY, not manufacture release",
+  "native_validity": "PASS",
+  "part_count": 10,
+  "static_intersections_mm3": [],
+  "component_overlap_mm3": [],
+  "all_static_checks_pass": true,
+  "nominal_contact_cap_inner_span_mm": 129,
+  "listed_BS08_pair_mass_g": 3.4,
+  "pair_mass_status": "manufacturer catalog, not measured or including capsules",
+  "mechanical_solid_volume_cm3": 16.8,
+  "physical_comfort_verified": false,
+  "folding_verified": false,
+  "manufacturing_ready": false,
+  "open_gates": [
+    "purchased miniature component verification",
+    "full mechanical drawings and contact face",
+    "camera mounting/USB connector/thermal field of view",
+    "hinge selection and folding",
+    "isolator, clamp spacers and contact preload",
+    "skin-contact material",
+    "lens retention and optical fitting",
+    "audio driver qualification and vibration feedback",
+    "human fit/weight/comfort",
+    "capture sync and realtime latency"
+  ]
+}

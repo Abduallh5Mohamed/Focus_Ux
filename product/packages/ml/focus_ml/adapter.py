@@ -52,6 +52,7 @@ from focus_ml.identity import make_face_id, select_target_speaker
 from focus_ml.timing import audio_window_to_roi, duration_ms_from_samples, frames_to_ms
 from focus_ml.tracking import DETECT_EVERY, FACE_BOX_SCALE, match_detections
 from focus_ml.types import ExtractionResult, FaceCandidate, ModelBundle, TargetSelection
+from focus_ml.window_plan import separation_windows
 
 _HEAVY_MODULES = ("torch", "cv2", "face_alignment", "soundfile")
 _BACKEND_MESSAGE = "the ML engine backend is unavailable on this machine"
@@ -961,7 +962,8 @@ class LegacyDolphinAdapter:
         return out
 
     def _separate(self, backend: dict, mix_wav: str, mouth_roi, cfg: AdapterConfig, dolphin):
-        """Windowed separation, matching the legacy _separate stage exactly
+        """Windowed separation using the legacy full-window path, with short
+        trailing output borrowing past context instead of an empty visual ROI
         (legacy focus_runner.py lines 182-206): the TARGET speaker's ROI goes
         through ``I.get_preprocessing_pipelines()["val"]`` ONCE, each audio
         window maps to ROI frames via ``sf_ = int(start/sr*25)`` /
@@ -986,13 +988,16 @@ class LegacyDolphinAdapter:
         mix = torch.from_numpy(np.ascontiguousarray(data.mean(axis=1))).to(device)
         window = int(cfg.window_s * cfg.sample_rate)
         out = torch.zeros(1, len(mix), device="cpu")
-        start = 0
         forward_ms = 0.0
-        while start < len(mix):
-            end = min(start + window, len(mix))
-            roi_start, roi_end = audio_window_to_roi(
-                start, end, cfg.sample_rate, cfg.fps, roi_len=len(prepared_roi)
-            )
+        try:
+            plan = list(separation_windows(
+                len(mix), window, len(prepared_roi), cfg.sample_rate, cfg.fps
+            ))
+        except ValueError as exc:
+            raise MediaError("insufficient synchronized audio and mouth context", detail=str(exc)) from exc
+        for segment in plan:
+            start, end = segment.output_start, segment.output_end
+            roi_start, roi_end = segment.roi_start, segment.roi_end
             window_roi = (
                 torch.from_numpy(
                     np.ascontiguousarray(prepared_roi[roi_start:roi_end])
@@ -1004,12 +1009,12 @@ class LegacyDolphinAdapter:
             e1 = torch.cuda.Event(enable_timing=True)
             e0.record()
             with torch.inference_mode():
-                est = dolphin(mix[start:end][None], window_roi)
+                est = dolphin(mix[segment.model_start:end][None], window_roi)
             e1.record()
             torch.cuda.synchronize()
             forward_ms += e0.elapsed_time(e1)
-            out[0, start:end] = est[0, 0, : end - start].detach().cpu()
-            start += window
+            offset = segment.output_offset
+            out[0, start:end] = est[0, 0, offset:offset + end - start].detach().cpu()
         result = out[0].numpy()
         out_wav = os.path.join(os.path.dirname(mix_wav), "target_extract.wav")
         sf.write(out_wav, result, sr, subtype="PCM_16")

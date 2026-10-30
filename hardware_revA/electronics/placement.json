@@ -1,0 +1,73 @@
+[
+  {
+    "reference": "J1",
+    "value": "Pico physical pins 1-20 bottom row USB-left",
+    "footprint": "Connector_PinSocket_2.54mm:PinSocket_1x20_P2.54mm_Vertical",
+    "x_mm": 8.37,
+    "y_mm": 24.89,
+    "rotation_deg": 90,
+    "net_mapping": {
+      "3": "GND",
+      "4": "SELECT_N",
+      "5": "STOP_N",
+      "6": "LED_DRIVE"
+    }
+  },
+  {
+    "reference": "J2",
+    "value": "Pico physical pins 40-21 top row USB-left",
+    "footprint": "Connector_PinSocket_2.54mm:PinSocket_1x20_P2.54mm_Vertical",
+    "x_mm": 8.37,
+    "y_mm": 7.11,
+    "rotation_deg": 90,
+    "net_mapping": {}
+  },
+  {
+    "reference": "J3",
+    "value": "SELECT dry contact",
+    "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+    "x_mm": 61,
+    "y_mm": 8,
+    "rotation_deg": 0,
+    "net_mapping": {
+      "1": "SELECT_N",
+      "2": "GND"
+    }
+  },
+  {
+    "reference": "J4",
+    "value": "STOP dry contact",
+    "footprint": "Connector_PinHeader_2.54mm:PinHeader_1x02_P2.54mm_Vertical",
+    "x_mm": 61,
+    "y_mm": 21.46,
+    "rotation_deg": 0,
+    "net_mapping": {
+      "1": "STOP_N",
+      "2": "GND"
+    }
+  },
+  {
+    "reference": "D1",
+    "value": "Green LED 3mm",
+    "footprint": "LED_THT:LED_D3.0mm",
+    "x_mm": 3,
+    "y_mm": 8,
+    "rotation_deg": 270,
+    "net_mapping": {
+      "1": "GND",
+      "2": "LED_A"
+    }
+  },
+  {
+    "reference": "R1",
+    "value": "1k 1%",
+    "footprint": "Resistor_THT:R_Axial_DIN0207_L6.3mm_D2.5mm_P7.62mm_Horizontal",
+    "x_mm": 3,
+    "y_mm": 19,
+    "rotation_deg": 270,
+    "net_mapping": {
+      "1": "LED_DRIVE",
+      "2": "LED_A"
+    }
+  }
+]

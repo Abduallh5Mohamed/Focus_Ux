@@ -1,0 +1,4 @@
+(sym_lib_table
+  (version 7)
+  (lib (name "Focus") (type "KiCad") (uri "${KIPRJMOD}/Focus.kicad_sym") (options "") (descr "Local carrier schematic symbols"))
+)

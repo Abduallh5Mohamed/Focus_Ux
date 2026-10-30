@@ -1,0 +1,79 @@
+{
+  "revision": "D - wired bone conduction bench packaging, not production release",
+  "manufacturer_model_solids": 103,
+  "hardware_transform": "Rx180 then translation(63.75,.25,10.25)",
+  "parts": [
+    {
+      "name": "Front_Capture_Chassis",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 20348.92
+    },
+    {
+      "name": "Right_Service_Door",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 713.74
+    },
+    {
+      "name": "Left_Temples",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 4833.95
+    },
+    {
+      "name": "Left_Ear_Sleeve",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 628.81
+    },
+    {
+      "name": "Right_Temples",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 4827.47
+    },
+    {
+      "name": "Right_Ear_Sleeve",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 628.74
+    },
+    {
+      "name": "Left_BC_Cradle",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 1800.22
+    },
+    {
+      "name": "Left_BC_Contact_Cover",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 611.38
+    },
+    {
+      "name": "Right_BC_Cradle",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 1800.69
+    },
+    {
+      "name": "Right_BC_Contact_Cover",
+      "valid": true,
+      "solids": 1,
+      "volume_mm3": 611.41
+    }
+  ],
+  "hardware_intersections_mm3": [],
+  "static_print_intersections_mm3": [],
+  "open_items": [
+    "camera revision match",
+    "mic acoustic aperture confirmation",
+    "antenna position and RF keepout",
+    "USB cable and power source",
+    "nose pad and hinge retention",
+    "wearability/strength/heat",
+    "capture sync and realtime latency",
+    "actual manufacture and assembly tests"
+  ]
+}

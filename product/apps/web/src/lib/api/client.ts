@@ -240,6 +240,11 @@ export function createHttpApi(options: HttpApiOptions): FocusApi {
     },
 
     fetchMedia(url, signal) {
+      // API-relative paths must use the configured proxy prefix and authentication.
+      // Resolving them without an absolute base used to fetch Vite's HTML fallback.
+      if (!/^[a-z][a-z\d+.-]*:/i.test(url) && !url.startsWith('//')) {
+        return requestBlob(url, signal);
+      }
       // data:/blob: are local/opaque; never carry credentials.
       if (/^(data:|blob:)/i.test(url)) {
         return fetchBlobAbsolute(doFetch, url, () => null, signal);

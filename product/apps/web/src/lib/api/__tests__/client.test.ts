@@ -227,6 +227,16 @@ describe('createHttpApi', () => {
     expect((init.headers as Record<string, string>).Authorization).toBe('Bearer secret-token');
   });
 
+  it('loads protected thumbnails through a relative API proxy', async () => {
+    const blob = new Blob(['jpeg'], { type: 'image/jpeg' });
+    const fetchImpl = vi.fn(async () => fakeResponse(200, undefined, { blob }));
+    const api = createHttpApi({ baseUrl: '/api', getToken: () => 'session', fetchImpl: fetchImpl as unknown as typeof fetch });
+    await expect(api.fetchMedia('/videos/v1/faces/f1/thumbnail')).resolves.toBe(blob);
+    const [url, init] = fetchImpl.mock.calls[0] as unknown as [string, RequestInit];
+    expect(url).toBe('/api/videos/v1/faces/f1/thumbnail');
+    expect((init.headers as Record<string, string>).Authorization).toBe('Bearer session');
+  });
+
   it('never leaks the token to a foreign-origin media URL', async () => {
     const blob = new Blob(['x'], { type: 'image/svg+xml' });
     const fetchImpl = vi.fn(async () => fakeResponse(200, undefined, { blob }));

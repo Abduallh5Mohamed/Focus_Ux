@@ -1,0 +1,45 @@
+{
+  "frame_width_mm": 146,
+  "lens_opening_width_mm": 50,
+  "lens_opening_height_mm": 34,
+  "front_thickness_mm": 5,
+  "temple_pivot_x_mm": 70,
+  "temple_length_mm": 139,
+  "camera_module_mm": [
+    38,
+    38,
+    19.01
+  ],
+  "camera_xy_clearance_mm": 0.8,
+  "carrier_pcb_mm": [
+    65,
+    32,
+    1.6
+  ],
+  "control_pod_outer_mm": [
+    79,
+    44,
+    28
+  ],
+  "pcb_mount_holes_mm": [
+    [
+      3,
+      3
+    ],
+    [
+      62,
+      3
+    ],
+    [
+      3,
+      29
+    ],
+    [
+      62,
+      29
+    ]
+  ],
+  "nominal_print_clearance_mm": 0.4,
+  "screw_clearance_M3_mm": 3.4,
+  "NOTE": "Prototype assumptions, not fit/comfort/strength certification. Camera holes and switches intentionally not inferred."
+}
