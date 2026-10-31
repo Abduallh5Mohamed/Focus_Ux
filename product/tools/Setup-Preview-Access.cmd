@@ -1,9 +1,10 @@
 @echo off
-cd /d "%~dp0"
-if not exist "A:\focus\.venv\Scripts\python.exe" (
-  echo Original Python was not found at A:\focus\.venv\Scripts\python.exe.
+rem Works from the worker ZIP (this file at the folder root) and from a full checkout (product\tools).
+if exist "%~dp0product\tools\windows_worker.py" (cd /d "%~dp0") else cd /d "%~dp0..\.."
+call "%~dp0focus_env.cmd"
+if errorlevel 1 (
   pause
   exit /b 1
 )
-"A:\focus\.venv\Scripts\python.exe" product\tools\windows_worker.py --preview-access
+"%FOCUS_PY%" product\tools\windows_worker.py --preview-access
 pause

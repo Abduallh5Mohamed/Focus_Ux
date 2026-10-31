@@ -1,7 +1,8 @@
 """Outbound-only Windows CUDA worker. Uses the user's existing environment.
 
 No dependency installation, model downloads, listener, tunnel or training.
-Run from the extracted worker kit; original A:/focus files remain read-only.
+Run from the extracted worker kit or a full checkout. Model folders come from FOCUS_HOME (default:
+this folder) or the FOCUS_MODEL_* settings; they are only read.
 """
 from __future__ import annotations
 
@@ -52,6 +53,23 @@ class NoRedirect(HTTPRedirectHandler):
             "Connection redirected before reaching FOCUS. The preview may require "
             "Replit sign-in, or the website address may have changed. No credentials "
             "were forwarded. Use Check-Connection.cmd; do not change model files."
+        )
+
+
+def check_code_version(handshake: dict) -> None:
+    """Refuse a worker whose source differs from the running backend (stale ZIP or checkout)."""
+    try:
+        from focus_ml.code_version import ISOLATE_CONTRACT, code_version
+    except ImportError:
+        raise ConnectionSetupError(
+            "This worker copy has no focus_ml package; extract the full worker ZIP or use the repo checkout."
+        ) from None
+    theirs, ours = handshake.get("code_version"), code_version()
+    if theirs != ours or handshake.get("isolate_contract") != ISOLATE_CONTRACT:
+        raise ConnectionSetupError(
+            "The worker code does not match the website (website %s, this worker %s). Download the "
+            "worker ZIP again from the website, or run git pull --ff-only in the checkout, then restart. "
+            "Nothing was loaded." % (theirs or "unknown", ours)
         )
 
 
@@ -109,6 +127,7 @@ class WorkerClient:
                 result = json.loads(raw)
                 if not isinstance(result, dict) or result.get("worker_protocol") != 1:
                     raise ConnectionSetupError("The address is not a compatible FOCUS worker API.")
+                check_code_version(result)
         except HTTPError as exc:
             if exc.code in (401, 403):
                 raise ConnectionSetupError(
@@ -242,15 +261,30 @@ class WorkerClient:
         elif kind == "isolate":
             # The request carries the enrollment and the cached diarization. No
             # video, frame, face or lip data exists on this path.
+            from focus_ml.code_version import ISOLATE_CONTRACT
             from focus_ml.voice.engine import regions_to_wire
+            if payload.get("contract") != ISOLATE_CONTRACT or not {"voiceprint", "diarization"} <= payload.keys():
+                raise ValueError("isolate request does not match this worker (contract %r, expected %r)"
+                                 % (payload.get("contract"), ISOLATE_CONTRACT))
+            extra = {}
+            if payload.get("reference_wav_b64"):
+                # Clean enrollment audio only (an uploaded voice file); same task payload cap.
+                import base64
+                import io
+                import wave
+                import numpy as np
+                with wave.open(io.BytesIO(base64.b64decode(payload["reference_wav_b64"])), "rb") as ref:
+                    extra["reference_audio"] = np.frombuffer(
+                        ref.readframes(ref.getnframes()), dtype="<i2").astype(np.float32) / 32768.0
             result = engine.isolate_audio(
-                str(video), payload["voiceprint"], payload["diarization"], directory)
+                str(video), payload["voiceprint"], payload["diarization"], directory, **extra)
             wav = Path(result.wav_path)
             if wav.resolve().parent != Path(directory).resolve():
                 raise ValueError("engine output is outside its task directory")
             if result.source_offset_ms != 0 or wav.stat().st_size > MAX_OUTPUT_AUDIO_BYTES:
                 raise ValueError("engine output is oversized or shifted")
-            self.json(prefix + "/regions", {"regions": regions_to_wire(result.details["regions"])})
+            self.json(prefix + "/regions", {"regions": regions_to_wire(result.details["regions"]),
+                                            "routing": result.details.get("routing_summary")})
             with self.request(
                 prefix + "/audio", wav.read_bytes(), "audio/wav", {"X-Focus-Engine": "audio_only"},
             ) as response:
@@ -339,14 +373,20 @@ def run(url, focus, *, local_api=False, engine=None):
     print("Checking website connection before loading models...", flush=True)
     client.preflight()
     print("FOCUS connection verified.", flush=True)
-    focus = Path(focus).resolve()
-    os.environ.update({
-        "HF_HOME": str(focus / "cache" / "hf"),
-        "TORCH_HOME": str(focus / "cache" / "torch"),
-        "FOCUS_MODEL_SOURCE": str(focus / "Dolphin"),
-        "FOCUS_MODEL_CACHE": str(focus / "cache" / "hf"),
-        "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1",
-    })
+    from focus_ml import hardware
+    from focus_ml.local_paths import focus_home, missing_model_assets, model_environment
+    gpu = hardware.detect()
+    if not gpu["usable"]:
+        raise RuntimeError("No usable NVIDIA GPU for this worker: " + "; ".join(gpu["blockers"]) +
+                           ". Run Focus-Check-GPU.cmd for details.")
+    print(f"GPU: {gpu['device']} (driver {gpu['driver']}, {gpu['vram_free_mib']} of "
+          f"{gpu['vram_total_mib']} MiB free, compute capability "
+          f"{gpu['compute_capability'][0]}.{gpu['compute_capability'][1]}).", flush=True)
+    settings = model_environment(focus_home(focus))
+    problems = missing_model_assets(settings)
+    if problems:
+        raise RuntimeError("Local models are not set up: " + "; ".join(problems))
+    os.environ.update(settings)
     engine_name = engine or os.environ.get("FOCUS_ISOLATION_ENGINE") or "audio_only"
     # audio_only handles the voice tasks; the lip engine setting below still
     # serves face detection and any lip-based job the website is set to.
@@ -415,7 +455,8 @@ def main():
     parser.add_argument("--engine", choices=ENGINES,
                         help="Isolation engine (default: FOCUS_ISOLATION_ENGINE or audio_only)")
     parser.add_argument("--url")
-    parser.add_argument("--focus", default="A:/focus")
+    parser.add_argument("--focus", default=None,
+                        help="Folder with Dolphin/ and cache/ (default: FOCUS_HOME, else this project folder)")
     parser.add_argument("--local-api", action="store_true",
                         help="Use only the loopback trial API and its separate local credential")
     args = parser.parse_args()

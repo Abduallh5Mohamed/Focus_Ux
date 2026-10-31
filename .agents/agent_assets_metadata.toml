@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "JEJoyP60X5DEaq0Lj2EFJ"
+uri = "file://product/experiments/real_tse/results/report.html"
+type = "html"
+title = "Real target-speaker extraction experiment"
+description = "Completion summary, tables, per-mix players (audio in listen/), licences and RTX 3050 commands. CPU, English LibriSpeech."
+logical_id = "1d556933-01eb-4060-9896-76e808c6fbdf"
+content_hash = "sha256:68be4a27702b2e21318fe020f27ed43fe8a54dcd71596cf04a89aa5f64d403c0"
+size = 73038
+mtime_ms = 1793401478336
+storage_uri = "gcs://replit-rams-assets-worf/rams/assets/repl:db76bae3-9d96-4329-8d98-adc44fef7a0f/1d556933-01eb-4060-9896-76e808c6fbdf/566f682d-2b46-4f38-9912-8efcee87a0cd"
+storage_version_token = "1793401538384650"
+content_type = "text/html"

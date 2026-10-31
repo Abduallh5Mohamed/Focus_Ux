@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import base64
+import json
 import os
 import subprocess
 import tempfile
@@ -16,6 +17,7 @@ from .interfaces import DetectedFace, ProviderError
 from .media_probe import probe_video
 
 ENGINE_WARNING = "engine: "  # marker stored with the job's audio warnings
+ROUTING_PREFIX = "routing: "  # JSON overlap-routing summary stored the same way
 
 
 def decode_faces(items):
@@ -241,17 +243,31 @@ class InferenceProviders:
                                                 retryable=False)
         audio = self.audio_path(job.video_id)
         diarization = analysis["result"]["diarization"]
-        voiceprint = enrollment["voiceprint"]
+        voiceprint = dict(enrollment["voiceprint"])
+        # Clean reference audio for target-conditioned overlap models (uploaded voice
+        # files only; other enrollments rebuild it from the recording). Audio, no video.
+        reference_b64 = voiceprint.pop("reference_wav_b64", None)
         on_progress("matching", 0.0)
         if self.bridge:
-            data, duration, engine, regions = self.bridge.call(
+            from focus_ml.code_version import ISOLATE_CONTRACT
+            payload = {"voiceprint": voiceprint, "diarization": diarization, "contract": ISOLATE_CONTRACT}
+            if reference_b64:
+                payload["reference_wav_b64"] = reference_b64
+            data, duration, engine, regions, *rest = self.bridge.call(
                 kind="isolate", video_id=job.video_id, video_path=audio,
-                payload={"voiceprint": voiceprint, "diarization": diarization},
+                payload=payload,
                 timeout_s=max(1800.0, video.duration_ms / 1000 * 10))
             path = Path(job_dir) / "isolated.wav"
             path.write_bytes(data)
+            routing = rest[0] if rest else None
         else:
-            result = self.engine.isolate_audio(audio, voiceprint, diarization, job_dir, on_progress)
+            reference = None
+            if reference_b64:
+                from .remote_inference import decode_reference
+                reference = decode_reference(reference_b64)
+            result = self.engine.isolate_audio(audio, voiceprint, diarization, job_dir, on_progress,
+                                               **({"reference_audio": reference} if reference is not None else {}))
+            routing = result.details.get("routing_summary")
             from focus_ml.voice.engine import regions_to_wire
             from .remote_inference import validate_wav
             path = Path(result.wav_path)
@@ -270,7 +286,11 @@ class InferenceProviders:
         warnings = [ENGINE_WARNING + engine]
         if not self.bridge:
             warnings.extend(result.warnings)
-        if not any(r["label"] == "target" for r in regions):
+        if routing:
+            warnings += [t for t in routing.get("notices") or [] if t not in warnings]
+            warnings.append(ROUTING_PREFIX + json.dumps(routing, separators=(",", ":")))
+        if not any(r["label"] == "target" for r in regions) and not (
+                routing and (routing.get("route_seconds") or {}).get("genuine_extraction", 0) > 0):
             warnings.append("The enrolled voice was not found in the audio; the result is silent.")
         return TargetRunResult(str(path), duration, source_offset_ms=0, warnings=warnings,
                                follow_periods=periods)

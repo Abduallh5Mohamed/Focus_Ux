@@ -30,6 +30,8 @@ from .enroll import (
 )
 from .errors import EnrollmentError
 from .extractor import Extractor, build_extractor
+from .extractor import GatedBaseline
+from .routing import RoutedExtractor, RoutingConfig, routing_from_env, summarize_routing
 from .match import MatchConfig, classify_regions
 from .profile import ResidencyPolicy
 from .preprocess import load_canonical, slice_samples
@@ -57,16 +59,20 @@ class AudioOnlyEngine:
     def __init__(self, diarizer: Diarizer, embedder: Embedder, *,
                  match: MatchConfig | None = None, extractor: Extractor | None = None,
                  enrollment: EnrollmentConfig | None = None,
-                 residency: ResidencyPolicy | None = None, log=None):
+                 residency: ResidencyPolicy | None = None, log=None,
+                 routing: RoutingConfig | None = None, overlap_extractor=None):
         self.diarizer, self.embedder = diarizer, embedder
         # Default residency unloads every model between stages (the validated
         # behaviour). A policy built from measured VRAM may keep some loaded.
         self.residency = residency or ResidencyPolicy()
         self.log = log   # optional StageLog/StageProfiler; None = no profiling
         self.match = match or MatchConfig.for_embedder(embedder.name)
-        # Default is the ducked baseline: the hard gate wrote digital silence
-        # for 41.7 % of a real job (docs/AUDIO_ISOLATION_DIAGNOSIS.md).
-        self.extractor = extractor or build_extractor()
+        # An explicit ``extractor`` is used as given. Otherwise isolate() routes by
+        # ``routing``; ``overlap_extractor`` (an overlap.OverlapExtractor) is None = disabled.
+        self.extractor = extractor or GatedBaseline()
+        self._explicit_extractor = extractor is not None
+        self.routing = routing or RoutingConfig()
+        self.overlap_extractor = overlap_extractor
         self.enrollment = enrollment or EnrollmentConfig()
 
     @classmethod
@@ -75,7 +81,15 @@ class AudioOnlyEngine:
         from .diarizer import PyannoteDiarizer
         from .embedder import build_embedder
         source = os.environ if env is None else env
-        return cls(PyannoteDiarizer(), build_embedder(source.get("FOCUS_VOICE_EMBEDDER") or "ecapa"))
+        embedder = build_embedder(source.get("FOCUS_VOICE_EMBEDDER") or "ecapa")
+        routing, overlap_name = routing_from_env(source)
+        overlap = None
+        if overlap_name:   # opt-in only; never the default (docs/OVERLAP_PRODUCTION.md)
+            from ..overlap.candidates import build_candidate
+            from .gpu import resolve_device
+            overlap = build_candidate(overlap_name, device=resolve_device("auto"), embedder=embedder)
+        extractor = build_extractor(source) if source.get("FOCUS_VOICE_EXTRACTOR") else None
+        return cls(PyannoteDiarizer(), embedder, extractor=extractor, routing=routing, overlap_extractor=overlap)
 
     def _stage(self, name: str):
         import contextlib
@@ -179,11 +193,68 @@ class AudioOnlyEngine:
         with self._stage("enroll"):
             vp = enroll_from_file(samples, diar, self.embedder, self.enrollment, name)
         self._release("embedder")
-        return {"voiceprint": vp.as_dict(), "warnings": vp.warnings}
+        out = {"voiceprint": vp.as_dict(), "warnings": vp.warnings}
+        # The clean spans index THIS file, which is not kept; keep a short clean
+        # reference so a target-conditioned overlap model can still be used later.
+        spans = [Segment(float(s["start"]), float(s["end"]))
+                 for s in vp.source.get("clean_spans") or []]
+        if spans:
+            from ..overlap.base import trim_enrollment
+            out["reference_wav_b64"] = _wav_b64(trim_enrollment(
+                np.concatenate([slice_samples(samples, s) for s in spans])))
+        return out
 
     # -- isolation -----------------------------------------------------------
+    def _enrollment_audio(self, samples, enrollment: Voiceprint, path: str | None, diar=None,
+                          reference=None):
+        """Clean enrollment audio for target-conditioned models: a separate recording
+        if given, else reference audio kept at enrollment (uploaded voice files), else
+        the clean spans the voiceprint was made from (spans of this same audio)."""
+        from ..overlap.base import trim_enrollment
+        if path:
+            if not os.path.isfile(path):
+                raise EnrollmentError("The enrollment recording is missing, so the selected voice cannot "
+                                      "be used as a reference. Upload it again.")
+            return trim_enrollment(load_canonical(path))
+        if reference is not None and len(reference):
+            return trim_enrollment(reference)
+        src = enrollment.source or {}
+        if src.get("kind") == "voice_file":
+            return None   # its spans index the uploaded file, not this recording
+        spans = [Segment(float(s["start"]), float(s["end"])) for s in src.get("clean_spans") or []]
+        if not spans and src.get("kind") == "speaker_label" and diar is not None:
+            spans = [s for s in _clean_spans(diar, src.get("speaker"))[0]
+                     if s.duration >= self.enrollment.min_span_s]
+        return trim_enrollment(np.concatenate([slice_samples(samples, s) for s in spans])) if spans else None
+
+    def _hybrid_config(self):
+        """Window length and batch size from the GPU's free VRAM (and explicit FOCUS_OVERLAP_* settings).
+        Only on CUDA: a CPU or test extractor keeps the defaults."""
+        from .. import hardware
+        from ..overlap.hybrid import HybridConfig
+        if not str(getattr(self.overlap_extractor, "device", "cpu")).startswith("cuda"):
+            return HybridConfig()
+        return HybridConfig(**hardware.hybrid_overrides(self.overlap_extractor.info))
+
+    def _routed(self, samples, enrollment: Voiceprint, enrollment_audio_path: str | None, diar=None,
+                reference=None):
+        if self._explicit_extractor:
+            return self.extractor
+        routed = RoutedExtractor(None, self.routing)
+        if self.overlap_extractor is not None:
+            routed.requested = self.overlap_extractor.info.name
+            ref = self._enrollment_audio(samples, enrollment, enrollment_audio_path, diar, reference)
+            if ref is None:
+                routed.skip_reason = "no clean enrollment audio is available for the target-conditioned model"
+            else:
+                from ..overlap.hybrid import HybridExtractor
+                routed.hybrid = HybridExtractor(self.overlap_extractor, enrollment, ref, self.embedder,
+                                                self._hybrid_config())
+        return routed
+
     def isolate(self, audio_path: str, voiceprint: dict, diarization: dict, job_dir: str,
-                on_progress=None) -> EngineResult:
+                on_progress=None, enrollment_audio_path: str | None = None,
+                reference_audio=None) -> EngineResult:
         """Audio + enrollment + the cached diarization in; isolated.wav and the
         labelled timeline out. Unmatched speech is muted; separation-based
         extractors keep overlap only where the evidence supports it - see
@@ -203,23 +274,23 @@ class AudioOnlyEngine:
         # Separation-based extractors re-check source identity against the
         # enrollment inside extract(), so the embedder must stay loaded until
         # after that final identity use; the mask extractors release it now.
-        identity_capable = hasattr(self.extractor, "set_context")
+        extractor = self._routed(samples, enrollment, enrollment_audio_path, diar, reference_audio)
+        identity_capable = hasattr(extractor, "set_context")
         if identity_capable:
-            self.extractor.set_context(enrollment, self.embedder, self.match)
-        else:
-            self._release("embedder")
+            extractor.set_context(enrollment, self.embedder, self.match)
         if on_progress:
             on_progress("matching", 1.0)
             on_progress("separating", 0.0)
         try:
             with self._stage("extract"):
-                out = self.extractor.extract(samples, regions)
+                out = extractor.extract(samples, regions)
         finally:
+            self._release("embedder")
             if identity_capable:
-                self._release("embedder")
-                identity_params = self.extractor.params() if hasattr(self.extractor, "params") else {}
-                if hasattr(self.extractor, "clear_context"):
-                    self.extractor.clear_context()
+                identity_params = extractor.params() if hasattr(extractor, "params") else {}
+                if hasattr(extractor, "clear_context"):
+                    extractor.clear_context()
+        routing = getattr(extractor, "last_report", None) or None
         path = os.path.join(str(job_dir), "isolated.wav")
         write_wav(path, out, SAMPLE_RATE)
         if on_progress:
@@ -228,7 +299,7 @@ class AudioOnlyEngine:
         target_s = total([Segment(r.start, r.end) for r in regions if r.label == TARGET])
         if target_s <= 0 and not np.any(out):
             warnings.append("The enrolled voice was not found in the audio; the result is silent.")
-        identity = getattr(self.extractor, "last_identity", None) if identity_capable else None
+        identity = getattr(extractor, "last_identity", None) if identity_capable else None
         if identity is not None and identity.get("warnings"):
             warnings += list(identity["warnings"])
         if identity is not None and identity.get("refusal") is None \
@@ -239,12 +310,14 @@ class AudioOnlyEngine:
                             "handling is provisional and has not been validated on real "
                             "recordings.")
         extractor_params = identity_params if identity_capable else (
-            self.extractor.params() if hasattr(self.extractor, "params") else {})
+            extractor.params() if hasattr(extractor, "params") else {})
         output_regions = [r.as_dict() for r in regions if r.label in (TARGET, UNCERTAIN)]
         if identity is not None and identity.get('source_output') == 'full_selected_stem':
             output_regions = [{'start': 0.0, 'end': len(out) / SAMPLE_RATE, 'label': TARGET,
                                'reason': 'global_separated_source_match', 'speaker': None,
                                'score': max(s for s in identity['similarities'] if s is not None)}]
+        if routing:
+            warnings += routing["notices"]
         return EngineResult(
             wav_path=path, duration_ms=duration_ms_from_samples(len(samples), SAMPLE_RATE),
             source_offset_ms=0, timings={"total": round(time.perf_counter() - t0, 2)},
@@ -252,11 +325,13 @@ class AudioOnlyEngine:
             details={"regions": output_regions,
                      # Which mask ran, so a result can never be mistaken for a
                      # separation model's output.
-                     "extractor": self.extractor.name, "extractor_params": extractor_params,
+                     "extractor": extractor.name, "extractor_params": extractor_params,
                      # Evidence behind the selected source (selection method,
                      # stem similarities, refusal, overlap stats); None exactly
                      # when the running extractor makes no identity claim.
-                     "identity": identity})
+                     "identity": identity,
+                     "routing_summary": summarize_routing(routing),
+                     **({"routing": routing} if routing else {})})
 
 
 def regions_to_wire(regions: list[dict]) -> list[dict]:

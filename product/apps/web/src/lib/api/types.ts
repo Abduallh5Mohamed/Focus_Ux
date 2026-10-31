@@ -88,7 +88,39 @@ export interface FollowPeriod {
   output_allowed: boolean;
 }
 
+/** What the overlap step actually did. A fallback is never isolation. */
+export interface OverlapRouting {
+  extractor_requested: string | null;
+  extractor_ran: boolean;
+  overlap_extraction: 'disabled' | 'ran' | 'skipped' | 'failed';
+  reason: string | null;
+  overlap_seconds: number;
+  windows: number;
+  pieces_extracted: number;
+  pieces_muted: number;
+  muted_seconds: number;
+  fallback_used: boolean;
+  fallback_seconds: number;
+  isolation_claim: 'strict_isolation' | 'not_isolation';
+  /** strict = isolation that mutes unconfirmed speech; continuity = reduced original mix, not isolation. */
+  mode?: 'strict' | 'continuity';
+  /** Paths the job really took (never inferred from settings). */
+  route_labels?: Array<
+    | 'genuine_extraction'
+    | 'gated_baseline'
+    | 'strict_muting'
+    | 'continuity_fallback'
+    | 'extraction_skipped'
+    | 'extraction_failed'
+  >;
+  /** Seconds of uncertain speech with no confirmed target audio (possibly lost in strict mode). */
+  unconfirmed_seconds?: number;
+  target_may_be_lost?: boolean;
+}
+
 export interface JobResult {
+  /** Audio-only engine: overlap routing summary (absent for other engines). */
+  routing?: OverlapRouting;
   /** Optional: absent until the voice-follow models are approved and integrated. */
   follow_periods?: FollowPeriod[];
   duration_ms?: number;

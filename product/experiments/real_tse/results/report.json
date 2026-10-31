@@ -1,0 +1,7130 @@
+{
+ "basis": {
+  "data": "LibriSpeech dev-clean solo recordings mixed with exact references (CC-BY-4.0)",
+  "device": "cpu",
+  "regions": "oracle (ground truth from the mixing plan)",
+  "seed": 83,
+  "cpu_threads": 8,
+  "embedder": "ecapa",
+  "versions": {
+   "torch": "2.15.0+cpu",
+   "torchaudio": "2.11.1+cpu",
+   "numpy": "2.5.4",
+   "scipy": "1.18.1",
+   "soundfile": "0.14.0",
+   "speechbrain": "1.1.2",
+   "hyperpyyaml": "1.2.3",
+   "pyyaml": "6.0.3",
+   "wespeaker": "0.0.0",
+   "silero-vad": "6.2.3",
+   "onnxruntime": "1.31.1",
+   "kaldiio": "2.18.1",
+   "pystoi": "0.4.1",
+   "pesq": "0.0.4",
+   "huggingface-hub": "2.4.0",
+   "setuptools": "84.2.1",
+   "python": "3.12.12",
+   "platform": "Linux-6.18.59-x86_64-with-glibc2.40"
+  },
+  "caveat": "English, non-Egyptian read speech. Not an Egyptian-Arabic or RTX 3050 result.",
+  "language": "english_librispeech_non_egyptian"
+ },
+ "set": {
+  "language": "english_librispeech_non_egyptian",
+  "noise_dir": null,
+  "mixes": 12,
+  "region_truth": "turn-level, from the mixing plan (oracle)",
+  "seed": 83,
+  "layout": "experiment",
+  "replicates": 1
+ },
+ "mixes": [
+  {
+   "id": "mix01",
+   "target": "1462",
+   "others": [
+    "652"
+   ],
+   "n_overlap": 2,
+   "scenario": "full",
+   "target_rel_db": -6.0,
+   "seconds": 10.0,
+   "regions": [
+    {
+     "start": 0.0,
+     "end": 10.0,
+     "active": [
+      "1462",
+      "652"
+     ]
+    }
+   ],
+   "plan": [
+    {
+     "speaker": "1462",
+     "start": 0.0,
+     "length": 10.0
+    },
+    {
+     "speaker": "652",
+     "start": 0.0,
+     "length": 10.0
+    }
+   ]
+  },
+  {
+   "id": "mix02",
+   "target": "1673",
+   "others": [
+    "1462"
+   ],
+   "n_overlap": 2,
+   "scenario": "full",
+   "target_rel_db": 0.0,
+   "seconds": 10.0,
+   "regions": [
+    {
+     "start": 0.0,
+     "end": 10.0,
+     "active": [
+      "1462",
+      "1673"
+     ]
+    }
+   ],
+   "plan": [
+    {
+     "speaker": "1673",
+     "start": 0.0,
+     "length": 10.0
+    },
+    {
+     "speaker": "1462",
+     "start": 0.0,
+     "length": 10.0
+    }
+   ]
+  },
+  {
+   "id": "mix03",
+   "target": "174",
+   "others": [
+    "1919"
+   ],
+   "n_overlap": 2,
+   "scenario": "full",
+   "target_rel_db": 6.0,
+   "seconds": 10.0,
+   "regions": [
+    {
+     "start": 0.0,
+     "end": 10.0,
+     "active": [
+      "174",
+      "1919"
+     ]
+    }
+   ],
+   "plan": [
+    {
+     "speaker": "174",
+     "start": 0.0,
+     "length": 10.0
+    },
+    {
+     "speaker": "1919",
+     "start": 0.0,
+     "length": 10.0
+    }
+   ]
+  },
+  {
+   "id": "mix04",
+   "target": "1919",
+   "others": [
+    "174"
+   ],
+   "n_overlap": 2,
+   "scenario": "partial",
+   "target_rel_db": -6.0,
+   "seconds": 10.0,
+   "regions": [
+    {
+     "start": 0.0,
+     "end": 2.5,
+     "active": [
+      "1919"
+     ]
+    },
+    {
+     "start": 2.5,
+     "end": 5.0,
+     "active": [
+      "174",
+      "1919"
+     ]
+    },
+    {
+     "start": 5.0,
+     "end": 7.5,
+     "active": [
+      "174"
+     ]
+    },
+    {
+     "start": 8.0,
+     "end": 10.0,
+     "active": [
+      "1919"
+     ]
+    }
+   ],
+   "plan": [
+    {
+     "speaker": "1919",
+     "start": 0.0,
+     "length": 5.0
+    },
+    {
+     "speaker": "174",
+     "start": 2.5,
+     "length": 5.0
+    },
+    {
+     "speaker": "1919",
+     "start": 8.0,
+     "length": 2.0
+    }
+   ]
+  },
+  {
+   "id": "mix05",
+   "target": "251",
+   "others": [
+    "1462"
+   ],
+   "n_overlap": 2,
+   "scenario": "partial",
+   "target_rel_db": 0.0,
+   "seconds": 10.0,
+   "regions": [
+    {
+     "start": 0.0,
+     "end": 2.5,
+     "active": [
+      "251"
+     ]
+    },
+    {
+     "start": 2.5,
+     "end": 5.0,
+     "active": [
+      "1462",
+      "251"
+     ]
+    },
+    {
+     "start": 5.0,
+     "end": 7.5,
+     "active": [
+      "1462"
+     ]
+    },
+    {
+     "start": 8.0,
+     "end": 10.0,
+     "active": [
+      "251"
+     ]
+    }
+   ],
+   "plan": [
+    {
+     "speaker": "251",
+     "start": 0.0,
+     "length": 5.0
+    },
+    {
+     "speaker": "1462",
+     "start": 2.5,
+     "length": 5.0
+    },
+    {
+     "speaker": "251",
+     "start": 8.0,
+     "length": 2.0
+    }
+   ]
+  },
+  {
+   "id": "mix06",
+   "target": "422",
+   "others": [
+    "174"
+   ],
+   "n_overlap": 2,
+   "scenario": "partial",
+   "target_rel_db": 6.0,
+   "seconds": 10.0,
+   "regions": [
+    {
+     "start": 0.0,
+     "end": 2.5,
+     "active": [
+      "422"
+     ]
+    },
+    {
+     "start": 2.5,
+     "end": 5.0,
+     "active": [
+      "174",
+      "422"
+     ]
+    },
+    {
+     "start": 5.0,
+     "end": 7.5,
+     "active": [
+      "174"
+     ]
+    },
+    {
+     "start": 8.0,
+     "end": 10.0,
+     "active": [
+      "422"
+     ]
+    }
+   ],
+   "plan": [
+    {
+     "speaker": "422",
+     "start": 0.0,
+     "length": 5.0
+    },
+    {
+     "speaker": "174",
+     "start": 2.5,
+     "length": 5.0
+    },
+    {
+     "speaker": "422",
+     "start": 8.0,
+     "length": 2.0
+    }
+   ]
+  },
+  {
+   "id": "mix07",
+   "target": "652",
+   "others": [
+    "84",
+    "251"
+   ],
+   "n_overlap": 3,
+   "scenario": "full",
+   "target_rel_db": -6.0,
+   "seconds": 10.0,
+   "regions": [
+    {
+     "start": 0.0,
+     "end": 10.0,
+     "active": [
+      "251",
+      "652",
+      "84"
+     ]
+    }
+   ],
+   "plan": [
+    {
+     "speaker": "652",
+     "start": 0.0,
+     "length": 10.0
+    },
+    {
+     "speaker": "84",
+     "start": 0.0,
+     "length": 10.0
+    },
+    {
+     "speaker": "251",
+     "start": 0.0,
+     "length": 10.0
+    }
+   ]
+  },
+  {
+   "id": "mix08",
+   "target": "84",
+   "others": [
+    "652",
+    "251"
+   ],
+   "n_overlap": 3,
+   "scenario": "full",
+   "target_rel_db": 0.0,
+   "seconds": 10.0,
+   "regions": [
+    {
+     "start": 0.0,
+     "end": 10.0,
+     "active": [
+      "251",
+      "652",
+      "84"
+     ]
+    }
+   ],
+   "plan": [
+    {
+     "speaker": "84",
+     "start": 0.0,
+     "length": 10.0
+    },
+    {
+     "speaker": "652",
+     "start": 0.0,
+     "length": 10.0
+    },
+    {
+     "speaker": "251",
+     "start": 0.0,
+     "length": 10.0
+    }
+   ]
+  },
+  {
+   "id": "mix09",
+   "target": "1462",
+   "others": [
+    "422",
+    "1919"
+   ],
+   "n_overlap": 3,
+   "scenario": "full",
+   "target_rel_db": 6.0,
+   "seconds": 10.0,
+   "regions": [
+    {
+     "start": 0.0,
+     "end": 10.0,
+     "active": [
+      "1462",
+      "1919",
+      "422"
+     ]
+    }
+   ],
+   "plan": [
+    {
+     "speaker": "1462",
+     "start": 0.0,
+     "length": 10.0
+    },
+    {
+     "speaker": "422",
+     "start": 0.0,
+     "length": 10.0
+    },
+    {
+     "speaker": "1919",
+     "start": 0.0,
+     "length": 10.0
+    }
+   ]
+  },
+  {
+   "id": "mix10",
+   "target": "1673",
+   "others": [
+    "174",
+    "251"
+   ],
+   "n_overlap": 3,
+   "scenario": "partial",
+   "target_rel_db": -6.0,
+   "seconds": 10.0,
+   "regions": [
+    {
+     "start": 0.0,
+     "end": 2.0,
+     "active": [
+      "1673"
+     ]
+    },
+    {
+     "start": 2.0,
+     "end": 3.0,
+     "active": [
+      "1673",
+      "174"
+     ]
+    },
+    {
+     "start": 3.0,
+     "end": 5.0,
+     "active": [
+      "1673",
+      "174",
+      "251"
+     ]
+    },
+    {
+     "start": 5.0,
+     "end": 7.0,
+     "active": [
+      "174",
+      "251"
+     ]
+    },
+    {
+     "start": 7.0,
+     "end": 8.0,
+     "active": [
+      "251"
+     ]
+    },
+    {
+     "start": 8.5,
+     "end": 10.0,
+     "active": [
+      "1673"
+     ]
+    }
+   ],
+   "plan": [
+    {
+     "speaker": "1673",
+     "start": 0.0,
+     "length": 5.0
+    },
+    {
+     "speaker": "174",
+     "start": 2.0,
+     "length": 5.0
+    },
+    {
+     "speaker": "251",
+     "start": 3.0,
+     "length": 5.0
+    },
+    {
+     "speaker": "1673",
+     "start": 8.5,
+     "length": 1.5
+    }
+   ]
+  },
+  {
+   "id": "mix11",
+   "target": "174",
+   "others": [
+    "1919",
+    "1673"
+   ],
+   "n_overlap": 3,
+   "scenario": "partial",
+   "target_rel_db": 0.0,
+   "seconds": 10.0,
+   "regions": [
+    {
+     "start": 0.0,
+     "end": 2.0,
+     "active": [
+      "174"
+     ]
+    },
+    {
+     "start": 2.0,
+     "end": 3.0,
+     "active": [
+      "174",
+      "1919"
+     ]
+    },
+    {
+     "start": 3.0,
+     "end": 5.0,
+     "active": [
+      "1673",
+      "174",
+      "1919"
+     ]
+    },
+    {
+     "start": 5.0,
+     "end": 7.0,
+     "active": [
+      "1673",
+      "1919"
+     ]
+    },
+    {
+     "start": 7.0,
+     "end": 8.0,
+     "active": [
+      "1673"
+     ]
+    },
+    {
+     "start": 8.5,
+     "end": 10.0,
+     "active": [
+      "174"
+     ]
+    }
+   ],
+   "plan": [
+    {
+     "speaker": "174",
+     "start": 0.0,
+     "length": 5.0
+    },
+    {
+     "speaker": "1919",
+     "start": 2.0,
+     "length": 5.0
+    },
+    {
+     "speaker": "1673",
+     "start": 3.0,
+     "length": 5.0
+    },
+    {
+     "speaker": "174",
+     "start": 8.5,
+     "length": 1.5
+    }
+   ]
+  },
+  {
+   "id": "mix12",
+   "target": "1919",
+   "others": [
+    "174",
+    "1673"
+   ],
+   "n_overlap": 3,
+   "scenario": "partial",
+   "target_rel_db": 6.0,
+   "seconds": 10.0,
+   "regions": [
+    {
+     "start": 0.0,
+     "end": 2.0,
+     "active": [
+      "1919"
+     ]
+    },
+    {
+     "start": 2.0,
+     "end": 3.0,
+     "active": [
+      "174",
+      "1919"
+     ]
+    },
+    {
+     "start": 3.0,
+     "end": 5.0,
+     "active": [
+      "1673",
+      "174",
+      "1919"
+     ]
+    },
+    {
+     "start": 5.0,
+     "end": 7.0,
+     "active": [
+      "1673",
+      "174"
+     ]
+    },
+    {
+     "start": 7.0,
+     "end": 8.0,
+     "active": [
+      "1673"
+     ]
+    },
+    {
+     "start": 8.5,
+     "end": 10.0,
+     "active": [
+      "1919"
+     ]
+    }
+   ],
+   "plan": [
+    {
+     "speaker": "1919",
+     "start": 0.0,
+     "length": 5.0
+    },
+    {
+     "speaker": "174",
+     "start": 2.0,
+     "length": 5.0
+    },
+    {
+     "speaker": "1673",
+     "start": 3.0,
+     "length": 5.0
+    },
+    {
+     "speaker": "1919",
+     "start": 8.5,
+     "length": 1.5
+    }
+   ]
+  }
+ ],
+ "candidates": {
+  "wesep_bsrnn": {
+   "info": {
+    "name": "wesep_bsrnn",
+    "title": "REAL-TSE WeSep BSRNN (spk_emb_100, 16 kHz)",
+    "mechanism": "target_conditioned",
+    "code_licence": "Apache-2.0 (as stated for the project; no LICENSE file was found at the repository root when checked)",
+    "weights_licence": "no explicit licence",
+    "model_rate": 16000,
+    "categories": [
+     "overlap_2",
+     "overlap_3plus"
+    ],
+    "version": "wenet-e2e/wesep fork REAL-TSE/wesep-real-tse @ 2a54097",
+    "notes": "Conditioned on a WeSpeaker speaker embedding computed from the enrollment audio. Checkpoints are distributed on Google Drive (not Hugging Face).",
+    "fp16_note": "The library call is file based; fp16 autocast is tried and falls back to fp32 on NaN.",
+    "vram_base_mib": 500.0,
+    "vram_per_window_s_mib": 70.0
+   },
+   "blocked": null,
+   "load_seconds": 11.0539,
+   "errors": [],
+   "mixes": {
+    "mix01": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 14.272,
+        "si_sdr_mix_db": -5.423,
+        "si_sdri_db": 19.695,
+        "muted_share": 0.0,
+        "target_retention": 1.0048,
+        "leakage_share": 0.0001,
+        "leakage_ratio": 0.0005,
+        "stoi": 0.8842,
+        "pesq": 2.03,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 14.272,
+        "si_sdr_mix_db": -5.423,
+        "si_sdri_db": 19.695,
+        "muted_share": 0.0,
+        "target_retention": 1.0048,
+        "leakage_share": 0.0001,
+        "leakage_ratio": 0.0005,
+        "stoi": 0.8842,
+        "pesq": 2.03,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 9.0347,
+      "cpu_s": 8.9686,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.9035
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 6.037,
+        "si_sdr_mix_db": -5.423,
+        "si_sdri_db": 11.46,
+        "muted_share": 0.25,
+        "target_retention": 0.7064,
+        "leakage_share": 0.0001,
+        "leakage_ratio": 0.0004,
+        "stoi": 0.6735,
+        "pesq": 1.385,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 6.037,
+        "si_sdr_mix_db": -5.423,
+        "si_sdri_db": 11.46,
+        "muted_share": 0.25,
+        "target_retention": 0.7064,
+        "leakage_share": 0.0001,
+        "leakage_ratio": 0.0004,
+        "stoi": 0.6735,
+        "pesq": 1.385,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 13.427,
+      "cpu_s": 16.6967,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 12.7975,
+      "rtf_overlap": 1.2797,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 2.5,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "uncertain",
+        "score": 0.3893,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "target",
+        "score": 0.5149,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "target",
+        "score": 0.5776,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "target",
+        "score": 0.6799,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix02": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 19.463,
+        "si_sdr_mix_db": 2.831,
+        "si_sdri_db": 16.632,
+        "muted_share": 0.0,
+        "target_retention": 0.9947,
+        "leakage_share": 0.0006,
+        "leakage_ratio": 0.0003,
+        "stoi": 0.9759,
+        "pesq": 3.748,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 19.463,
+        "si_sdr_mix_db": 2.831,
+        "si_sdri_db": 16.632,
+        "muted_share": 0.0,
+        "target_retention": 0.9947,
+        "leakage_share": 0.0006,
+        "leakage_ratio": 0.0003,
+        "stoi": 0.9759,
+        "pesq": 3.748,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 9.095,
+      "cpu_s": 9.0934,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.9095
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 19.507,
+        "si_sdr_mix_db": 2.831,
+        "si_sdri_db": 16.677,
+        "muted_share": 0.0,
+        "target_retention": 0.9985,
+        "leakage_share": 0.0006,
+        "leakage_ratio": 0.0003,
+        "stoi": 0.9757,
+        "pesq": 3.762,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 19.507,
+        "si_sdr_mix_db": 2.831,
+        "si_sdri_db": 16.677,
+        "muted_share": 0.0,
+        "target_retention": 0.9985,
+        "leakage_share": 0.0006,
+        "leakage_ratio": 0.0003,
+        "stoi": 0.9757,
+        "pesq": 3.762,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 12.9204,
+      "cpu_s": 16.1486,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 12.3431,
+      "rtf_overlap": 1.2343,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 0,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "target",
+        "score": 0.5985,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "target",
+        "score": 0.6944,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "target",
+        "score": 0.6927,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "target",
+        "score": 0.6385,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix03": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 16.547,
+        "si_sdr_mix_db": -0.12,
+        "si_sdri_db": 16.667,
+        "muted_share": 0.0,
+        "target_retention": 0.987,
+        "leakage_share": 0.0006,
+        "leakage_ratio": 0.0006,
+        "stoi": 0.9718,
+        "pesq": 2.95,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 16.547,
+        "si_sdr_mix_db": -0.12,
+        "si_sdri_db": 16.667,
+        "muted_share": 0.0,
+        "target_retention": 0.987,
+        "leakage_share": 0.0006,
+        "leakage_ratio": 0.0006,
+        "stoi": 0.9718,
+        "pesq": 2.95,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 9.0986,
+      "cpu_s": 9.0966,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.9099
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 16.511,
+        "si_sdr_mix_db": -0.12,
+        "si_sdri_db": 16.631,
+        "muted_share": 0.0,
+        "target_retention": 0.9882,
+        "leakage_share": 0.0007,
+        "leakage_ratio": 0.0007,
+        "stoi": 0.9714,
+        "pesq": 2.889,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 16.511,
+        "si_sdr_mix_db": -0.12,
+        "si_sdri_db": 16.631,
+        "muted_share": 0.0,
+        "target_retention": 0.9882,
+        "leakage_share": 0.0007,
+        "leakage_ratio": 0.0007,
+        "stoi": 0.9714,
+        "pesq": 2.889,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 13.3939,
+      "cpu_s": 16.6518,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 12.8215,
+      "rtf_overlap": 1.2821,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 0,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "target",
+        "score": 0.6277,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "target",
+        "score": 0.681,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "target",
+        "score": 0.7014,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "target",
+        "score": 0.5809,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix04": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": 20.211,
+        "si_sdr_mix_db": -1.505,
+        "si_sdri_db": 21.716,
+        "muted_share": 0.0,
+        "target_retention": 0.975,
+        "leakage_share": 0.0,
+        "leakage_ratio": 0.0,
+        "stoi": 0.9822,
+        "pesq": 2.907,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 24.905,
+        "si_sdr_mix_db": 0.13,
+        "si_sdri_db": 24.775,
+        "muted_share": 0.046,
+        "target_retention": 0.9976,
+        "leakage_share": 0.0,
+        "leakage_ratio": 0.0,
+        "stoi": 0.9984,
+        "pesq": 3.651,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 9.3788,
+      "cpu_s": 9.3802,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.9379
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": 18.291,
+        "si_sdr_mix_db": -1.505,
+        "si_sdri_db": 19.796,
+        "muted_share": 0.0,
+        "target_retention": 0.9727,
+        "leakage_share": 0.0,
+        "leakage_ratio": 0.0,
+        "stoi": 0.9819,
+        "pesq": 2.535,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 21.23,
+        "si_sdr_mix_db": 0.13,
+        "si_sdri_db": 21.099,
+        "muted_share": 0.3,
+        "target_retention": 0.9839,
+        "leakage_share": 0.0,
+        "leakage_ratio": 0.0,
+        "stoi": 0.9953,
+        "pesq": 3.473,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 3.3883,
+      "cpu_s": 4.205,
+      "audio_s": 10.0,
+      "overlap_s": 2.5,
+      "extract_s": 3.2467,
+      "rtf_overlap": 1.2987,
+      "windows": 1,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 0,
+      "pieces": [
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "target",
+        "score": 0.7222,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix05": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": 18.501,
+        "si_sdr_mix_db": -1.219,
+        "si_sdri_db": 19.72,
+        "muted_share": 0.0,
+        "target_retention": 0.9882,
+        "leakage_share": 0.0001,
+        "leakage_ratio": 0.0001,
+        "stoi": 0.9631,
+        "pesq": 3.179,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 23.603,
+        "si_sdr_mix_db": 1.664,
+        "si_sdri_db": 21.939,
+        "muted_share": 0.048,
+        "target_retention": 0.9909,
+        "leakage_share": 0.0,
+        "leakage_ratio": 0.0,
+        "stoi": 0.9915,
+        "pesq": 3.896,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 9.2606,
+      "cpu_s": 9.2558,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.9261
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": 18.765,
+        "si_sdr_mix_db": -1.219,
+        "si_sdri_db": 19.984,
+        "muted_share": 0.0,
+        "target_retention": 0.9779,
+        "leakage_share": 0.0001,
+        "leakage_ratio": 0.0001,
+        "stoi": 0.9611,
+        "pesq": 3.242,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 23.94,
+        "si_sdr_mix_db": 1.664,
+        "si_sdri_db": 22.277,
+        "muted_share": 0.3,
+        "target_retention": 0.9931,
+        "leakage_share": 0.0,
+        "leakage_ratio": 0.0,
+        "stoi": 0.9909,
+        "pesq": 4.109,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 3.2865,
+      "cpu_s": 4.1026,
+      "audio_s": 10.0,
+      "overlap_s": 2.5,
+      "extract_s": 3.1469,
+      "rtf_overlap": 1.2588,
+      "windows": 1,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 0,
+      "pieces": [
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "target",
+        "score": 0.7309,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix06": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": 22.706,
+        "si_sdr_mix_db": 9.29,
+        "si_sdri_db": 13.416,
+        "muted_share": 0.0,
+        "target_retention": 0.994,
+        "leakage_share": 0.0008,
+        "leakage_ratio": 0.0001,
+        "stoi": 0.9014,
+        "pesq": 3.447,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 28.838,
+        "si_sdr_mix_db": 11.906,
+        "si_sdri_db": 16.932,
+        "muted_share": 0.048,
+        "target_retention": 1.0,
+        "leakage_share": 0.0002,
+        "leakage_ratio": 0.0,
+        "stoi": 0.9696,
+        "pesq": 3.937,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 9.3243,
+      "cpu_s": 9.3218,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.9324
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": 21.114,
+        "si_sdr_mix_db": 9.29,
+        "si_sdri_db": 11.824,
+        "muted_share": 0.0,
+        "target_retention": 0.9913,
+        "leakage_share": 0.0007,
+        "leakage_ratio": 0.0001,
+        "stoi": 0.8972,
+        "pesq": 3.416,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 27.459,
+        "si_sdr_mix_db": 11.906,
+        "si_sdri_db": 15.553,
+        "muted_share": 0.3,
+        "target_retention": 0.9979,
+        "leakage_share": 0.0001,
+        "leakage_ratio": 0.0,
+        "stoi": 0.9673,
+        "pesq": 4.066,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 3.4875,
+      "cpu_s": 4.3011,
+      "audio_s": 10.0,
+      "overlap_s": 2.5,
+      "extract_s": 3.3355,
+      "rtf_overlap": 1.3342,
+      "windows": 1,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 0,
+      "pieces": [
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "target",
+        "score": 0.6681,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix07": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -9.879,
+        "si_sdr_mix_db": -9.922,
+        "si_sdri_db": 0.043,
+        "muted_share": 0.0,
+        "target_retention": 0.5925,
+        "leakage_share": 0.5232,
+        "leakage_ratio": 9.6813,
+        "stoi": 0.5285,
+        "pesq": 1.106,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -9.879,
+        "si_sdr_mix_db": -9.922,
+        "si_sdri_db": 0.043,
+        "muted_share": 0.0,
+        "target_retention": 0.5925,
+        "leakage_share": 0.5232,
+        "leakage_ratio": 9.6813,
+        "stoi": 0.5285,
+        "pesq": 1.106,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 11.0276,
+      "cpu_s": 11.0266,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 1.1028
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -10.993,
+        "si_sdr_mix_db": -9.922,
+        "si_sdri_db": -1.071,
+        "muted_share": 0.5,
+        "target_retention": 0.2069,
+        "leakage_share": 0.0915,
+        "leakage_ratio": 4.8516,
+        "stoi": 0.2908,
+        "pesq": 1.085,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -10.993,
+        "si_sdr_mix_db": -9.922,
+        "si_sdri_db": -1.071,
+        "muted_share": 0.5,
+        "target_retention": 0.2069,
+        "leakage_share": 0.0915,
+        "leakage_ratio": 4.8516,
+        "stoi": 0.2908,
+        "pesq": 1.085,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 14.4589,
+      "cpu_s": 17.7218,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 13.8492,
+      "rtf_overlap": 1.3849,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 5.0,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "uncertain",
+        "score": 0.2635,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "uncertain",
+        "score": 0.2722,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "target",
+        "score": 0.4494,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "target",
+        "score": 0.4881,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix08": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -1.667,
+        "si_sdr_mix_db": -3.907,
+        "si_sdri_db": 2.24,
+        "muted_share": 0.0,
+        "target_retention": 0.7995,
+        "leakage_share": 0.2414,
+        "leakage_ratio": 0.7941,
+        "stoi": 0.7031,
+        "pesq": 1.148,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -1.667,
+        "si_sdr_mix_db": -3.907,
+        "si_sdri_db": 2.24,
+        "muted_share": 0.0,
+        "target_retention": 0.7995,
+        "leakage_share": 0.2414,
+        "leakage_ratio": 0.7941,
+        "stoi": 0.7031,
+        "pesq": 1.148,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 9.8599,
+      "cpu_s": 9.8539,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.986
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -1.277,
+        "si_sdr_mix_db": -3.907,
+        "si_sdri_db": 2.63,
+        "muted_share": 0.0,
+        "target_retention": 0.8072,
+        "leakage_share": 0.1915,
+        "leakage_ratio": 0.6239,
+        "stoi": 0.7164,
+        "pesq": 1.147,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -1.277,
+        "si_sdr_mix_db": -3.907,
+        "si_sdri_db": 2.63,
+        "muted_share": 0.0,
+        "target_retention": 0.8072,
+        "leakage_share": 0.1915,
+        "leakage_ratio": 0.6239,
+        "stoi": 0.7164,
+        "pesq": 1.147,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 14.718,
+      "cpu_s": 17.9762,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 14.0763,
+      "rtf_overlap": 1.4076,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 0,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "target",
+        "score": 0.4209,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "target",
+        "score": 0.4738,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "target",
+        "score": 0.4455,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "target",
+        "score": 0.5254,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix09": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 10.517,
+        "si_sdr_mix_db": 2.28,
+        "si_sdri_db": 8.237,
+        "muted_share": 0.0,
+        "target_retention": 1.0154,
+        "leakage_share": 0.0311,
+        "leakage_ratio": 0.018,
+        "stoi": 0.915,
+        "pesq": 1.755,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 10.517,
+        "si_sdr_mix_db": 2.28,
+        "si_sdri_db": 8.237,
+        "muted_share": 0.0,
+        "target_retention": 1.0154,
+        "leakage_share": 0.0311,
+        "leakage_ratio": 0.018,
+        "stoi": 0.915,
+        "pesq": 1.755,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 10.082,
+      "cpu_s": 10.0773,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 1.0082
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 9.605,
+        "si_sdr_mix_db": 2.28,
+        "si_sdri_db": 7.325,
+        "muted_share": 0.0,
+        "target_retention": 1.0442,
+        "leakage_share": 0.0598,
+        "leakage_ratio": 0.0336,
+        "stoi": 0.9056,
+        "pesq": 1.661,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 9.605,
+        "si_sdr_mix_db": 2.28,
+        "si_sdri_db": 7.325,
+        "muted_share": 0.0,
+        "target_retention": 1.0442,
+        "leakage_share": 0.0598,
+        "leakage_ratio": 0.0336,
+        "stoi": 0.9056,
+        "pesq": 1.661,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 14.8383,
+      "cpu_s": 18.0862,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 14.1858,
+      "rtf_overlap": 1.4186,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 0,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "target",
+        "score": 0.5075,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "target",
+        "score": 0.5615,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "target",
+        "score": 0.441,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "target",
+        "score": 0.5462,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix10": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": 7.236,
+        "si_sdr_mix_db": -1.965,
+        "si_sdri_db": 9.201,
+        "muted_share": 0.0,
+        "target_retention": 0.9678,
+        "leakage_share": 0.0328,
+        "leakage_ratio": 0.0546,
+        "stoi": 0.8965,
+        "pesq": 1.951,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 7.498,
+        "si_sdr_mix_db": -2.281,
+        "si_sdri_db": 9.78,
+        "muted_share": 0.046,
+        "target_retention": 1.0046,
+        "leakage_share": 0.0545,
+        "leakage_ratio": 0.0926,
+        "stoi": 0.9396,
+        "pesq": 2.694,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 10.1907,
+      "cpu_s": 10.195,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 1.0191
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": 8.828,
+        "si_sdr_mix_db": -1.965,
+        "si_sdri_db": 10.793,
+        "muted_share": 0.1667,
+        "target_retention": 0.8421,
+        "leakage_share": 0.0006,
+        "leakage_ratio": 0.0011,
+        "stoi": 0.8504,
+        "pesq": 2.059,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 12.7,
+        "si_sdr_mix_db": -2.281,
+        "si_sdri_db": 14.981,
+        "muted_share": 0.4,
+        "target_retention": 0.923,
+        "leakage_share": 0.0001,
+        "leakage_ratio": 0.0003,
+        "stoi": 0.8887,
+        "pesq": 3.446,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 7.4177,
+      "cpu_s": 9.0499,
+      "audio_s": 10.0,
+      "overlap_s": 5.0,
+      "extract_s": 7.1193,
+      "rtf_overlap": 1.4239,
+      "windows": 2,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 2.5,
+      "pieces": [
+       {
+        "start": 2.0,
+        "end": 4.5,
+        "label": "target",
+        "score": 0.6386,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 4.5,
+        "end": 7.0,
+        "label": "uncertain",
+        "score": 0.0014,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix11": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": 0.069,
+        "si_sdr_mix_db": -7.378,
+        "si_sdri_db": 7.447,
+        "muted_share": 0.0,
+        "target_retention": 1.087,
+        "leakage_share": 0.0547,
+        "leakage_ratio": 0.2677,
+        "stoi": 0.8502,
+        "pesq": 1.417,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -3.679,
+        "si_sdr_mix_db": -9.006,
+        "si_sdri_db": 5.326,
+        "muted_share": 0.048,
+        "target_retention": 1.1465,
+        "leakage_share": 0.1226,
+        "leakage_ratio": 0.8386,
+        "stoi": 0.9074,
+        "pesq": 2.204,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 9.7705,
+      "cpu_s": 9.7682,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.977
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": 1.375,
+        "si_sdr_mix_db": -7.378,
+        "si_sdri_db": 8.753,
+        "muted_share": 0.1667,
+        "target_retention": 0.8821,
+        "leakage_share": 0.0354,
+        "leakage_ratio": 0.2133,
+        "stoi": 0.8075,
+        "pesq": 1.366,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 4.466,
+        "si_sdr_mix_db": -9.006,
+        "si_sdri_db": 13.472,
+        "muted_share": 0.4,
+        "target_retention": 0.928,
+        "leakage_share": 0.0019,
+        "leakage_ratio": 0.0164,
+        "stoi": 0.8977,
+        "pesq": 2.562,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 8.3991,
+      "cpu_s": 10.0256,
+      "audio_s": 10.0,
+      "overlap_s": 5.0,
+      "extract_s": 8.0452,
+      "rtf_overlap": 1.609,
+      "windows": 2,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 2.5,
+      "pieces": [
+       {
+        "start": 2.0,
+        "end": 4.5,
+        "label": "target",
+        "score": 0.5618,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 4.5,
+        "end": 7.0,
+        "label": "uncertain",
+        "score": 0.0884,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix12": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": 11.186,
+        "si_sdr_mix_db": 2.562,
+        "si_sdri_db": 8.624,
+        "muted_share": 0.0,
+        "target_retention": 0.9958,
+        "leakage_share": 0.0232,
+        "leakage_ratio": 0.0128,
+        "stoi": 0.9749,
+        "pesq": 2.624,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 13.73,
+        "si_sdr_mix_db": 4.191,
+        "si_sdri_db": 9.54,
+        "muted_share": 0.046,
+        "target_retention": 1.0049,
+        "leakage_share": 0.0249,
+        "leakage_ratio": 0.0093,
+        "stoi": 0.9943,
+        "pesq": 3.182,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 10.8056,
+      "cpu_s": 10.8041,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 1.0806
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": 1.58,
+        "si_sdr_mix_db": 2.562,
+        "si_sdri_db": -0.982,
+        "muted_share": 0.1667,
+        "target_retention": 0.4609,
+        "leakage_share": 0.0404,
+        "leakage_ratio": 0.048,
+        "stoi": 0.8177,
+        "pesq": 1.957,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 6.417,
+        "si_sdr_mix_db": 4.191,
+        "si_sdri_db": 2.226,
+        "muted_share": 0.4,
+        "target_retention": 0.7323,
+        "leakage_share": 0.0162,
+        "leakage_ratio": 0.0083,
+        "stoi": 0.8727,
+        "pesq": 3.191,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 7.1803,
+      "cpu_s": 8.8131,
+      "audio_s": 10.0,
+      "overlap_s": 5.0,
+      "extract_s": 6.8704,
+      "rtf_overlap": 1.3741,
+      "windows": 2,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 2.5,
+      "pieces": [
+       {
+        "start": 2.0,
+        "end": 4.5,
+        "label": "target",
+        "score": 0.6133,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 4.5,
+        "end": 7.0,
+        "label": "uncertain",
+        "score": 0.0596,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    }
+   },
+   "timing": {
+    "raw_whole_mixture": {
+     "mixes": 12,
+     "audio_seconds": 120.0,
+     "wall_seconds": 116.928,
+     "cpu_seconds": 116.841,
+     "rtf": 0.9744,
+     "seconds_per_mix": 9.744,
+     "peak_vram": "not measured (CPU)"
+    },
+    "hybrid": {
+     "mixes": 12,
+     "audio_seconds": 120.0,
+     "wall_seconds": 116.916,
+     "cpu_seconds": 143.779,
+     "rtf": 0.9743,
+     "seconds_per_mix": 9.743,
+     "peak_vram": "not measured (CPU)",
+     "extract_seconds": 111.837,
+     "overlap_seconds": 82.5,
+     "rtf_overlap": 1.3556
+    }
+   },
+   "inference_completed": true
+  },
+  "usef_tse": {
+   "info": {
+    "name": "usef_tse",
+    "title": "USEF-TSE (USEF-SepFormer, WSJ0-2mix, 8 kHz)",
+    "mechanism": "target_conditioned",
+    "code_licence": "CC-BY-NC-4.0 (non-commercial)",
+    "weights_licence": "CC-BY-NC-4.0 (non-commercial)",
+    "model_rate": 8000,
+    "categories": [
+     "overlap_2",
+     "overlap_3plus"
+    ],
+    "version": "ZBang/USEF-TSE @ bdaeb36, checkpoint chkpt/USEF-SepFormer/wsj0-2mix",
+    "notes": "Embedding-free: the enrollment audio is encoded by the same encoder and fused by cross attention. The TFGridNet variant is larger and is not tried (4 GB VRAM).",
+    "fp16_note": "fp16 autocast with fp32 fallback.",
+    "vram_base_mib": 900.0,
+    "vram_per_window_s_mib": 120.0
+   },
+   "blocked": null,
+   "load_seconds": 7.8178,
+   "errors": [],
+   "mixes": {
+    "mix01": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 13.914,
+        "si_sdr_mix_db": -5.423,
+        "si_sdri_db": 19.337,
+        "muted_share": 0.01,
+        "target_retention": 1.008,
+        "leakage_share": 0.0002,
+        "leakage_ratio": 0.0005,
+        "stoi": 0.8949,
+        "pesq": 1.615,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 13.914,
+        "si_sdr_mix_db": -5.423,
+        "si_sdri_db": 19.337,
+        "muted_share": 0.01,
+        "target_retention": 1.008,
+        "leakage_share": 0.0002,
+        "leakage_ratio": 0.0005,
+        "stoi": 0.8949,
+        "pesq": 1.615,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 36.7212,
+      "cpu_s": 36.262,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 3.6721
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 3.431,
+        "si_sdr_mix_db": -5.423,
+        "si_sdri_db": 8.854,
+        "muted_share": 0.25,
+        "target_retention": 0.5215,
+        "leakage_share": 0.0001,
+        "leakage_ratio": 0.0008,
+        "stoi": 0.6988,
+        "pesq": 1.291,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 3.431,
+        "si_sdr_mix_db": -5.423,
+        "si_sdri_db": 8.854,
+        "muted_share": 0.25,
+        "target_retention": 0.5215,
+        "leakage_share": 0.0001,
+        "leakage_ratio": 0.0008,
+        "stoi": 0.6988,
+        "pesq": 1.291,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 77.9305,
+      "cpu_s": 78.6293,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 77.1078,
+      "rtf_overlap": 7.7108,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 2.5,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "target",
+        "score": 0.4307,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "uncertain",
+        "score": 0.3554,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "target",
+        "score": 0.4268,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "target",
+        "score": 0.4962,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix02": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 17.121,
+        "si_sdr_mix_db": 2.831,
+        "si_sdri_db": 14.291,
+        "muted_share": 0.0,
+        "target_retention": 0.9849,
+        "leakage_share": 0.0008,
+        "leakage_ratio": 0.0004,
+        "stoi": 0.9561,
+        "pesq": 2.547,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 17.121,
+        "si_sdr_mix_db": 2.831,
+        "si_sdri_db": 14.291,
+        "muted_share": 0.0,
+        "target_retention": 0.9849,
+        "leakage_share": 0.0008,
+        "leakage_ratio": 0.0004,
+        "stoi": 0.9561,
+        "pesq": 2.547,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 46.7895,
+      "cpu_s": 46.8255,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 4.6789
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 17.631,
+        "si_sdr_mix_db": 2.831,
+        "si_sdri_db": 14.801,
+        "muted_share": 0.0,
+        "target_retention": 0.9775,
+        "leakage_share": 0.0002,
+        "leakage_ratio": 0.0001,
+        "stoi": 0.9598,
+        "pesq": 2.66,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 17.631,
+        "si_sdr_mix_db": 2.831,
+        "si_sdri_db": 14.801,
+        "muted_share": 0.0,
+        "target_retention": 0.9775,
+        "leakage_share": 0.0002,
+        "leakage_ratio": 0.0001,
+        "stoi": 0.9598,
+        "pesq": 2.66,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 89.0646,
+      "cpu_s": 89.85,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 88.3447,
+      "rtf_overlap": 8.8345,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 0,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "target",
+        "score": 0.5193,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "target",
+        "score": 0.5995,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "target",
+        "score": 0.5539,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "target",
+        "score": 0.5548,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix03": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 12.352,
+        "si_sdr_mix_db": -0.12,
+        "si_sdri_db": 12.472,
+        "muted_share": 0.0,
+        "target_retention": 0.9182,
+        "leakage_share": 0.0005,
+        "leakage_ratio": 0.0006,
+        "stoi": 0.968,
+        "pesq": 2.191,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 12.352,
+        "si_sdr_mix_db": -0.12,
+        "si_sdri_db": 12.472,
+        "muted_share": 0.0,
+        "target_retention": 0.9182,
+        "leakage_share": 0.0005,
+        "leakage_ratio": 0.0006,
+        "stoi": 0.968,
+        "pesq": 2.191,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 45.0164,
+      "cpu_s": 45.0043,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 4.5016
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 0.18,
+        "si_sdr_mix_db": -0.12,
+        "si_sdri_db": 0.3,
+        "muted_share": 0.5,
+        "target_retention": 0.2651,
+        "leakage_share": 0.0001,
+        "leakage_ratio": 0.0004,
+        "stoi": 0.4883,
+        "pesq": 1.271,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 0.18,
+        "si_sdr_mix_db": -0.12,
+        "si_sdri_db": 0.3,
+        "muted_share": 0.5,
+        "target_retention": 0.2651,
+        "leakage_share": 0.0001,
+        "leakage_ratio": 0.0004,
+        "stoi": 0.4883,
+        "pesq": 1.271,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 88.8486,
+      "cpu_s": 89.7464,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 88.1264,
+      "rtf_overlap": 8.8126,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 5.0,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "target",
+        "score": 0.4577,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "uncertain",
+        "score": 0.381,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "target",
+        "score": 0.491,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "uncertain",
+        "score": 0.263,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix04": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": 13.423,
+        "si_sdr_mix_db": -1.505,
+        "si_sdri_db": 14.929,
+        "muted_share": 0.0,
+        "target_retention": 0.9545,
+        "leakage_share": 0.0004,
+        "leakage_ratio": 0.0005,
+        "stoi": 0.9392,
+        "pesq": 1.799,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 12.696,
+        "si_sdr_mix_db": 0.13,
+        "si_sdri_db": 12.565,
+        "muted_share": 0.046,
+        "target_retention": 0.938,
+        "leakage_share": 0.0004,
+        "leakage_ratio": 0.0005,
+        "stoi": 0.9939,
+        "pesq": 2.442,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 46.5043,
+      "cpu_s": 46.5131,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 4.6504
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": 12.672,
+        "si_sdr_mix_db": -1.505,
+        "si_sdri_db": 14.178,
+        "muted_share": 0.0,
+        "target_retention": 0.9473,
+        "leakage_share": 0.0004,
+        "leakage_ratio": 0.0005,
+        "stoi": 0.936,
+        "pesq": 1.814,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 17.062,
+        "si_sdr_mix_db": 0.13,
+        "si_sdri_db": 16.931,
+        "muted_share": 0.3,
+        "target_retention": 0.9758,
+        "leakage_share": 0.0001,
+        "leakage_ratio": 0.0001,
+        "stoi": 0.9933,
+        "pesq": 2.414,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 17.8452,
+      "cpu_s": 18.6529,
+      "audio_s": 10.0,
+      "overlap_s": 2.5,
+      "extract_s": 17.6375,
+      "rtf_overlap": 7.055,
+      "windows": 1,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 0,
+      "pieces": [
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "target",
+        "score": 0.4695,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix05": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": 13.372,
+        "si_sdr_mix_db": -1.219,
+        "si_sdri_db": 14.591,
+        "muted_share": 0.0,
+        "target_retention": 0.9475,
+        "leakage_share": 0.0003,
+        "leakage_ratio": 0.0004,
+        "stoi": 0.9535,
+        "pesq": 2.053,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 16.673,
+        "si_sdr_mix_db": 1.664,
+        "si_sdri_db": 15.01,
+        "muted_share": 0.048,
+        "target_retention": 0.967,
+        "leakage_share": 0.0001,
+        "leakage_ratio": 0.0001,
+        "stoi": 0.9878,
+        "pesq": 2.892,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 46.1684,
+      "cpu_s": 46.158,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 4.6168
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": -30.0,
+        "si_sdr_mix_db": -1.219,
+        "si_sdri_db": -28.781,
+        "muted_share": 1.0,
+        "target_retention": 0.0,
+        "leakage_share": 0.0,
+        "leakage_ratio": null,
+        "stoi": null,
+        "pesq": null,
+        "quality_errors": [
+         "output is silent"
+        ]
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 3.566,
+        "si_sdr_mix_db": 1.664,
+        "si_sdri_db": 1.902,
+        "muted_share": 0.55,
+        "target_retention": 0.4823,
+        "leakage_share": 0.0,
+        "leakage_ratio": 0.0,
+        "stoi": 0.7395,
+        "pesq": 2.817,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 17.1122,
+      "cpu_s": 17.9172,
+      "audio_s": 10.0,
+      "overlap_s": 2.5,
+      "extract_s": 16.901,
+      "rtf_overlap": 6.7604,
+      "windows": 1,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 2.5,
+      "pieces": [
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "uncertain",
+        "score": 0.3896,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix06": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": 10.655,
+        "si_sdr_mix_db": 9.29,
+        "si_sdri_db": 1.365,
+        "muted_share": 0.0,
+        "target_retention": 0.8485,
+        "leakage_share": 0.0048,
+        "leakage_ratio": 0.0007,
+        "stoi": 0.8922,
+        "pesq": 1.877,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 8.723,
+        "si_sdr_mix_db": 11.906,
+        "si_sdri_db": -3.183,
+        "muted_share": 0.048,
+        "target_retention": 0.7842,
+        "leakage_share": 0.0025,
+        "leakage_ratio": 0.0002,
+        "stoi": 0.9588,
+        "pesq": 2.449,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 47.1678,
+      "cpu_s": 47.173,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 4.7168
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": 10.609,
+        "si_sdr_mix_db": 9.29,
+        "si_sdri_db": 1.319,
+        "muted_share": 0.0,
+        "target_retention": 0.8549,
+        "leakage_share": 0.0031,
+        "leakage_ratio": 0.0004,
+        "stoi": 0.8957,
+        "pesq": 1.864,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 17.263,
+        "si_sdr_mix_db": 11.906,
+        "si_sdri_db": 5.357,
+        "muted_share": 0.3,
+        "target_retention": 0.9655,
+        "leakage_share": 0.0005,
+        "leakage_ratio": 0.0,
+        "stoi": 0.9662,
+        "pesq": 2.374,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 18.0392,
+      "cpu_s": 18.8237,
+      "audio_s": 10.0,
+      "overlap_s": 2.5,
+      "extract_s": 17.8215,
+      "rtf_overlap": 7.1286,
+      "windows": 1,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 0,
+      "pieces": [
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "target",
+        "score": 0.5322,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix07": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -14.184,
+        "si_sdr_mix_db": -9.922,
+        "si_sdri_db": -4.262,
+        "muted_share": 0.0,
+        "target_retention": 0.1861,
+        "leakage_share": 0.4858,
+        "leakage_ratio": 28.6319,
+        "stoi": 0.3989,
+        "pesq": 1.079,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -14.184,
+        "si_sdr_mix_db": -9.922,
+        "si_sdri_db": -4.262,
+        "muted_share": 0.0,
+        "target_retention": 0.1861,
+        "leakage_share": 0.4858,
+        "leakage_ratio": 28.6319,
+        "stoi": 0.3989,
+        "pesq": 1.079,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 47.5695,
+      "cpu_s": 47.5564,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 4.7569
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -30.0,
+        "si_sdr_mix_db": -9.922,
+        "si_sdri_db": -20.078,
+        "muted_share": 1.0,
+        "target_retention": 0.0,
+        "leakage_share": 0.0,
+        "leakage_ratio": null,
+        "stoi": null,
+        "pesq": null,
+        "quality_errors": [
+         "output is silent"
+        ]
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -30.0,
+        "si_sdr_mix_db": -9.922,
+        "si_sdri_db": -20.078,
+        "muted_share": 1.0,
+        "target_retention": 0.0,
+        "leakage_share": 0.0,
+        "leakage_ratio": null,
+        "stoi": null,
+        "pesq": null,
+        "quality_errors": [
+         "output is silent"
+        ]
+       }
+      },
+      "wall_s": 88.7023,
+      "cpu_s": 89.4977,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 87.9913,
+      "rtf_overlap": 8.7991,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 10.0,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "uncertain",
+        "score": 0.033,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "uncertain",
+        "score": 0.0163,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "uncertain",
+        "score": 0.1179,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "uncertain",
+        "score": 0.1145,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix08": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 3.438,
+        "si_sdr_mix_db": -3.907,
+        "si_sdri_db": 7.346,
+        "muted_share": 0.0,
+        "target_retention": 1.2131,
+        "leakage_share": 0.0863,
+        "leakage_ratio": 0.1871,
+        "stoi": 0.7528,
+        "pesq": 1.147,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 3.438,
+        "si_sdr_mix_db": -3.907,
+        "si_sdri_db": 7.346,
+        "muted_share": 0.0,
+        "target_retention": 1.2131,
+        "leakage_share": 0.0863,
+        "leakage_ratio": 0.1871,
+        "stoi": 0.7528,
+        "pesq": 1.147,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 52.7888,
+      "cpu_s": 53.4309,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 5.2789
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -3.876,
+        "si_sdr_mix_db": -3.907,
+        "si_sdri_db": 0.031,
+        "muted_share": 0.5,
+        "target_retention": 0.2081,
+        "leakage_share": 0.0167,
+        "leakage_ratio": 0.2106,
+        "stoi": 0.3784,
+        "pesq": 1.066,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -3.876,
+        "si_sdr_mix_db": -3.907,
+        "si_sdri_db": 0.031,
+        "muted_share": 0.5,
+        "target_retention": 0.2081,
+        "leakage_share": 0.0167,
+        "leakage_ratio": 0.2106,
+        "stoi": 0.3784,
+        "pesq": 1.066,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 98.2901,
+      "cpu_s": 98.8786,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 97.4385,
+      "rtf_overlap": 9.7439,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 5.0,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "uncertain",
+        "score": 0.3649,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "target",
+        "score": 0.4257,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "target",
+        "score": 0.4259,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "uncertain",
+        "score": 0.209,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix09": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 5.984,
+        "si_sdr_mix_db": 2.28,
+        "si_sdri_db": 3.704,
+        "muted_share": 0.0,
+        "target_retention": 0.9831,
+        "leakage_share": 0.2679,
+        "leakage_ratio": 0.1599,
+        "stoi": 0.8333,
+        "pesq": 1.488,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 5.984,
+        "si_sdr_mix_db": 2.28,
+        "si_sdri_db": 3.704,
+        "muted_share": 0.0,
+        "target_retention": 0.9831,
+        "leakage_share": 0.2679,
+        "leakage_ratio": 0.1599,
+        "stoi": 0.8333,
+        "pesq": 1.488,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 52.8709,
+      "cpu_s": 52.833,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 5.2871
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -3.035,
+        "si_sdr_mix_db": 2.28,
+        "si_sdri_db": -5.315,
+        "muted_share": 0.5,
+        "target_retention": 0.1694,
+        "leakage_share": 0.0476,
+        "leakage_ratio": 0.165,
+        "stoi": 0.3603,
+        "pesq": 1.095,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -3.035,
+        "si_sdr_mix_db": 2.28,
+        "si_sdri_db": -5.315,
+        "muted_share": 0.5,
+        "target_retention": 0.1694,
+        "leakage_share": 0.0476,
+        "leakage_ratio": 0.165,
+        "stoi": 0.3603,
+        "pesq": 1.095,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 99.4444,
+      "cpu_s": 100.2407,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 98.763,
+      "rtf_overlap": 9.8763,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 5.0,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "target",
+        "score": 0.4529,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "uncertain",
+        "score": 0.3856,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "uncertain",
+        "score": 0.3588,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "target",
+        "score": 0.4546,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix10": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": 6.605,
+        "si_sdr_mix_db": -1.965,
+        "si_sdri_db": 8.57,
+        "muted_share": 0.0,
+        "target_retention": 0.9628,
+        "leakage_share": 0.0384,
+        "leakage_ratio": 0.0643,
+        "stoi": 0.8167,
+        "pesq": 1.487,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 7.349,
+        "si_sdr_mix_db": -2.281,
+        "si_sdri_db": 9.631,
+        "muted_share": 0.046,
+        "target_retention": 1.0299,
+        "leakage_share": 0.0547,
+        "leakage_ratio": 0.0905,
+        "stoi": 0.8964,
+        "pesq": 2.203,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 56.0007,
+      "cpu_s": 55.9286,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 5.6001
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": 7.245,
+        "si_sdr_mix_db": -1.965,
+        "si_sdri_db": 9.21,
+        "muted_share": 0.1667,
+        "target_retention": 0.8255,
+        "leakage_share": 0.0034,
+        "leakage_ratio": 0.0066,
+        "stoi": 0.7801,
+        "pesq": 1.579,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 11.314,
+        "si_sdr_mix_db": -2.281,
+        "si_sdri_db": 13.595,
+        "muted_share": 0.4,
+        "target_retention": 0.9161,
+        "leakage_share": 0.0008,
+        "leakage_ratio": 0.0015,
+        "stoi": 0.855,
+        "pesq": 2.603,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 44.5887,
+      "cpu_s": 45.3909,
+      "audio_s": 10.0,
+      "overlap_s": 5.0,
+      "extract_s": 44.1838,
+      "rtf_overlap": 8.8368,
+      "windows": 2,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 2.5,
+      "pieces": [
+       {
+        "start": 2.0,
+        "end": 4.5,
+        "label": "target",
+        "score": 0.5754,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 4.5,
+        "end": 7.0,
+        "label": "uncertain",
+        "score": 0.1353,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix11": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": -4.125,
+        "si_sdr_mix_db": -7.378,
+        "si_sdri_db": 3.253,
+        "muted_share": 0.0,
+        "target_retention": 0.814,
+        "leakage_share": 0.2795,
+        "leakage_ratio": 1.8266,
+        "stoi": 0.7775,
+        "pesq": 1.247,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -8.225,
+        "si_sdr_mix_db": -9.006,
+        "si_sdri_db": 0.78,
+        "muted_share": 0.046,
+        "target_retention": 0.8488,
+        "leakage_share": 0.656,
+        "leakage_ratio": 6.0631,
+        "stoi": 0.868,
+        "pesq": 1.623,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 59.4549,
+      "cpu_s": 59.4345,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 5.9455
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": -30.0,
+        "si_sdr_mix_db": -7.378,
+        "si_sdri_db": -22.622,
+        "muted_share": 1.0,
+        "target_retention": 0.0,
+        "leakage_share": 0.0,
+        "leakage_ratio": null,
+        "stoi": null,
+        "pesq": null,
+        "quality_errors": [
+         "output is silent"
+        ]
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -0.456,
+        "si_sdr_mix_db": -9.006,
+        "si_sdri_db": 8.55,
+        "muted_share": 0.65,
+        "target_retention": 0.2238,
+        "leakage_share": 0.0,
+        "leakage_ratio": 0.0001,
+        "stoi": 0.5506,
+        "pesq": 2.165,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 42.9415,
+      "cpu_s": 43.7748,
+      "audio_s": 10.0,
+      "overlap_s": 5.0,
+      "extract_s": 42.556,
+      "rtf_overlap": 8.5112,
+      "windows": 2,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 5.0,
+      "pieces": [
+       {
+        "start": 2.0,
+        "end": 4.5,
+        "label": "uncertain",
+        "score": 0.3969,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 4.5,
+        "end": 7.0,
+        "label": "uncertain",
+        "score": 0.0558,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix12": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": 14.064,
+        "si_sdr_mix_db": 2.562,
+        "si_sdri_db": 11.502,
+        "muted_share": 0.0,
+        "target_retention": 0.9575,
+        "leakage_share": 0.0047,
+        "leakage_ratio": 0.0027,
+        "stoi": 0.9477,
+        "pesq": 1.911,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 14.85,
+        "si_sdr_mix_db": 4.191,
+        "si_sdri_db": 10.659,
+        "muted_share": 0.046,
+        "target_retention": 0.9684,
+        "leakage_share": 0.004,
+        "leakage_ratio": 0.0016,
+        "stoi": 0.9893,
+        "pesq": 2.599,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 58.555,
+      "cpu_s": 58.5373,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 5.8555
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": -30.0,
+        "si_sdr_mix_db": 2.562,
+        "si_sdri_db": -32.562,
+        "muted_share": 1.0,
+        "target_retention": 0.0,
+        "leakage_share": 0.0,
+        "leakage_ratio": null,
+        "stoi": null,
+        "pesq": null,
+        "quality_errors": [
+         "output is silent"
+        ]
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 0.995,
+        "si_sdr_mix_db": 4.191,
+        "si_sdri_db": -3.196,
+        "muted_share": 0.65,
+        "target_retention": 0.3087,
+        "leakage_share": 0.0,
+        "leakage_ratio": 0.0001,
+        "stoi": 0.5646,
+        "pesq": 1.883,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 46.4621,
+      "cpu_s": 47.1982,
+      "audio_s": 10.0,
+      "overlap_s": 5.0,
+      "extract_s": 46.064,
+      "rtf_overlap": 9.2128,
+      "windows": 2,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 5.0,
+      "pieces": [
+       {
+        "start": 2.0,
+        "end": 4.5,
+        "label": "uncertain",
+        "score": 0.3983,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 4.5,
+        "end": 7.0,
+        "label": "uncertain",
+        "score": 0.0014,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    }
+   },
+   "timing": {
+    "raw_whole_mixture": {
+     "mixes": 12,
+     "audio_seconds": 120.0,
+     "wall_seconds": 595.607,
+     "cpu_seconds": 595.657,
+     "rtf": 4.9634,
+     "seconds_per_mix": 49.634,
+     "peak_vram": "not measured (CPU)"
+    },
+    "hybrid": {
+     "mixes": 12,
+     "audio_seconds": 120.0,
+     "wall_seconds": 729.269,
+     "cpu_seconds": 738.6,
+     "rtf": 6.0772,
+     "seconds_per_mix": 60.772,
+     "peak_vram": "not measured (CPU)",
+     "extract_seconds": 722.936,
+     "overlap_seconds": 82.5,
+     "rtf_overlap": 8.7629
+    }
+   },
+   "inference_completed": true
+  },
+  "spexplus": {
+   "info": {
+    "name": "spexplus",
+    "title": "ClearerVoice SpEx+ (WSJ0-2mix, 8 kHz)",
+    "mechanism": "target_conditioned",
+    "code_licence": "MIT (SpEx+ reference code, via ClearerVoice-Studio)",
+    "weights_licence": "Apache-2.0 (Hugging Face model card)",
+    "model_rate": 8000,
+    "categories": [
+     "overlap_2",
+     "overlap_3plus"
+    ],
+    "version": "modelscope/ClearerVoice-Studio @ 6b3774d, alibabasglab/log_wsj0-2mix_speech_SpEx-plus_2spk",
+    "notes": "Trained on clean English 2-speaker WSJ0-2mix only: weaker on noise, Arabic and 3+ voices is expected. The audio-only checkpoint lives in the training code, not the clearvoice inference package, so the model class is imported from the pinned source file.",
+    "fp16_note": "fp16 autocast with fp32 fallback. Output level and polarity are arbitrary (scale-invariant training); matched to the mixture by least squares.",
+    "vram_base_mib": 500.0,
+    "vram_per_window_s_mib": 50.0
+   },
+   "blocked": null,
+   "load_seconds": 3.7182,
+   "errors": [],
+   "mixes": {
+    "mix01": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 9.374,
+        "si_sdr_mix_db": -5.423,
+        "si_sdri_db": 14.797,
+        "muted_share": 0.03,
+        "target_retention": 0.9015,
+        "leakage_share": 0.0002,
+        "leakage_ratio": 0.001,
+        "stoi": 0.8449,
+        "pesq": 1.386,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 9.374,
+        "si_sdr_mix_db": -5.423,
+        "si_sdri_db": 14.797,
+        "muted_share": 0.03,
+        "target_retention": 0.9015,
+        "leakage_share": 0.0002,
+        "leakage_ratio": 0.001,
+        "stoi": 0.8449,
+        "pesq": 1.386,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 3.3595,
+      "cpu_s": 2.6355,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.336
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 4.864,
+        "si_sdr_mix_db": -5.423,
+        "si_sdri_db": 10.287,
+        "muted_share": 0.28,
+        "target_retention": 0.6525,
+        "leakage_share": 0.0002,
+        "leakage_ratio": 0.001,
+        "stoi": 0.6413,
+        "pesq": 1.207,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 4.864,
+        "si_sdr_mix_db": -5.423,
+        "si_sdri_db": 10.287,
+        "muted_share": 0.28,
+        "target_retention": 0.6525,
+        "leakage_share": 0.0002,
+        "leakage_ratio": 0.001,
+        "stoi": 0.6413,
+        "pesq": 1.207,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 7.8256,
+      "cpu_s": 8.6934,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 7.1671,
+      "rtf_overlap": 0.7167,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 2.5,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "uncertain",
+        "score": 0.2661,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "target",
+        "score": 0.4297,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "target",
+        "score": 0.4351,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "target",
+        "score": 0.4695,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix02": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -7.632,
+        "si_sdr_mix_db": 2.831,
+        "si_sdri_db": -10.463,
+        "muted_share": 0.0,
+        "target_retention": 0.1171,
+        "leakage_share": 0.7321,
+        "leakage_ratio": 3.2305,
+        "stoi": 0.4761,
+        "pesq": 1.053,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -7.632,
+        "si_sdr_mix_db": 2.831,
+        "si_sdri_db": -10.463,
+        "muted_share": 0.0,
+        "target_retention": 0.1171,
+        "leakage_share": 0.7321,
+        "leakage_ratio": 3.2305,
+        "stoi": 0.4761,
+        "pesq": 1.053,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 2.3699,
+      "cpu_s": 2.3688,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.237
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -30.0,
+        "si_sdr_mix_db": 2.831,
+        "si_sdri_db": -32.831,
+        "muted_share": 1.0,
+        "target_retention": 0.0,
+        "leakage_share": 0.0,
+        "leakage_ratio": null,
+        "stoi": null,
+        "pesq": null,
+        "quality_errors": [
+         "output is silent"
+        ]
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -30.0,
+        "si_sdr_mix_db": 2.831,
+        "si_sdri_db": -32.831,
+        "muted_share": 1.0,
+        "target_retention": 0.0,
+        "leakage_share": 0.0,
+        "leakage_ratio": null,
+        "stoi": null,
+        "pesq": null,
+        "quality_errors": [
+         "output is silent"
+        ]
+       }
+      },
+      "wall_s": 8.3207,
+      "cpu_s": 9.1997,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 7.6174,
+      "rtf_overlap": 0.7617,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 10.0,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "uncertain",
+        "score": 0.3682,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "uncertain",
+        "score": 0.1211,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "uncertain",
+        "score": 0.1872,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "uncertain",
+        "score": 0.3544,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix03": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 11.626,
+        "si_sdr_mix_db": -0.12,
+        "si_sdri_db": 11.746,
+        "muted_share": 0.002,
+        "target_retention": 0.892,
+        "leakage_share": 0.0003,
+        "leakage_ratio": 0.0004,
+        "stoi": 0.9602,
+        "pesq": 2.003,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 11.626,
+        "si_sdr_mix_db": -0.12,
+        "si_sdri_db": 11.746,
+        "muted_share": 0.002,
+        "target_retention": 0.892,
+        "leakage_share": 0.0003,
+        "leakage_ratio": 0.0004,
+        "stoi": 0.9602,
+        "pesq": 2.003,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 2.5323,
+      "cpu_s": 3.2354,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.2532
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -0.008,
+        "si_sdr_mix_db": -0.12,
+        "si_sdri_db": 0.112,
+        "muted_share": 0.5,
+        "target_retention": 0.258,
+        "leakage_share": 0.0002,
+        "leakage_ratio": 0.0007,
+        "stoi": 0.484,
+        "pesq": 1.231,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -0.008,
+        "si_sdr_mix_db": -0.12,
+        "si_sdri_db": 0.112,
+        "muted_share": 0.5,
+        "target_retention": 0.258,
+        "leakage_share": 0.0002,
+        "leakage_ratio": 0.0007,
+        "stoi": 0.484,
+        "pesq": 1.231,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 8.3011,
+      "cpu_s": 9.1762,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 7.5356,
+      "rtf_overlap": 0.7536,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 5.0,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "target",
+        "score": 0.4468,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "uncertain",
+        "score": 0.4013,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "target",
+        "score": 0.4518,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "uncertain",
+        "score": 0.2731,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix04": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": 13.058,
+        "si_sdr_mix_db": -1.505,
+        "si_sdri_db": 14.563,
+        "muted_share": 0.0,
+        "target_retention": 0.9766,
+        "leakage_share": 0.0006,
+        "leakage_ratio": 0.0008,
+        "stoi": 0.9474,
+        "pesq": 1.852,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 9.56,
+        "si_sdr_mix_db": 0.13,
+        "si_sdri_db": 9.43,
+        "muted_share": 0.01,
+        "target_retention": 0.8614,
+        "leakage_share": 0.0009,
+        "leakage_ratio": 0.001,
+        "stoi": 0.9909,
+        "pesq": 2.328,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 2.44,
+      "cpu_s": 2.44,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.244
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": -30.0,
+        "si_sdr_mix_db": -1.505,
+        "si_sdri_db": -28.495,
+        "muted_share": 1.0,
+        "target_retention": 0.0,
+        "leakage_share": 0.0,
+        "leakage_ratio": null,
+        "stoi": null,
+        "pesq": null,
+        "quality_errors": [
+         "output is silent"
+        ]
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 3.254,
+        "si_sdr_mix_db": 0.13,
+        "si_sdri_db": 3.124,
+        "muted_share": 0.55,
+        "target_retention": 0.4599,
+        "leakage_share": 0.0,
+        "leakage_ratio": 0.0,
+        "stoi": 0.7143,
+        "pesq": 2.211,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 1.1916,
+      "cpu_s": 2.0071,
+      "audio_s": 10.0,
+      "overlap_s": 2.5,
+      "extract_s": 1.0414,
+      "rtf_overlap": 0.4166,
+      "windows": 1,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 2.5,
+      "pieces": [
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "uncertain",
+        "score": 0.3795,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix05": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": 5.367,
+        "si_sdr_mix_db": -1.219,
+        "si_sdri_db": 6.586,
+        "muted_share": 0.0,
+        "target_retention": 0.6261,
+        "leakage_share": 0.0017,
+        "leakage_ratio": 0.0034,
+        "stoi": 0.8576,
+        "pesq": 1.731,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 0.901,
+        "si_sdr_mix_db": 1.664,
+        "si_sdri_db": -0.763,
+        "muted_share": 0.006,
+        "target_retention": 0.3185,
+        "leakage_share": 0.0005,
+        "leakage_ratio": 0.0011,
+        "stoi": 0.6601,
+        "pesq": 1.404,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 2.3788,
+      "cpu_s": 2.3851,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.2379
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": -30.0,
+        "si_sdr_mix_db": -1.219,
+        "si_sdri_db": -28.781,
+        "muted_share": 1.0,
+        "target_retention": 0.0,
+        "leakage_share": 0.0,
+        "leakage_ratio": null,
+        "stoi": null,
+        "pesq": null,
+        "quality_errors": [
+         "output is silent"
+        ]
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 3.566,
+        "si_sdr_mix_db": 1.664,
+        "si_sdri_db": 1.902,
+        "muted_share": 0.55,
+        "target_retention": 0.4823,
+        "leakage_share": 0.0,
+        "leakage_ratio": 0.0,
+        "stoi": 0.7395,
+        "pesq": 2.817,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 1.2103,
+      "cpu_s": 2.025,
+      "audio_s": 10.0,
+      "overlap_s": 2.5,
+      "extract_s": 1.0531,
+      "rtf_overlap": 0.4213,
+      "windows": 1,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 2.5,
+      "pieces": [
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "uncertain",
+        "score": 0.2455,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix06": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": -25.386,
+        "si_sdr_mix_db": 9.29,
+        "si_sdri_db": -34.677,
+        "muted_share": 0.088,
+        "target_retention": 0.0001,
+        "leakage_share": 0.1257,
+        "leakage_ratio": 115.6773,
+        "stoi": 0.2666,
+        "pesq": 1.035,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -30.0,
+        "si_sdr_mix_db": 11.906,
+        "si_sdri_db": -41.906,
+        "muted_share": 0.138,
+        "target_retention": 0.0,
+        "leakage_share": 0.0231,
+        "leakage_ratio": 204.3536,
+        "stoi": 0.0507,
+        "pesq": 1.093,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 2.3101,
+      "cpu_s": 2.3154,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.231
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 2.5,
+        "si_sdr_db": -30.0,
+        "si_sdr_mix_db": 9.29,
+        "si_sdri_db": -39.29,
+        "muted_share": 1.0,
+        "target_retention": 0.0,
+        "leakage_share": 0.0,
+        "leakage_ratio": null,
+        "stoi": null,
+        "pesq": null,
+        "quality_errors": [
+         "output is silent"
+        ]
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 5.241,
+        "si_sdr_mix_db": 11.906,
+        "si_sdri_db": -6.665,
+        "muted_share": 0.55,
+        "target_retention": 0.5924,
+        "leakage_share": 0.0,
+        "leakage_ratio": 0.0,
+        "stoi": 0.6215,
+        "pesq": 2.08,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 1.1693,
+      "cpu_s": 1.9803,
+      "audio_s": 10.0,
+      "overlap_s": 2.5,
+      "extract_s": 1.0163,
+      "rtf_overlap": 0.4065,
+      "windows": 1,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 2.5,
+      "pieces": [
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "uncertain",
+        "score": 0.3017,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix07": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -6.044,
+        "si_sdr_mix_db": -9.922,
+        "si_sdri_db": 3.878,
+        "muted_share": 0.0,
+        "target_retention": 0.9467,
+        "leakage_share": 0.1515,
+        "leakage_ratio": 1.7549,
+        "stoi": 0.6134,
+        "pesq": 1.193,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -6.044,
+        "si_sdr_mix_db": -9.922,
+        "si_sdri_db": 3.878,
+        "muted_share": 0.0,
+        "target_retention": 0.9467,
+        "leakage_share": 0.1515,
+        "leakage_ratio": 1.7549,
+        "stoi": 0.6134,
+        "pesq": 1.193,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 2.2701,
+      "cpu_s": 2.2782,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.227
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -12.677,
+        "si_sdr_mix_db": -9.922,
+        "si_sdri_db": -2.755,
+        "muted_share": 0.75,
+        "target_retention": 0.0615,
+        "leakage_share": 0.0088,
+        "leakage_ratio": 1.5726,
+        "stoi": 0.1576,
+        "pesq": 1.079,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -12.677,
+        "si_sdr_mix_db": -9.922,
+        "si_sdri_db": -2.755,
+        "muted_share": 0.75,
+        "target_retention": 0.0615,
+        "leakage_share": 0.0088,
+        "leakage_ratio": 1.5726,
+        "stoi": 0.1576,
+        "pesq": 1.079,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 7.5599,
+      "cpu_s": 8.4343,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 6.8891,
+      "rtf_overlap": 0.6889,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 7.5,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "uncertain",
+        "score": 0.1111,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "uncertain",
+        "score": 0.0733,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "uncertain",
+        "score": 0.3021,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "target",
+        "score": 0.5395,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix08": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 2.506,
+        "si_sdr_mix_db": -3.907,
+        "si_sdri_db": 6.413,
+        "muted_share": 0.0,
+        "target_retention": 0.919,
+        "leakage_share": 0.0703,
+        "leakage_ratio": 0.2012,
+        "stoi": 0.7142,
+        "pesq": 1.132,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 2.506,
+        "si_sdr_mix_db": -3.907,
+        "si_sdri_db": 6.413,
+        "muted_share": 0.0,
+        "target_retention": 0.919,
+        "leakage_share": 0.0703,
+        "leakage_ratio": 0.2012,
+        "stoi": 0.7142,
+        "pesq": 1.132,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 2.3762,
+      "cpu_s": 2.3983,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.2376
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -30.0,
+        "si_sdr_mix_db": -3.907,
+        "si_sdri_db": -26.093,
+        "muted_share": 1.0,
+        "target_retention": 0.0,
+        "leakage_share": 0.0,
+        "leakage_ratio": null,
+        "stoi": null,
+        "pesq": null,
+        "quality_errors": [
+         "output is silent"
+        ]
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -30.0,
+        "si_sdr_mix_db": -3.907,
+        "si_sdri_db": -26.093,
+        "muted_share": 1.0,
+        "target_retention": 0.0,
+        "leakage_share": 0.0,
+        "leakage_ratio": null,
+        "stoi": null,
+        "pesq": null,
+        "quality_errors": [
+         "output is silent"
+        ]
+       }
+      },
+      "wall_s": 7.6386,
+      "cpu_s": 8.5192,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 6.9561,
+      "rtf_overlap": 0.6956,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 10.0,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "uncertain",
+        "score": 0.337,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "uncertain",
+        "score": 0.3572,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "uncertain",
+        "score": 0.3273,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "uncertain",
+        "score": 0.2481,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix09": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": 5.899,
+        "si_sdr_mix_db": 2.28,
+        "si_sdri_db": 3.619,
+        "muted_share": 0.0,
+        "target_retention": 0.9594,
+        "leakage_share": 0.2538,
+        "leakage_ratio": 0.1552,
+        "stoi": 0.8455,
+        "pesq": 1.535,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 5.899,
+        "si_sdr_mix_db": 2.28,
+        "si_sdri_db": 3.619,
+        "muted_share": 0.0,
+        "target_retention": 0.9594,
+        "leakage_share": 0.2538,
+        "leakage_ratio": 0.1552,
+        "stoi": 0.8455,
+        "pesq": 1.535,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 2.433,
+      "cpu_s": 3.1549,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.2433
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 10.0,
+        "si_sdr_db": -3.825,
+        "si_sdr_mix_db": 2.28,
+        "si_sdri_db": -6.105,
+        "muted_share": 0.5,
+        "target_retention": 0.1543,
+        "leakage_share": 0.0894,
+        "leakage_ratio": 0.3399,
+        "stoi": 0.355,
+        "pesq": 1.094,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -3.825,
+        "si_sdr_mix_db": 2.28,
+        "si_sdri_db": -6.105,
+        "muted_share": 0.5,
+        "target_retention": 0.1543,
+        "leakage_share": 0.0894,
+        "leakage_ratio": 0.3399,
+        "stoi": 0.355,
+        "pesq": 1.094,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 7.6162,
+      "cpu_s": 8.4885,
+      "audio_s": 10.0,
+      "overlap_s": 10.0,
+      "extract_s": 6.9294,
+      "rtf_overlap": 0.6929,
+      "windows": 4,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 5.0,
+      "pieces": [
+       {
+        "start": 0.0,
+        "end": 2.5,
+        "label": "target",
+        "score": 0.4166,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 2.5,
+        "end": 5.0,
+        "label": "uncertain",
+        "score": 0.3829,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 5.0,
+        "end": 7.5,
+        "label": "uncertain",
+        "score": 0.3378,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 7.5,
+        "end": 10.0,
+        "label": "target",
+        "score": 0.4476,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       }
+      ]
+     }
+    },
+    "mix10": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": 5.462,
+        "si_sdr_mix_db": -1.965,
+        "si_sdri_db": 7.427,
+        "muted_share": 0.0,
+        "target_retention": 1.0517,
+        "leakage_share": 0.0521,
+        "leakage_ratio": 0.0799,
+        "stoi": 0.7562,
+        "pesq": 1.403,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -0.849,
+        "si_sdr_mix_db": -2.281,
+        "si_sdri_db": 1.432,
+        "muted_share": 0.0,
+        "target_retention": 0.3661,
+        "leakage_share": 0.0434,
+        "leakage_ratio": 0.2023,
+        "stoi": 0.6787,
+        "pesq": 1.447,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 2.3067,
+      "cpu_s": 2.3087,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.2307
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": 0.346,
+        "si_sdr_mix_db": -1.965,
+        "si_sdri_db": 2.311,
+        "muted_share": 0.1667,
+        "target_retention": 0.3894,
+        "leakage_share": 0.0032,
+        "leakage_ratio": 0.0131,
+        "stoi": 0.4922,
+        "pesq": 1.231,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 6.041,
+        "si_sdr_mix_db": -2.281,
+        "si_sdri_db": 8.322,
+        "muted_share": 0.4,
+        "target_retention": 0.7149,
+        "leakage_share": 0.0007,
+        "leakage_ratio": 0.0017,
+        "stoi": 0.7167,
+        "pesq": 2.274,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 2.5179,
+      "cpu_s": 3.345,
+      "audio_s": 10.0,
+      "overlap_s": 5.0,
+      "extract_s": 2.2147,
+      "rtf_overlap": 0.4429,
+      "windows": 2,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 2.5,
+      "pieces": [
+       {
+        "start": 2.0,
+        "end": 4.5,
+        "label": "target",
+        "score": 0.4231,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 4.5,
+        "end": 7.0,
+        "label": "uncertain",
+        "score": 0.0694,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix11": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": -2.559,
+        "si_sdr_mix_db": -7.378,
+        "si_sdri_db": 4.819,
+        "muted_share": 0.0,
+        "target_retention": 0.7765,
+        "leakage_share": 0.2125,
+        "leakage_ratio": 1.4558,
+        "stoi": 0.8051,
+        "pesq": 1.342,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": -8.046,
+        "si_sdr_mix_db": -9.006,
+        "si_sdri_db": 0.96,
+        "muted_share": 0.004,
+        "target_retention": 0.8349,
+        "leakage_share": 0.6342,
+        "leakage_ratio": 5.9586,
+        "stoi": 0.8748,
+        "pesq": 1.847,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 2.2846,
+      "cpu_s": 2.3065,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.2285
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": 1.111,
+        "si_sdr_mix_db": -7.378,
+        "si_sdri_db": 8.489,
+        "muted_share": 0.1667,
+        "target_retention": 0.7291,
+        "leakage_share": 0.0286,
+        "leakage_ratio": 0.2087,
+        "stoi": 0.7915,
+        "pesq": 1.277,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 4.549,
+        "si_sdr_mix_db": -9.006,
+        "si_sdri_db": 13.555,
+        "muted_share": 0.4,
+        "target_retention": 0.8446,
+        "leakage_share": 0.0015,
+        "leakage_ratio": 0.0144,
+        "stoi": 0.8903,
+        "pesq": 2.15,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 2.3846,
+      "cpu_s": 3.2118,
+      "audio_s": 10.0,
+      "overlap_s": 5.0,
+      "extract_s": 2.0874,
+      "rtf_overlap": 0.4175,
+      "windows": 2,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 2.5,
+      "pieces": [
+       {
+        "start": 2.0,
+        "end": 4.5,
+        "label": "target",
+        "score": 0.4107,
+        "status": "extracted",
+        "reason": "voiceprint_match"
+       },
+       {
+        "start": 4.5,
+        "end": 7.0,
+        "label": "uncertain",
+        "score": 0.0658,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    },
+    "mix12": {
+     "raw": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": 10.573,
+        "si_sdr_mix_db": 2.562,
+        "si_sdri_db": 8.011,
+        "muted_share": 0.0,
+        "target_retention": 0.9524,
+        "leakage_share": 0.0149,
+        "leakage_ratio": 0.0086,
+        "stoi": 0.9479,
+        "pesq": 1.956,
+        "quality_errors": []
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 12.807,
+        "si_sdr_mix_db": 4.191,
+        "si_sdri_db": 8.617,
+        "muted_share": 0.006,
+        "target_retention": 0.9611,
+        "leakage_share": 0.0081,
+        "leakage_ratio": 0.0032,
+        "stoi": 0.9874,
+        "pesq": 2.625,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 2.1992,
+      "cpu_s": 2.1992,
+      "audio_s": 10.0,
+      "peak_vram_mib": null,
+      "rtf": 0.2199
+     },
+     "hybrid": {
+      "scores": {
+       "overlap": {
+        "seconds": 3.0,
+        "si_sdr_db": -30.0,
+        "si_sdr_mix_db": 2.562,
+        "si_sdri_db": -32.562,
+        "muted_share": 1.0,
+        "target_retention": 0.0,
+        "leakage_share": 0.0,
+        "leakage_ratio": null,
+        "stoi": null,
+        "pesq": null,
+        "quality_errors": [
+         "output is silent"
+        ]
+       },
+       "clip": {
+        "seconds": 10.0,
+        "si_sdr_db": 0.995,
+        "si_sdr_mix_db": 4.191,
+        "si_sdri_db": -3.196,
+        "muted_share": 0.65,
+        "target_retention": 0.3087,
+        "leakage_share": 0.0,
+        "leakage_ratio": 0.0001,
+        "stoi": 0.5646,
+        "pesq": 1.883,
+        "quality_errors": []
+       }
+      },
+      "wall_s": 2.3262,
+      "cpu_s": 3.1485,
+      "audio_s": 10.0,
+      "overlap_s": 5.0,
+      "extract_s": 2.0358,
+      "rtf_overlap": 0.4072,
+      "windows": 2,
+      "peak_vram_mib": null,
+      "uncertain_muted_s": 5.0,
+      "pieces": [
+       {
+        "start": 2.0,
+        "end": 4.5,
+        "label": "uncertain",
+        "score": 0.3824,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       },
+       {
+        "start": 4.5,
+        "end": 7.0,
+        "label": "uncertain",
+        "score": 0.1259,
+        "status": "muted",
+        "reason": "below_voiceprint_threshold"
+       }
+      ]
+     }
+    }
+   },
+   "timing": {
+    "raw_whole_mixture": {
+     "mixes": 12,
+     "audio_seconds": 120.0,
+     "wall_seconds": 29.26,
+     "cpu_seconds": 30.026,
+     "rtf": 0.2438,
+     "seconds_per_mix": 2.438,
+     "peak_vram": "not measured (CPU)"
+    },
+    "hybrid": {
+     "mixes": 12,
+     "audio_seconds": 120.0,
+     "wall_seconds": 58.062,
+     "cpu_seconds": 68.229,
+     "rtf": 0.4839,
+     "seconds_per_mix": 4.838,
+     "peak_vram": "not measured (CPU)",
+     "extract_seconds": 52.543,
+     "overlap_seconds": 82.5,
+     "rtf_overlap": 0.6369
+    }
+   },
+   "inference_completed": true
+  }
+ },
+ "pooled": {
+  "2": {
+   "gated_baseline": {
+    "overlap": {
+     "mixes": 6,
+     "si_sdri_db": -30.642,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.0,
+     "target_retention_n": 6,
+     "leakage_share": 0.0,
+     "leakage_share_n": 6,
+     "leakage_ratio": null,
+     "leakage_ratio_n": 0,
+     "muted_share": 1.0,
+     "muted_share_n": 6,
+     "stoi": null,
+     "stoi_n": 0,
+     "pesq": null,
+     "pesq_n": 0
+    },
+    "clip": {
+     "mixes": 6,
+     "si_sdri_db": -14.817,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.256,
+     "target_retention_n": 6,
+     "leakage_share": 0.0,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.0,
+     "leakage_ratio_n": 3,
+     "muted_share": 0.775,
+     "muted_share_n": 6,
+     "stoi": 0.692,
+     "stoi_n": 3,
+     "pesq": 2.4,
+     "pesq_n": 3
+    },
+    "by_level": {
+     "-6 dB": {
+      "mixes": 2,
+      "si_sdri_db": -26.536,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.0,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": null,
+      "leakage_ratio_n": 0,
+      "muted_share": 1.0,
+      "muted_share_n": 2,
+      "stoi": null,
+      "stoi_n": 0,
+      "pesq": null,
+      "pesq_n": 0
+     },
+     "+0 dB": {
+      "mixes": 2,
+      "si_sdri_db": -30.806,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.0,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": null,
+      "leakage_ratio_n": 0,
+      "muted_share": 1.0,
+      "muted_share_n": 2,
+      "stoi": null,
+      "stoi_n": 0,
+      "pesq": null,
+      "pesq_n": 0
+     },
+     "+6 dB": {
+      "mixes": 2,
+      "si_sdri_db": -34.585,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.0,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": null,
+      "leakage_ratio_n": 0,
+      "muted_share": 1.0,
+      "muted_share_n": 2,
+      "stoi": null,
+      "stoi_n": 0,
+      "pesq": null,
+      "pesq_n": 0
+     }
+    },
+    "by_scenario": {
+     "full": {
+      "mixes": 3,
+      "si_sdri_db": -29.096,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.0,
+      "target_retention_n": 3,
+      "leakage_share": 0.0,
+      "leakage_share_n": 3,
+      "leakage_ratio": null,
+      "leakage_ratio_n": 0,
+      "muted_share": 1.0,
+      "muted_share_n": 3,
+      "stoi": null,
+      "stoi_n": 0,
+      "pesq": null,
+      "pesq_n": 0
+     },
+     "partial": {
+      "mixes": 3,
+      "si_sdri_db": -32.189,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.0,
+      "target_retention_n": 3,
+      "leakage_share": 0.0,
+      "leakage_share_n": 3,
+      "leakage_ratio": null,
+      "leakage_ratio_n": 0,
+      "muted_share": 1.0,
+      "muted_share_n": 3,
+      "stoi": null,
+      "stoi_n": 0,
+      "pesq": null,
+      "pesq_n": 0
+     }
+    }
+   },
+   "wesep_bsrnn:raw": {
+    "overlap": {
+     "mixes": 6,
+     "si_sdri_db": 17.974,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.991,
+     "target_retention_n": 6,
+     "leakage_share": 0.0,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.0,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.0,
+     "muted_share_n": 6,
+     "stoi": 0.946,
+     "stoi_n": 6,
+     "pesq": 3.043,
+     "pesq_n": 6
+    },
+    "clip": {
+     "mixes": 6,
+     "si_sdri_db": 19.44,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.996,
+     "target_retention_n": 6,
+     "leakage_share": 0.0,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.0,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.024,
+     "muted_share_n": 6,
+     "stoi": 0.965,
+     "stoi_n": 6,
+     "pesq": 3.369,
+     "pesq_n": 6
+    },
+    "by_level": {
+     "-6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 20.706,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.99,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.933,
+      "stoi_n": 2,
+      "pesq": 2.468,
+      "pesq_n": 2
+     },
+     "+0 dB": {
+      "mixes": 2,
+      "si_sdri_db": 18.176,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.991,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.97,
+      "stoi_n": 2,
+      "pesq": 3.463,
+      "pesq_n": 2
+     },
+     "+6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 15.042,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.99,
+      "target_retention_n": 2,
+      "leakage_share": 0.001,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.937,
+      "stoi_n": 2,
+      "pesq": 3.199,
+      "pesq_n": 2
+     }
+    },
+    "by_scenario": {
+     "full": {
+      "mixes": 3,
+      "si_sdri_db": 17.665,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.995,
+      "target_retention_n": 3,
+      "leakage_share": 0.0,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.0,
+      "muted_share_n": 3,
+      "stoi": 0.944,
+      "stoi_n": 3,
+      "pesq": 2.909,
+      "pesq_n": 3
+     },
+     "partial": {
+      "mixes": 3,
+      "si_sdri_db": 18.284,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.986,
+      "target_retention_n": 3,
+      "leakage_share": 0.0,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.0,
+      "muted_share_n": 3,
+      "stoi": 0.949,
+      "stoi_n": 3,
+      "pesq": 3.178,
+      "pesq_n": 3
+     }
+    }
+   },
+   "wesep_bsrnn:hybrid": {
+    "overlap": {
+     "mixes": 6,
+     "si_sdri_db": 16.062,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.939,
+     "target_retention_n": 6,
+     "leakage_share": 0.0,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.0,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.042,
+     "muted_share_n": 6,
+     "stoi": 0.91,
+     "stoi_n": 6,
+     "pesq": 2.871,
+     "pesq_n": 6
+    },
+    "clip": {
+     "mixes": 6,
+     "si_sdri_db": 17.283,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.945,
+     "target_retention_n": 6,
+     "leakage_share": 0.0,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.0,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.192,
+     "muted_share_n": 6,
+     "stoi": 0.929,
+     "stoi_n": 6,
+     "pesq": 3.281,
+     "pesq_n": 6
+    },
+    "by_level": {
+     "-6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 15.628,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.84,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.125,
+      "muted_share_n": 2,
+      "stoi": 0.828,
+      "stoi_n": 2,
+      "pesq": 1.96,
+      "pesq_n": 2
+     },
+     "+0 dB": {
+      "mixes": 2,
+      "si_sdri_db": 18.331,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.988,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.968,
+      "stoi_n": 2,
+      "pesq": 3.502,
+      "pesq_n": 2
+     },
+     "+6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 14.227,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.99,
+      "target_retention_n": 2,
+      "leakage_share": 0.001,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.934,
+      "stoi_n": 2,
+      "pesq": 3.152,
+      "pesq_n": 2
+     }
+    },
+    "by_scenario": {
+     "full": {
+      "mixes": 3,
+      "si_sdri_db": 14.923,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.898,
+      "target_retention_n": 3,
+      "leakage_share": 0.0,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.083,
+      "muted_share_n": 3,
+      "stoi": 0.874,
+      "stoi_n": 3,
+      "pesq": 2.679,
+      "pesq_n": 3
+     },
+     "partial": {
+      "mixes": 3,
+      "si_sdri_db": 17.201,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.981,
+      "target_retention_n": 3,
+      "leakage_share": 0.0,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.0,
+      "muted_share_n": 3,
+      "stoi": 0.947,
+      "stoi_n": 3,
+      "pesq": 3.064,
+      "pesq_n": 3
+     }
+    }
+   },
+   "usef_tse:raw": {
+    "overlap": {
+     "mixes": 6,
+     "si_sdri_db": 12.831,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.944,
+     "target_retention_n": 6,
+     "leakage_share": 0.001,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.001,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.002,
+     "muted_share_n": 6,
+     "stoi": 0.934,
+     "stoi_n": 6,
+     "pesq": 2.014,
+     "pesq_n": 6
+    },
+    "clip": {
+     "mixes": 6,
+     "si_sdri_db": 11.749,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.933,
+     "target_retention_n": 6,
+     "leakage_share": 0.001,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.0,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.025,
+     "muted_share_n": 6,
+     "stoi": 0.96,
+     "stoi_n": 6,
+     "pesq": 2.356,
+     "pesq_n": 6
+    },
+    "by_level": {
+     "-6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 17.133,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.981,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.001,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.005,
+      "muted_share_n": 2,
+      "stoi": 0.917,
+      "stoi_n": 2,
+      "pesq": 1.707,
+      "pesq_n": 2
+     },
+     "+0 dB": {
+      "mixes": 2,
+      "si_sdri_db": 14.441,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.966,
+      "target_retention_n": 2,
+      "leakage_share": 0.001,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.955,
+      "stoi_n": 2,
+      "pesq": 2.3,
+      "pesq_n": 2
+     },
+     "+6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 6.918,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.883,
+      "target_retention_n": 2,
+      "leakage_share": 0.003,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.001,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.93,
+      "stoi_n": 2,
+      "pesq": 2.034,
+      "pesq_n": 2
+     }
+    },
+    "by_scenario": {
+     "full": {
+      "mixes": 3,
+      "si_sdri_db": 15.367,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.97,
+      "target_retention_n": 3,
+      "leakage_share": 0.001,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.001,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.003,
+      "muted_share_n": 3,
+      "stoi": 0.94,
+      "stoi_n": 3,
+      "pesq": 2.118,
+      "pesq_n": 3
+     },
+     "partial": {
+      "mixes": 3,
+      "si_sdri_db": 10.295,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.917,
+      "target_retention_n": 3,
+      "leakage_share": 0.002,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.001,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.0,
+      "muted_share_n": 3,
+      "stoi": 0.928,
+      "stoi_n": 3,
+      "pesq": 1.91,
+      "pesq_n": 3
+     }
+    }
+   },
+   "usef_tse:hybrid": {
+    "overlap": {
+     "mixes": 6,
+     "si_sdri_db": 1.779,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.594,
+     "target_retention_n": 6,
+     "leakage_share": 0.001,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.0,
+     "leakage_ratio_n": 5,
+     "muted_share": 0.292,
+     "muted_share_n": 6,
+     "stoi": 0.796,
+     "stoi_n": 5,
+     "pesq": 1.78,
+     "pesq_n": 5
+    },
+    "clip": {
+     "mixes": 6,
+     "si_sdri_db": 8.024,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.698,
+     "target_retention_n": 6,
+     "leakage_share": 0.0,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.0,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.317,
+     "muted_share_n": 6,
+     "stoi": 0.808,
+     "stoi_n": 6,
+     "pesq": 2.138,
+     "pesq_n": 6
+    },
+    "by_level": {
+     "-6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 11.516,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.734,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.001,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.125,
+      "muted_share_n": 2,
+      "stoi": 0.817,
+      "stoi_n": 2,
+      "pesq": 1.552,
+      "pesq_n": 2
+     },
+     "+0 dB": {
+      "mixes": 2,
+      "si_sdri_db": -6.99,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.489,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 1,
+      "muted_share": 0.5,
+      "muted_share_n": 2,
+      "stoi": 0.96,
+      "stoi_n": 1,
+      "pesq": 2.66,
+      "pesq_n": 1
+     },
+     "+6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 0.809,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.56,
+      "target_retention_n": 2,
+      "leakage_share": 0.002,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.25,
+      "muted_share_n": 2,
+      "stoi": 0.692,
+      "stoi_n": 2,
+      "pesq": 1.567,
+      "pesq_n": 2
+     }
+    },
+    "by_scenario": {
+     "full": {
+      "mixes": 3,
+      "si_sdri_db": 7.985,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.588,
+      "target_retention_n": 3,
+      "leakage_share": 0.0,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.25,
+      "muted_share_n": 3,
+      "stoi": 0.716,
+      "stoi_n": 3,
+      "pesq": 1.741,
+      "pesq_n": 3
+     },
+     "partial": {
+      "mixes": 3,
+      "si_sdri_db": -4.428,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.601,
+      "target_retention_n": 3,
+      "leakage_share": 0.001,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.0,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.333,
+      "muted_share_n": 3,
+      "stoi": 0.916,
+      "stoi_n": 2,
+      "pesq": 1.839,
+      "pesq_n": 2
+     }
+    }
+   },
+   "spexplus:raw": {
+    "overlap": {
+     "mixes": 6,
+     "si_sdri_db": 0.425,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.586,
+     "target_retention_n": 6,
+     "leakage_share": 0.143,
+     "leakage_share_n": 6,
+     "leakage_ratio": 19.819,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.02,
+     "muted_share_n": 6,
+     "stoi": 0.725,
+     "stoi_n": 6,
+     "pesq": 1.51,
+     "pesq_n": 6
+    },
+    "clip": {
+     "mixes": 6,
+     "si_sdri_db": -2.86,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.515,
+     "target_retention_n": 6,
+     "leakage_share": 0.126,
+     "leakage_share_n": 6,
+     "leakage_ratio": 34.598,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.031,
+     "muted_share_n": 6,
+     "stoi": 0.664,
+     "stoi_n": 6,
+     "pesq": 1.544,
+     "pesq_n": 6
+    },
+    "by_level": {
+     "-6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 14.68,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.939,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.001,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.015,
+      "muted_share_n": 2,
+      "stoi": 0.896,
+      "stoi_n": 2,
+      "pesq": 1.619,
+      "pesq_n": 2
+     },
+     "+0 dB": {
+      "mixes": 2,
+      "si_sdri_db": -1.938,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.372,
+      "target_retention_n": 2,
+      "leakage_share": 0.367,
+      "leakage_share_n": 2,
+      "leakage_ratio": 1.617,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.667,
+      "stoi_n": 2,
+      "pesq": 1.392,
+      "pesq_n": 2
+     },
+     "+6 dB": {
+      "mixes": 2,
+      "si_sdri_db": -11.465,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.446,
+      "target_retention_n": 2,
+      "leakage_share": 0.063,
+      "leakage_share_n": 2,
+      "leakage_ratio": 57.839,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.045,
+      "muted_share_n": 2,
+      "stoi": 0.613,
+      "stoi_n": 2,
+      "pesq": 1.519,
+      "pesq_n": 2
+     }
+    },
+    "by_scenario": {
+     "full": {
+      "mixes": 3,
+      "si_sdri_db": 5.36,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.637,
+      "target_retention_n": 3,
+      "leakage_share": 0.244,
+      "leakage_share_n": 3,
+      "leakage_ratio": 1.077,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.011,
+      "muted_share_n": 3,
+      "stoi": 0.76,
+      "stoi_n": 3,
+      "pesq": 1.481,
+      "pesq_n": 3
+     },
+     "partial": {
+      "mixes": 3,
+      "si_sdri_db": -4.509,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.534,
+      "target_retention_n": 3,
+      "leakage_share": 0.043,
+      "leakage_share_n": 3,
+      "leakage_ratio": 38.56,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.029,
+      "muted_share_n": 3,
+      "stoi": 0.691,
+      "stoi_n": 3,
+      "pesq": 1.539,
+      "pesq_n": 3
+     }
+    }
+   },
+   "spexplus:hybrid": {
+    "overlap": {
+     "mixes": 6,
+     "si_sdri_db": -19.833,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.152,
+     "target_retention_n": 6,
+     "leakage_share": 0.0,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.001,
+     "leakage_ratio_n": 2,
+     "muted_share": 0.797,
+     "muted_share_n": 6,
+     "stoi": 0.563,
+     "stoi_n": 2,
+     "pesq": 1.219,
+     "pesq_n": 2
+    },
+    "clip": {
+     "mixes": 6,
+     "si_sdri_db": -4.012,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.408,
+     "target_retention_n": 6,
+     "leakage_share": 0.0,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.0,
+     "leakage_ratio_n": 5,
+     "muted_share": 0.572,
+     "muted_share_n": 6,
+     "stoi": 0.64,
+     "stoi_n": 5,
+     "pesq": 1.909,
+     "pesq_n": 5
+    },
+    "by_level": {
+     "-6 dB": {
+      "mixes": 2,
+      "si_sdri_db": -9.104,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.326,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.001,
+      "leakage_ratio_n": 1,
+      "muted_share": 0.64,
+      "muted_share_n": 2,
+      "stoi": 0.641,
+      "stoi_n": 1,
+      "pesq": 1.207,
+      "pesq_n": 1
+     },
+     "+0 dB": {
+      "mixes": 2,
+      "si_sdri_db": -30.806,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.0,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": null,
+      "leakage_ratio_n": 0,
+      "muted_share": 1.0,
+      "muted_share_n": 2,
+      "stoi": null,
+      "stoi_n": 0,
+      "pesq": null,
+      "pesq_n": 0
+     },
+     "+6 dB": {
+      "mixes": 2,
+      "si_sdri_db": -19.589,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.129,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.001,
+      "leakage_ratio_n": 1,
+      "muted_share": 0.75,
+      "muted_share_n": 2,
+      "stoi": 0.484,
+      "stoi_n": 1,
+      "pesq": 1.231,
+      "pesq_n": 1
+     }
+    },
+    "by_scenario": {
+     "full": {
+      "mixes": 3,
+      "si_sdri_db": -7.477,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.303,
+      "target_retention_n": 3,
+      "leakage_share": 0.0,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.001,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.593,
+      "muted_share_n": 3,
+      "stoi": 0.563,
+      "stoi_n": 2,
+      "pesq": 1.219,
+      "pesq_n": 2
+     },
+     "partial": {
+      "mixes": 3,
+      "si_sdri_db": -32.189,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.0,
+      "target_retention_n": 3,
+      "leakage_share": 0.0,
+      "leakage_share_n": 3,
+      "leakage_ratio": null,
+      "leakage_ratio_n": 0,
+      "muted_share": 1.0,
+      "muted_share_n": 3,
+      "stoi": null,
+      "stoi_n": 0,
+      "pesq": null,
+      "pesq_n": 0
+     }
+    }
+   }
+  },
+  "3": {
+   "gated_baseline": {
+    "overlap": {
+     "mixes": 6,
+     "si_sdri_db": -26.945,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.0,
+     "target_retention_n": 6,
+     "leakage_share": 0.0,
+     "leakage_share_n": 6,
+     "leakage_ratio": null,
+     "leakage_ratio_n": 0,
+     "muted_share": 1.0,
+     "muted_share_n": 6,
+     "stoi": null,
+     "stoi_n": 0,
+     "pesq": null,
+     "pesq_n": 0
+    },
+    "clip": {
+     "mixes": 6,
+     "si_sdri_db": -11.486,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.15,
+     "target_retention_n": 6,
+     "leakage_share": 0.0,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.0,
+     "leakage_ratio_n": 3,
+     "muted_share": 0.825,
+     "muted_share_n": 6,
+     "stoi": 0.524,
+     "stoi_n": 3,
+     "pesq": 1.946,
+     "pesq_n": 3
+    },
+    "by_level": {
+     "-6 dB": {
+      "mixes": 2,
+      "si_sdri_db": -24.056,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.0,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": null,
+      "leakage_ratio_n": 0,
+      "muted_share": 1.0,
+      "muted_share_n": 2,
+      "stoi": null,
+      "stoi_n": 0,
+      "pesq": null,
+      "pesq_n": 0
+     },
+     "+0 dB": {
+      "mixes": 2,
+      "si_sdri_db": -24.358,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.0,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": null,
+      "leakage_ratio_n": 0,
+      "muted_share": 1.0,
+      "muted_share_n": 2,
+      "stoi": null,
+      "stoi_n": 0,
+      "pesq": null,
+      "pesq_n": 0
+     },
+     "+6 dB": {
+      "mixes": 2,
+      "si_sdri_db": -32.421,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.0,
+      "target_retention_n": 2,
+      "leakage_share": 0.0,
+      "leakage_share_n": 2,
+      "leakage_ratio": null,
+      "leakage_ratio_n": 0,
+      "muted_share": 1.0,
+      "muted_share_n": 2,
+      "stoi": null,
+      "stoi_n": 0,
+      "pesq": null,
+      "pesq_n": 0
+     }
+    },
+    "by_scenario": {
+     "full": {
+      "mixes": 3,
+      "si_sdri_db": -26.15,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.0,
+      "target_retention_n": 3,
+      "leakage_share": 0.0,
+      "leakage_share_n": 3,
+      "leakage_ratio": null,
+      "leakage_ratio_n": 0,
+      "muted_share": 1.0,
+      "muted_share_n": 3,
+      "stoi": null,
+      "stoi_n": 0,
+      "pesq": null,
+      "pesq_n": 0
+     },
+     "partial": {
+      "mixes": 3,
+      "si_sdri_db": -27.74,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.0,
+      "target_retention_n": 3,
+      "leakage_share": 0.0,
+      "leakage_share_n": 3,
+      "leakage_ratio": null,
+      "leakage_ratio_n": 0,
+      "muted_share": 1.0,
+      "muted_share_n": 3,
+      "stoi": null,
+      "stoi_n": 0,
+      "pesq": null,
+      "pesq_n": 0
+     }
+    }
+   },
+   "wesep_bsrnn:raw": {
+    "overlap": {
+     "mixes": 6,
+     "si_sdri_db": 5.965,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.91,
+     "target_retention_n": 6,
+     "leakage_share": 0.151,
+     "leakage_share_n": 6,
+     "leakage_ratio": 1.805,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.0,
+     "muted_share_n": 6,
+     "stoi": 0.811,
+     "stoi_n": 6,
+     "pesq": 1.667,
+     "pesq_n": 6
+    },
+    "clip": {
+     "mixes": 6,
+     "si_sdri_db": 5.861,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.927,
+     "target_retention_n": 6,
+     "leakage_share": 0.166,
+     "leakage_share_n": 6,
+     "leakage_ratio": 1.906,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.023,
+     "muted_share_n": 6,
+     "stoi": 0.831,
+     "stoi_n": 6,
+     "pesq": 2.015,
+     "pesq_n": 6
+    },
+    "by_level": {
+     "-6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 4.622,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.78,
+      "target_retention_n": 2,
+      "leakage_share": 0.278,
+      "leakage_share_n": 2,
+      "leakage_ratio": 4.868,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.712,
+      "stoi_n": 2,
+      "pesq": 1.529,
+      "pesq_n": 2
+     },
+     "+0 dB": {
+      "mixes": 2,
+      "si_sdri_db": 4.844,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.943,
+      "target_retention_n": 2,
+      "leakage_share": 0.148,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.531,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.777,
+      "stoi_n": 2,
+      "pesq": 1.282,
+      "pesq_n": 2
+     },
+     "+6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 8.431,
+      "si_sdri_db_n": 2,
+      "target_retention": 1.006,
+      "target_retention_n": 2,
+      "leakage_share": 0.027,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.015,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.945,
+      "stoi_n": 2,
+      "pesq": 2.189,
+      "pesq_n": 2
+     }
+    },
+    "by_scenario": {
+     "full": {
+      "mixes": 3,
+      "si_sdri_db": 3.507,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.802,
+      "target_retention_n": 3,
+      "leakage_share": 0.265,
+      "leakage_share_n": 3,
+      "leakage_ratio": 3.498,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.0,
+      "muted_share_n": 3,
+      "stoi": 0.716,
+      "stoi_n": 3,
+      "pesq": 1.336,
+      "pesq_n": 3
+     },
+     "partial": {
+      "mixes": 3,
+      "si_sdri_db": 8.424,
+      "si_sdri_db_n": 3,
+      "target_retention": 1.017,
+      "target_retention_n": 3,
+      "leakage_share": 0.037,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.112,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.0,
+      "muted_share_n": 3,
+      "stoi": 0.907,
+      "stoi_n": 3,
+      "pesq": 1.997,
+      "pesq_n": 3
+     }
+    }
+   },
+   "wesep_bsrnn:hybrid": {
+    "overlap": {
+     "mixes": 6,
+     "si_sdri_db": 4.575,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.707,
+     "target_retention_n": 6,
+     "leakage_share": 0.07,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.962,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.167,
+     "muted_share_n": 6,
+     "stoi": 0.731,
+     "stoi_n": 6,
+     "pesq": 1.546,
+     "pesq_n": 6
+    },
+    "clip": {
+     "mixes": 6,
+     "si_sdri_db": 6.594,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.774,
+     "target_retention_n": 6,
+     "leakage_share": 0.06,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.922,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.283,
+     "muted_share_n": 6,
+     "stoi": 0.762,
+     "stoi_n": 6,
+     "pesq": 2.182,
+     "pesq_n": 6
+    },
+    "by_level": {
+     "-6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 4.861,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.524,
+      "target_retention_n": 2,
+      "leakage_share": 0.046,
+      "leakage_share_n": 2,
+      "leakage_ratio": 2.426,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.333,
+      "muted_share_n": 2,
+      "stoi": 0.571,
+      "stoi_n": 2,
+      "pesq": 1.572,
+      "pesq_n": 2
+     },
+     "+0 dB": {
+      "mixes": 2,
+      "si_sdri_db": 5.691,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.845,
+      "target_retention_n": 2,
+      "leakage_share": 0.113,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.419,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.083,
+      "muted_share_n": 2,
+      "stoi": 0.762,
+      "stoi_n": 2,
+      "pesq": 1.256,
+      "pesq_n": 2
+     },
+     "+6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 3.171,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.753,
+      "target_retention_n": 2,
+      "leakage_share": 0.05,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.041,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.083,
+      "muted_share_n": 2,
+      "stoi": 0.862,
+      "stoi_n": 2,
+      "pesq": 1.809,
+      "pesq_n": 2
+     }
+    },
+    "by_scenario": {
+     "full": {
+      "mixes": 3,
+      "si_sdri_db": 2.961,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.686,
+      "target_retention_n": 3,
+      "leakage_share": 0.114,
+      "leakage_share_n": 3,
+      "leakage_ratio": 1.836,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.167,
+      "muted_share_n": 3,
+      "stoi": 0.638,
+      "stoi_n": 3,
+      "pesq": 1.298,
+      "pesq_n": 3
+     },
+     "partial": {
+      "mixes": 3,
+      "si_sdri_db": 6.188,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.728,
+      "target_retention_n": 3,
+      "leakage_share": 0.025,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.087,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.167,
+      "muted_share_n": 3,
+      "stoi": 0.825,
+      "stoi_n": 3,
+      "pesq": 1.794,
+      "pesq_n": 3
+     }
+    }
+   },
+   "usef_tse:raw": {
+    "overlap": {
+     "mixes": 6,
+     "si_sdri_db": 5.019,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.853,
+     "target_retention_n": 6,
+     "leakage_share": 0.194,
+     "leakage_share_n": 6,
+     "leakage_ratio": 5.145,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.0,
+     "muted_share_n": 6,
+     "stoi": 0.754,
+     "stoi_n": 6,
+     "pesq": 1.393,
+     "pesq_n": 6
+    },
+    "clip": {
+     "mixes": 6,
+     "si_sdri_db": 4.643,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.872,
+     "target_retention_n": 6,
+     "leakage_share": 0.259,
+     "leakage_share_n": 6,
+     "leakage_ratio": 5.856,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.023,
+     "muted_share_n": 6,
+     "stoi": 0.79,
+     "stoi_n": 6,
+     "pesq": 1.69,
+     "pesq_n": 6
+    },
+    "by_level": {
+     "-6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 2.154,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.574,
+      "target_retention_n": 2,
+      "leakage_share": 0.262,
+      "leakage_share_n": 2,
+      "leakage_ratio": 14.348,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.608,
+      "stoi_n": 2,
+      "pesq": 1.283,
+      "pesq_n": 2
+     },
+     "+0 dB": {
+      "mixes": 2,
+      "si_sdri_db": 5.3,
+      "si_sdri_db_n": 2,
+      "target_retention": 1.014,
+      "target_retention_n": 2,
+      "leakage_share": 0.183,
+      "leakage_share_n": 2,
+      "leakage_ratio": 1.007,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.765,
+      "stoi_n": 2,
+      "pesq": 1.197,
+      "pesq_n": 2
+     },
+     "+6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 7.603,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.97,
+      "target_retention_n": 2,
+      "leakage_share": 0.136,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.081,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.891,
+      "stoi_n": 2,
+      "pesq": 1.7,
+      "pesq_n": 2
+     }
+    },
+    "by_scenario": {
+     "full": {
+      "mixes": 3,
+      "si_sdri_db": 2.263,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.794,
+      "target_retention_n": 3,
+      "leakage_share": 0.28,
+      "leakage_share_n": 3,
+      "leakage_ratio": 9.66,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.0,
+      "muted_share_n": 3,
+      "stoi": 0.662,
+      "stoi_n": 3,
+      "pesq": 1.238,
+      "pesq_n": 3
+     },
+     "partial": {
+      "mixes": 3,
+      "si_sdri_db": 7.775,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.911,
+      "target_retention_n": 3,
+      "leakage_share": 0.108,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.631,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.0,
+      "muted_share_n": 3,
+      "stoi": 0.847,
+      "stoi_n": 3,
+      "pesq": 1.548,
+      "pesq_n": 3
+     }
+    }
+   },
+   "usef_tse:hybrid": {
+    "overlap": {
+     "mixes": 6,
+     "si_sdri_db": -11.889,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.201,
+     "target_retention_n": 6,
+     "leakage_share": 0.011,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.127,
+     "leakage_ratio_n": 3,
+     "muted_share": 0.694,
+     "muted_share_n": 6,
+     "stoi": 0.506,
+     "stoi_n": 3,
+     "pesq": 1.247,
+     "pesq_n": 3
+    },
+    "clip": {
+     "mixes": 6,
+     "si_sdri_db": -1.069,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.304,
+     "target_retention_n": 6,
+     "leakage_share": 0.011,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.075,
+     "leakage_ratio_n": 5,
+     "muted_share": 0.617,
+     "muted_share_n": 6,
+     "stoi": 0.542,
+     "stoi_n": 5,
+     "pesq": 1.762,
+     "pesq_n": 5
+    },
+    "by_level": {
+     "-6 dB": {
+      "mixes": 2,
+      "si_sdri_db": -5.434,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.413,
+      "target_retention_n": 2,
+      "leakage_share": 0.002,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.007,
+      "leakage_ratio_n": 1,
+      "muted_share": 0.583,
+      "muted_share_n": 2,
+      "stoi": 0.78,
+      "stoi_n": 1,
+      "pesq": 1.579,
+      "pesq_n": 1
+     },
+     "+0 dB": {
+      "mixes": 2,
+      "si_sdri_db": -11.296,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.104,
+      "target_retention_n": 2,
+      "leakage_share": 0.008,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.211,
+      "leakage_ratio_n": 1,
+      "muted_share": 0.75,
+      "muted_share_n": 2,
+      "stoi": 0.378,
+      "stoi_n": 1,
+      "pesq": 1.066,
+      "pesq_n": 1
+     },
+     "+6 dB": {
+      "mixes": 2,
+      "si_sdri_db": -18.938,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.085,
+      "target_retention_n": 2,
+      "leakage_share": 0.024,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.165,
+      "leakage_ratio_n": 1,
+      "muted_share": 0.75,
+      "muted_share_n": 2,
+      "stoi": 0.36,
+      "stoi_n": 1,
+      "pesq": 1.095,
+      "pesq_n": 1
+     }
+    },
+    "by_scenario": {
+     "full": {
+      "mixes": 3,
+      "si_sdri_db": -8.454,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.126,
+      "target_retention_n": 3,
+      "leakage_share": 0.021,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.188,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.667,
+      "muted_share_n": 3,
+      "stoi": 0.369,
+      "stoi_n": 2,
+      "pesq": 1.081,
+      "pesq_n": 2
+     },
+     "partial": {
+      "mixes": 3,
+      "si_sdri_db": -15.325,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.275,
+      "target_retention_n": 3,
+      "leakage_share": 0.001,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.007,
+      "leakage_ratio_n": 1,
+      "muted_share": 0.722,
+      "muted_share_n": 3,
+      "stoi": 0.78,
+      "stoi_n": 1,
+      "pesq": 1.579,
+      "pesq_n": 1
+     }
+    }
+   },
+   "spexplus:raw": {
+    "overlap": {
+     "mixes": 6,
+     "si_sdri_db": 5.695,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.934,
+     "target_retention_n": 6,
+     "leakage_share": 0.126,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.609,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.0,
+     "muted_share_n": 6,
+     "stoi": 0.78,
+     "stoi_n": 6,
+     "pesq": 1.427,
+     "pesq_n": 6
+    },
+    "clip": {
+     "mixes": 6,
+     "si_sdri_db": 4.153,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.831,
+     "target_retention_n": 6,
+     "leakage_share": 0.194,
+     "leakage_share_n": 6,
+     "leakage_ratio": 1.379,
+     "leakage_ratio_n": 6,
+     "muted_share": 0.002,
+     "muted_share_n": 6,
+     "stoi": 0.786,
+     "stoi_n": 6,
+     "pesq": 1.63,
+     "pesq_n": 6
+    },
+    "by_level": {
+     "-6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 5.652,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.999,
+      "target_retention_n": 2,
+      "leakage_share": 0.102,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.917,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.685,
+      "stoi_n": 2,
+      "pesq": 1.298,
+      "pesq_n": 2
+     },
+     "+0 dB": {
+      "mixes": 2,
+      "si_sdri_db": 5.616,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.848,
+      "target_retention_n": 2,
+      "leakage_share": 0.141,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.829,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.76,
+      "stoi_n": 2,
+      "pesq": 1.237,
+      "pesq_n": 2
+     },
+     "+6 dB": {
+      "mixes": 2,
+      "si_sdri_db": 5.815,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.956,
+      "target_retention_n": 2,
+      "leakage_share": 0.134,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.082,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.0,
+      "muted_share_n": 2,
+      "stoi": 0.897,
+      "stoi_n": 2,
+      "pesq": 1.745,
+      "pesq_n": 2
+     }
+    },
+    "by_scenario": {
+     "full": {
+      "mixes": 3,
+      "si_sdri_db": 4.637,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.942,
+      "target_retention_n": 3,
+      "leakage_share": 0.159,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.704,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.0,
+      "muted_share_n": 3,
+      "stoi": 0.724,
+      "stoi_n": 3,
+      "pesq": 1.287,
+      "pesq_n": 3
+     },
+     "partial": {
+      "mixes": 3,
+      "si_sdri_db": 6.752,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.927,
+      "target_retention_n": 3,
+      "leakage_share": 0.093,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.515,
+      "leakage_ratio_n": 3,
+      "muted_share": 0.0,
+      "muted_share_n": 3,
+      "stoi": 0.836,
+      "stoi_n": 3,
+      "pesq": 1.567,
+      "pesq_n": 3
+     }
+    }
+   },
+   "spexplus:hybrid": {
+    "overlap": {
+     "mixes": 6,
+     "si_sdri_db": -9.452,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.222,
+     "target_retention_n": 6,
+     "leakage_share": 0.022,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.534,
+     "leakage_ratio_n": 4,
+     "muted_share": 0.597,
+     "muted_share_n": 6,
+     "stoi": 0.449,
+     "stoi_n": 4,
+     "pesq": 1.17,
+     "pesq_n": 4
+    },
+    "clip": {
+     "mixes": 6,
+     "si_sdri_db": -2.712,
+     "si_sdri_db_n": 6,
+     "target_retention": 0.347,
+     "target_retention_n": 6,
+     "leakage_share": 0.017,
+     "leakage_share_n": 6,
+     "leakage_ratio": 0.386,
+     "leakage_ratio_n": 5,
+     "muted_share": 0.617,
+     "muted_share_n": 6,
+     "stoi": 0.537,
+     "stoi_n": 5,
+     "pesq": 1.696,
+     "pesq_n": 5
+    },
+    "by_level": {
+     "-6 dB": {
+      "mixes": 2,
+      "si_sdri_db": -0.222,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.225,
+      "target_retention_n": 2,
+      "leakage_share": 0.006,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.793,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.458,
+      "muted_share_n": 2,
+      "stoi": 0.325,
+      "stoi_n": 2,
+      "pesq": 1.155,
+      "pesq_n": 2
+     },
+     "+0 dB": {
+      "mixes": 2,
+      "si_sdri_db": -8.802,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.365,
+      "target_retention_n": 2,
+      "leakage_share": 0.014,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.209,
+      "leakage_ratio_n": 1,
+      "muted_share": 0.583,
+      "muted_share_n": 2,
+      "stoi": 0.791,
+      "stoi_n": 1,
+      "pesq": 1.277,
+      "pesq_n": 1
+     },
+     "+6 dB": {
+      "mixes": 2,
+      "si_sdri_db": -19.334,
+      "si_sdri_db_n": 2,
+      "target_retention": 0.077,
+      "target_retention_n": 2,
+      "leakage_share": 0.045,
+      "leakage_share_n": 2,
+      "leakage_ratio": 0.34,
+      "leakage_ratio_n": 1,
+      "muted_share": 0.75,
+      "muted_share_n": 2,
+      "stoi": 0.355,
+      "stoi_n": 1,
+      "pesq": 1.094,
+      "pesq_n": 1
+     }
+    },
+    "by_scenario": {
+     "full": {
+      "mixes": 3,
+      "si_sdri_db": -11.651,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.072,
+      "target_retention_n": 3,
+      "leakage_share": 0.033,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.956,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.75,
+      "muted_share_n": 3,
+      "stoi": 0.256,
+      "stoi_n": 2,
+      "pesq": 1.087,
+      "pesq_n": 2
+     },
+     "partial": {
+      "mixes": 3,
+      "si_sdri_db": -7.254,
+      "si_sdri_db_n": 3,
+      "target_retention": 0.373,
+      "target_retention_n": 3,
+      "leakage_share": 0.011,
+      "leakage_share_n": 3,
+      "leakage_ratio": 0.111,
+      "leakage_ratio_n": 2,
+      "muted_share": 0.444,
+      "muted_share_n": 3,
+      "stoi": 0.642,
+      "stoi_n": 2,
+      "pesq": 1.254,
+      "pesq_n": 2
+     }
+    }
+   }
+  }
+ },
+ "gated_baseline_pooled": {
+  "2": {
+   "overlap": {
+    "mixes": 6,
+    "si_sdri_db": -30.642,
+    "si_sdri_db_n": 6,
+    "target_retention": 0.0,
+    "target_retention_n": 6,
+    "leakage_share": 0.0,
+    "leakage_share_n": 6,
+    "leakage_ratio": null,
+    "leakage_ratio_n": 0,
+    "muted_share": 1.0,
+    "muted_share_n": 6,
+    "stoi": null,
+    "stoi_n": 0,
+    "pesq": null,
+    "pesq_n": 0
+   }
+  },
+  "3": {
+   "overlap": {
+    "mixes": 6,
+    "si_sdri_db": -26.945,
+    "si_sdri_db_n": 6,
+    "target_retention": 0.0,
+    "target_retention_n": 6,
+    "leakage_share": 0.0,
+    "leakage_share_n": 6,
+    "leakage_ratio": null,
+    "leakage_ratio_n": 0,
+    "muted_share": 1.0,
+    "muted_share_n": 6,
+    "stoi": null,
+    "stoi_n": 0,
+    "pesq": null,
+    "pesq_n": 0
+   }
+  }
+ },
+ "verdicts": {
+  "2": {
+   "wesep_bsrnn": {
+    "improves": true,
+    "reasons": []
+   },
+   "usef_tse": {
+    "improves": true,
+    "reasons": []
+   },
+   "spexplus": {
+    "improves": false,
+    "reasons": [
+     "SI-SDRi -19.833 dB is below +1.0 dB",
+     "target retention 0.152 is below 0.3"
+    ]
+   }
+  },
+  "3": {
+   "wesep_bsrnn": {
+    "improves": false,
+    "reasons": [
+     "leakage ratio 0.962 is above 0.5"
+    ]
+   },
+   "usef_tse": {
+    "improves": false,
+    "reasons": [
+     "SI-SDRi -11.889 dB is below +1.0 dB",
+     "target retention 0.201 is below 0.3"
+    ]
+   },
+   "spexplus": {
+    "improves": false,
+    "reasons": [
+     "SI-SDRi -9.452 dB is below +1.0 dB",
+     "target retention 0.222 is below 0.3",
+     "leakage ratio 0.534 is above 0.5"
+    ]
+   }
+  }
+ },
+ "listening": {
+  "mix01": {
+   "files": [
+    {
+     "label": "Original mixture",
+     "file": "listen/mix01/00_mixture.flac",
+     "key": "00_mixture"
+    },
+    {
+     "label": "Clean target reference",
+     "file": "listen/mix01/01_target_reference.flac",
+     "key": "01_target_reference"
+    },
+    {
+     "label": "Enrollment clip (separate recording)",
+     "file": "listen/mix01/02_enrollment.flac",
+     "key": "02_enrollment"
+    },
+    {
+     "label": "Gated baseline (target solo turns only)",
+     "file": "listen/mix01/gated_baseline.flac",
+     "key": "gated_baseline"
+    },
+    {
+     "label": "wesep_bsrnn: raw extraction (model on the whole mixture)",
+     "file": "listen/mix01/wesep_bsrnn_raw.flac",
+     "key": "wesep_bsrnn_raw"
+    },
+    {
+     "label": "wesep_bsrnn: residual (mixture minus raw extraction)",
+     "file": "listen/mix01/wesep_bsrnn_residual.flac",
+     "key": "wesep_bsrnn_residual"
+    },
+    {
+     "label": "wesep_bsrnn: hybrid output (extraction only in overlap)",
+     "file": "listen/mix01/wesep_bsrnn_hybrid.flac",
+     "key": "wesep_bsrnn_hybrid"
+    },
+    {
+     "label": "usef_tse: raw extraction (model on the whole mixture)",
+     "file": "listen/mix01/usef_tse_raw.flac",
+     "key": "usef_tse_raw"
+    },
+    {
+     "label": "usef_tse: residual (mixture minus raw extraction)",
+     "file": "listen/mix01/usef_tse_residual.flac",
+     "key": "usef_tse_residual"
+    },
+    {
+     "label": "usef_tse: hybrid output (extraction only in overlap)",
+     "file": "listen/mix01/usef_tse_hybrid.flac",
+     "key": "usef_tse_hybrid"
+    },
+    {
+     "label": "spexplus: raw extraction (model on the whole mixture)",
+     "file": "listen/mix01/spexplus_raw.flac",
+     "key": "spexplus_raw"
+    },
+    {
+     "label": "spexplus: residual (mixture minus raw extraction)",
+     "file": "listen/mix01/spexplus_residual.flac",
+     "key": "spexplus_residual"
+    },
+    {
+     "label": "spexplus: hybrid output (extraction only in overlap)",
+     "file": "listen/mix01/spexplus_hybrid.flac",
+     "key": "spexplus_hybrid"
+    }
+   ]
+  },
+  "mix02": {
+   "files": [
+    {
+     "label": "Original mixture",
+     "file": "listen/mix02/00_mixture.flac",
+     "key": "00_mixture"
+    },
+    {
+     "label": "Clean target reference",
+     "file": "listen/mix02/01_target_reference.flac",
+     "key": "01_target_reference"
+    },
+    {
+     "label": "Enrollment clip (separate recording)",
+     "file": "listen/mix02/02_enrollment.flac",
+     "key": "02_enrollment"
+    },
+    {
+     "label": "Gated baseline (target solo turns only)",
+     "file": "listen/mix02/gated_baseline.flac",
+     "key": "gated_baseline"
+    },
+    {
+     "label": "wesep_bsrnn: raw extraction (model on the whole mixture)",
+     "file": "listen/mix02/wesep_bsrnn_raw.flac",
+     "key": "wesep_bsrnn_raw"
+    },
+    {
+     "label": "wesep_bsrnn: residual (mixture minus raw extraction)",
+     "file": "listen/mix02/wesep_bsrnn_residual.flac",
+     "key": "wesep_bsrnn_residual"
+    },
+    {
+     "label": "wesep_bsrnn: hybrid output (extraction only in overlap)",
+     "file": "listen/mix02/wesep_bsrnn_hybrid.flac",
+     "key": "wesep_bsrnn_hybrid"
+    },
+    {
+     "label": "usef_tse: raw extraction (model on the whole mixture)",
+     "file": "listen/mix02/usef_tse_raw.flac",
+     "key": "usef_tse_raw"
+    },
+    {
+     "label": "usef_tse: residual (mixture minus raw extraction)",
+     "file": "listen/mix02/usef_tse_residual.flac",
+     "key": "usef_tse_residual"
+    },
+    {
+     "label": "usef_tse: hybrid output (extraction only in overlap)",
+     "file": "listen/mix02/usef_tse_hybrid.flac",
+     "key": "usef_tse_hybrid"
+    },
+    {
+     "label": "spexplus: raw extraction (model on the whole mixture)",
+     "file": "listen/mix02/spexplus_raw.flac",
+     "key": "spexplus_raw"
+    },
+    {
+     "label": "spexplus: residual (mixture minus raw extraction)",
+     "file": "listen/mix02/spexplus_residual.flac",
+     "key": "spexplus_residual"
+    },
+    {
+     "label": "spexplus: hybrid output (extraction only in overlap)",
+     "file": "listen/mix02/spexplus_hybrid.flac",
+     "key": "spexplus_hybrid"
+    }
+   ]
+  },
+  "mix03": {
+   "files": [
+    {
+     "label": "Original mixture",
+     "file": "listen/mix03/00_mixture.flac",
+     "key": "00_mixture"
+    },
+    {
+     "label": "Clean target reference",
+     "file": "listen/mix03/01_target_reference.flac",
+     "key": "01_target_reference"
+    },
+    {
+     "label": "Enrollment clip (separate recording)",
+     "file": "listen/mix03/02_enrollment.flac",
+     "key": "02_enrollment"
+    },
+    {
+     "label": "Gated baseline (target solo turns only)",
+     "file": "listen/mix03/gated_baseline.flac",
+     "key": "gated_baseline"
+    },
+    {
+     "label": "wesep_bsrnn: raw extraction (model on the whole mixture)",
+     "file": "listen/mix03/wesep_bsrnn_raw.flac",
+     "key": "wesep_bsrnn_raw"
+    },
+    {
+     "label": "wesep_bsrnn: residual (mixture minus raw extraction)",
+     "file": "listen/mix03/wesep_bsrnn_residual.flac",
+     "key": "wesep_bsrnn_residual"
+    },
+    {
+     "label": "wesep_bsrnn: hybrid output (extraction only in overlap)",
+     "file": "listen/mix03/wesep_bsrnn_hybrid.flac",
+     "key": "wesep_bsrnn_hybrid"
+    },
+    {
+     "label": "usef_tse: raw extraction (model on the whole mixture)",
+     "file": "listen/mix03/usef_tse_raw.flac",
+     "key": "usef_tse_raw"
+    },
+    {
+     "label": "usef_tse: residual (mixture minus raw extraction)",
+     "file": "listen/mix03/usef_tse_residual.flac",
+     "key": "usef_tse_residual"
+    },
+    {
+     "label": "usef_tse: hybrid output (extraction only in overlap)",
+     "file": "listen/mix03/usef_tse_hybrid.flac",
+     "key": "usef_tse_hybrid"
+    },
+    {
+     "label": "spexplus: raw extraction (model on the whole mixture)",
+     "file": "listen/mix03/spexplus_raw.flac",
+     "key": "spexplus_raw"
+    },
+    {
+     "label": "spexplus: residual (mixture minus raw extraction)",
+     "file": "listen/mix03/spexplus_residual.flac",
+     "key": "spexplus_residual"
+    },
+    {
+     "label": "spexplus: hybrid output (extraction only in overlap)",
+     "file": "listen/mix03/spexplus_hybrid.flac",
+     "key": "spexplus_hybrid"
+    }
+   ]
+  },
+  "mix04": {
+   "files": [
+    {
+     "label": "Original mixture",
+     "file": "listen/mix04/00_mixture.flac",
+     "key": "00_mixture"
+    },
+    {
+     "label": "Clean target reference",
+     "file": "listen/mix04/01_target_reference.flac",
+     "key": "01_target_reference"
+    },
+    {
+     "label": "Enrollment clip (separate recording)",
+     "file": "listen/mix04/02_enrollment.flac",
+     "key": "02_enrollment"
+    },
+    {
+     "label": "Gated baseline (target solo turns only)",
+     "file": "listen/mix04/gated_baseline.flac",
+     "key": "gated_baseline"
+    },
+    {
+     "label": "wesep_bsrnn: raw extraction (model on the whole mixture)",
+     "file": "listen/mix04/wesep_bsrnn_raw.flac",
+     "key": "wesep_bsrnn_raw"
+    },
+    {
+     "label": "wesep_bsrnn: residual (mixture minus raw extraction)",
+     "file": "listen/mix04/wesep_bsrnn_residual.flac",
+     "key": "wesep_bsrnn_residual"
+    },
+    {
+     "label": "wesep_bsrnn: hybrid output (extraction only in overlap)",
+     "file": "listen/mix04/wesep_bsrnn_hybrid.flac",
+     "key": "wesep_bsrnn_hybrid"
+    },
+    {
+     "label": "usef_tse: raw extraction (model on the whole mixture)",
+     "file": "listen/mix04/usef_tse_raw.flac",
+     "key": "usef_tse_raw"
+    },
+    {
+     "label": "usef_tse: residual (mixture minus raw extraction)",
+     "file": "listen/mix04/usef_tse_residual.flac",
+     "key": "usef_tse_residual"
+    },
+    {
+     "label": "usef_tse: hybrid output (extraction only in overlap)",
+     "file": "listen/mix04/usef_tse_hybrid.flac",
+     "key": "usef_tse_hybrid"
+    },
+    {
+     "label": "spexplus: raw extraction (model on the whole mixture)",
+     "file": "listen/mix04/spexplus_raw.flac",
+     "key": "spexplus_raw"
+    },
+    {
+     "label": "spexplus: residual (mixture minus raw extraction)",
+     "file": "listen/mix04/spexplus_residual.flac",
+     "key": "spexplus_residual"
+    },
+    {
+     "label": "spexplus: hybrid output (extraction only in overlap)",
+     "file": "listen/mix04/spexplus_hybrid.flac",
+     "key": "spexplus_hybrid"
+    }
+   ]
+  },
+  "mix05": {
+   "files": [
+    {
+     "label": "Original mixture",
+     "file": "listen/mix05/00_mixture.flac",
+     "key": "00_mixture"
+    },
+    {
+     "label": "Clean target reference",
+     "file": "listen/mix05/01_target_reference.flac",
+     "key": "01_target_reference"
+    },
+    {
+     "label": "Enrollment clip (separate recording)",
+     "file": "listen/mix05/02_enrollment.flac",
+     "key": "02_enrollment"
+    },
+    {
+     "label": "Gated baseline (target solo turns only)",
+     "file": "listen/mix05/gated_baseline.flac",
+     "key": "gated_baseline"
+    },
+    {
+     "label": "wesep_bsrnn: raw extraction (model on the whole mixture)",
+     "file": "listen/mix05/wesep_bsrnn_raw.flac",
+     "key": "wesep_bsrnn_raw"
+    },
+    {
+     "label": "wesep_bsrnn: residual (mixture minus raw extraction)",
+     "file": "listen/mix05/wesep_bsrnn_residual.flac",
+     "key": "wesep_bsrnn_residual"
+    },
+    {
+     "label": "wesep_bsrnn: hybrid output (extraction only in overlap)",
+     "file": "listen/mix05/wesep_bsrnn_hybrid.flac",
+     "key": "wesep_bsrnn_hybrid"
+    },
+    {
+     "label": "usef_tse: raw extraction (model on the whole mixture)",
+     "file": "listen/mix05/usef_tse_raw.flac",
+     "key": "usef_tse_raw"
+    },
+    {
+     "label": "usef_tse: residual (mixture minus raw extraction)",
+     "file": "listen/mix05/usef_tse_residual.flac",
+     "key": "usef_tse_residual"
+    },
+    {
+     "label": "usef_tse: hybrid output (extraction only in overlap)",
+     "file": "listen/mix05/usef_tse_hybrid.flac",
+     "key": "usef_tse_hybrid"
+    },
+    {
+     "label": "spexplus: raw extraction (model on the whole mixture)",
+     "file": "listen/mix05/spexplus_raw.flac",
+     "key": "spexplus_raw"
+    },
+    {
+     "label": "spexplus: residual (mixture minus raw extraction)",
+     "file": "listen/mix05/spexplus_residual.flac",
+     "key": "spexplus_residual"
+    },
+    {
+     "label": "spexplus: hybrid output (extraction only in overlap)",
+     "file": "listen/mix05/spexplus_hybrid.flac",
+     "key": "spexplus_hybrid"
+    }
+   ]
+  },
+  "mix06": {
+   "files": [
+    {
+     "label": "Original mixture",
+     "file": "listen/mix06/00_mixture.flac",
+     "key": "00_mixture"
+    },
+    {
+     "label": "Clean target reference",
+     "file": "listen/mix06/01_target_reference.flac",
+     "key": "01_target_reference"
+    },
+    {
+     "label": "Enrollment clip (separate recording)",
+     "file": "listen/mix06/02_enrollment.flac",
+     "key": "02_enrollment"
+    },
+    {
+     "label": "Gated baseline (target solo turns only)",
+     "file": "listen/mix06/gated_baseline.flac",
+     "key": "gated_baseline"
+    },
+    {
+     "label": "wesep_bsrnn: raw extraction (model on the whole mixture)",
+     "file": "listen/mix06/wesep_bsrnn_raw.flac",
+     "key": "wesep_bsrnn_raw"
+    },
+    {
+     "label": "wesep_bsrnn: residual (mixture minus raw extraction)",
+     "file": "listen/mix06/wesep_bsrnn_residual.flac",
+     "key": "wesep_bsrnn_residual"
+    },
+    {
+     "label": "wesep_bsrnn: hybrid output (extraction only in overlap)",
+     "file": "listen/mix06/wesep_bsrnn_hybrid.flac",
+     "key": "wesep_bsrnn_hybrid"
+    },
+    {
+     "label": "usef_tse: raw extraction (model on the whole mixture)",
+     "file": "listen/mix06/usef_tse_raw.flac",
+     "key": "usef_tse_raw"
+    },
+    {
+     "label": "usef_tse: residual (mixture minus raw extraction)",
+     "file": "listen/mix06/usef_tse_residual.flac",
+     "key": "usef_tse_residual"
+    },
+    {
+     "label": "usef_tse: hybrid output (extraction only in overlap)",
+     "file": "listen/mix06/usef_tse_hybrid.flac",
+     "key": "usef_tse_hybrid"
+    },
+    {
+     "label": "spexplus: raw extraction (model on the whole mixture)",
+     "file": "listen/mix06/spexplus_raw.flac",
+     "key": "spexplus_raw"
+    },
+    {
+     "label": "spexplus: residual (mixture minus raw extraction)",
+     "file": "listen/mix06/spexplus_residual.flac",
+     "key": "spexplus_residual"
+    },
+    {
+     "label": "spexplus: hybrid output (extraction only in overlap)",
+     "file": "listen/mix06/spexplus_hybrid.flac",
+     "key": "spexplus_hybrid"
+    }
+   ]
+  },
+  "mix07": {
+   "files": [
+    {
+     "label": "Original mixture",
+     "file": "listen/mix07/00_mixture.flac",
+     "key": "00_mixture"
+    },
+    {
+     "label": "Clean target reference",
+     "file": "listen/mix07/01_target_reference.flac",
+     "key": "01_target_reference"
+    },
+    {
+     "label": "Enrollment clip (separate recording)",
+     "file": "listen/mix07/02_enrollment.flac",
+     "key": "02_enrollment"
+    },
+    {
+     "label": "Gated baseline (target solo turns only)",
+     "file": "listen/mix07/gated_baseline.flac",
+     "key": "gated_baseline"
+    },
+    {
+     "label": "wesep_bsrnn: raw extraction (model on the whole mixture)",
+     "file": "listen/mix07/wesep_bsrnn_raw.flac",
+     "key": "wesep_bsrnn_raw"
+    },
+    {
+     "label": "wesep_bsrnn: residual (mixture minus raw extraction)",
+     "file": "listen/mix07/wesep_bsrnn_residual.flac",
+     "key": "wesep_bsrnn_residual"
+    },
+    {
+     "label": "wesep_bsrnn: hybrid output (extraction only in overlap)",
+     "file": "listen/mix07/wesep_bsrnn_hybrid.flac",
+     "key": "wesep_bsrnn_hybrid"
+    },
+    {
+     "label": "usef_tse: raw extraction (model on the whole mixture)",
+     "file": "listen/mix07/usef_tse_raw.flac",
+     "key": "usef_tse_raw"
+    },
+    {
+     "label": "usef_tse: residual (mixture minus raw extraction)",
+     "file": "listen/mix07/usef_tse_residual.flac",
+     "key": "usef_tse_residual"
+    },
+    {
+     "label": "usef_tse: hybrid output (extraction only in overlap)",
+     "file": "listen/mix07/usef_tse_hybrid.flac",
+     "key": "usef_tse_hybrid"
+    },
+    {
+     "label": "spexplus: raw extraction (model on the whole mixture)",
+     "file": "listen/mix07/spexplus_raw.flac",
+     "key": "spexplus_raw"
+    },
+    {
+     "label": "spexplus: residual (mixture minus raw extraction)",
+     "file": "listen/mix07/spexplus_residual.flac",
+     "key": "spexplus_residual"
+    },
+    {
+     "label": "spexplus: hybrid output (extraction only in overlap)",
+     "file": "listen/mix07/spexplus_hybrid.flac",
+     "key": "spexplus_hybrid"
+    }
+   ]
+  },
+  "mix08": {
+   "files": [
+    {
+     "label": "Original mixture",
+     "file": "listen/mix08/00_mixture.flac",
+     "key": "00_mixture"
+    },
+    {
+     "label": "Clean target reference",
+     "file": "listen/mix08/01_target_reference.flac",
+     "key": "01_target_reference"
+    },
+    {
+     "label": "Enrollment clip (separate recording)",
+     "file": "listen/mix08/02_enrollment.flac",
+     "key": "02_enrollment"
+    },
+    {
+     "label": "Gated baseline (target solo turns only)",
+     "file": "listen/mix08/gated_baseline.flac",
+     "key": "gated_baseline"
+    },
+    {
+     "label": "wesep_bsrnn: raw extraction (model on the whole mixture)",
+     "file": "listen/mix08/wesep_bsrnn_raw.flac",
+     "key": "wesep_bsrnn_raw"
+    },
+    {
+     "label": "wesep_bsrnn: residual (mixture minus raw extraction)",
+     "file": "listen/mix08/wesep_bsrnn_residual.flac",
+     "key": "wesep_bsrnn_residual"
+    },
+    {
+     "label": "wesep_bsrnn: hybrid output (extraction only in overlap)",
+     "file": "listen/mix08/wesep_bsrnn_hybrid.flac",
+     "key": "wesep_bsrnn_hybrid"
+    },
+    {
+     "label": "usef_tse: raw extraction (model on the whole mixture)",
+     "file": "listen/mix08/usef_tse_raw.flac",
+     "key": "usef_tse_raw"
+    },
+    {
+     "label": "usef_tse: residual (mixture minus raw extraction)",
+     "file": "listen/mix08/usef_tse_residual.flac",
+     "key": "usef_tse_residual"
+    },
+    {
+     "label": "usef_tse: hybrid output (extraction only in overlap)",
+     "file": "listen/mix08/usef_tse_hybrid.flac",
+     "key": "usef_tse_hybrid"
+    },
+    {
+     "label": "spexplus: raw extraction (model on the whole mixture)",
+     "file": "listen/mix08/spexplus_raw.flac",
+     "key": "spexplus_raw"
+    },
+    {
+     "label": "spexplus: residual (mixture minus raw extraction)",
+     "file": "listen/mix08/spexplus_residual.flac",
+     "key": "spexplus_residual"
+    },
+    {
+     "label": "spexplus: hybrid output (extraction only in overlap)",
+     "file": "listen/mix08/spexplus_hybrid.flac",
+     "key": "spexplus_hybrid"
+    }
+   ]
+  },
+  "mix09": {
+   "files": [
+    {
+     "label": "Original mixture",
+     "file": "listen/mix09/00_mixture.flac",
+     "key": "00_mixture"
+    },
+    {
+     "label": "Clean target reference",
+     "file": "listen/mix09/01_target_reference.flac",
+     "key": "01_target_reference"
+    },
+    {
+     "label": "Enrollment clip (separate recording)",
+     "file": "listen/mix09/02_enrollment.flac",
+     "key": "02_enrollment"
+    },
+    {
+     "label": "Gated baseline (target solo turns only)",
+     "file": "listen/mix09/gated_baseline.flac",
+     "key": "gated_baseline"
+    },
+    {
+     "label": "wesep_bsrnn: raw extraction (model on the whole mixture)",
+     "file": "listen/mix09/wesep_bsrnn_raw.flac",
+     "key": "wesep_bsrnn_raw"
+    },
+    {
+     "label": "wesep_bsrnn: residual (mixture minus raw extraction)",
+     "file": "listen/mix09/wesep_bsrnn_residual.flac",
+     "key": "wesep_bsrnn_residual"
+    },
+    {
+     "label": "wesep_bsrnn: hybrid output (extraction only in overlap)",
+     "file": "listen/mix09/wesep_bsrnn_hybrid.flac",
+     "key": "wesep_bsrnn_hybrid"
+    },
+    {
+     "label": "usef_tse: raw extraction (model on the whole mixture)",
+     "file": "listen/mix09/usef_tse_raw.flac",
+     "key": "usef_tse_raw"
+    },
+    {
+     "label": "usef_tse: residual (mixture minus raw extraction)",
+     "file": "listen/mix09/usef_tse_residual.flac",
+     "key": "usef_tse_residual"
+    },
+    {
+     "label": "usef_tse: hybrid output (extraction only in overlap)",
+     "file": "listen/mix09/usef_tse_hybrid.flac",
+     "key": "usef_tse_hybrid"
+    },
+    {
+     "label": "spexplus: raw extraction (model on the whole mixture)",
+     "file": "listen/mix09/spexplus_raw.flac",
+     "key": "spexplus_raw"
+    },
+    {
+     "label": "spexplus: residual (mixture minus raw extraction)",
+     "file": "listen/mix09/spexplus_residual.flac",
+     "key": "spexplus_residual"
+    },
+    {
+     "label": "spexplus: hybrid output (extraction only in overlap)",
+     "file": "listen/mix09/spexplus_hybrid.flac",
+     "key": "spexplus_hybrid"
+    }
+   ]
+  },
+  "mix10": {
+   "files": [
+    {
+     "label": "Original mixture",
+     "file": "listen/mix10/00_mixture.flac",
+     "key": "00_mixture"
+    },
+    {
+     "label": "Clean target reference",
+     "file": "listen/mix10/01_target_reference.flac",
+     "key": "01_target_reference"
+    },
+    {
+     "label": "Enrollment clip (separate recording)",
+     "file": "listen/mix10/02_enrollment.flac",
+     "key": "02_enrollment"
+    },
+    {
+     "label": "Gated baseline (target solo turns only)",
+     "file": "listen/mix10/gated_baseline.flac",
+     "key": "gated_baseline"
+    },
+    {
+     "label": "wesep_bsrnn: raw extraction (model on the whole mixture)",
+     "file": "listen/mix10/wesep_bsrnn_raw.flac",
+     "key": "wesep_bsrnn_raw"
+    },
+    {
+     "label": "wesep_bsrnn: residual (mixture minus raw extraction)",
+     "file": "listen/mix10/wesep_bsrnn_residual.flac",
+     "key": "wesep_bsrnn_residual"
+    },
+    {
+     "label": "wesep_bsrnn: hybrid output (extraction only in overlap)",
+     "file": "listen/mix10/wesep_bsrnn_hybrid.flac",
+     "key": "wesep_bsrnn_hybrid"
+    },
+    {
+     "label": "usef_tse: raw extraction (model on the whole mixture)",
+     "file": "listen/mix10/usef_tse_raw.flac",
+     "key": "usef_tse_raw"
+    },
+    {
+     "label": "usef_tse: residual (mixture minus raw extraction)",
+     "file": "listen/mix10/usef_tse_residual.flac",
+     "key": "usef_tse_residual"
+    },
+    {
+     "label": "usef_tse: hybrid output (extraction only in overlap)",
+     "file": "listen/mix10/usef_tse_hybrid.flac",
+     "key": "usef_tse_hybrid"
+    },
+    {
+     "label": "spexplus: raw extraction (model on the whole mixture)",
+     "file": "listen/mix10/spexplus_raw.flac",
+     "key": "spexplus_raw"
+    },
+    {
+     "label": "spexplus: residual (mixture minus raw extraction)",
+     "file": "listen/mix10/spexplus_residual.flac",
+     "key": "spexplus_residual"
+    },
+    {
+     "label": "spexplus: hybrid output (extraction only in overlap)",
+     "file": "listen/mix10/spexplus_hybrid.flac",
+     "key": "spexplus_hybrid"
+    }
+   ]
+  },
+  "mix11": {
+   "files": [
+    {
+     "label": "Original mixture",
+     "file": "listen/mix11/00_mixture.flac",
+     "key": "00_mixture"
+    },
+    {
+     "label": "Clean target reference",
+     "file": "listen/mix11/01_target_reference.flac",
+     "key": "01_target_reference"
+    },
+    {
+     "label": "Enrollment clip (separate recording)",
+     "file": "listen/mix11/02_enrollment.flac",
+     "key": "02_enrollment"
+    },
+    {
+     "label": "Gated baseline (target solo turns only)",
+     "file": "listen/mix11/gated_baseline.flac",
+     "key": "gated_baseline"
+    },
+    {
+     "label": "wesep_bsrnn: raw extraction (model on the whole mixture)",
+     "file": "listen/mix11/wesep_bsrnn_raw.flac",
+     "key": "wesep_bsrnn_raw"
+    },
+    {
+     "label": "wesep_bsrnn: residual (mixture minus raw extraction)",
+     "file": "listen/mix11/wesep_bsrnn_residual.flac",
+     "key": "wesep_bsrnn_residual"
+    },
+    {
+     "label": "wesep_bsrnn: hybrid output (extraction only in overlap)",
+     "file": "listen/mix11/wesep_bsrnn_hybrid.flac",
+     "key": "wesep_bsrnn_hybrid"
+    },
+    {
+     "label": "usef_tse: raw extraction (model on the whole mixture)",
+     "file": "listen/mix11/usef_tse_raw.flac",
+     "key": "usef_tse_raw"
+    },
+    {
+     "label": "usef_tse: residual (mixture minus raw extraction)",
+     "file": "listen/mix11/usef_tse_residual.flac",
+     "key": "usef_tse_residual"
+    },
+    {
+     "label": "usef_tse: hybrid output (extraction only in overlap)",
+     "file": "listen/mix11/usef_tse_hybrid.flac",
+     "key": "usef_tse_hybrid"
+    },
+    {
+     "label": "spexplus: raw extraction (model on the whole mixture)",
+     "file": "listen/mix11/spexplus_raw.flac",
+     "key": "spexplus_raw"
+    },
+    {
+     "label": "spexplus: residual (mixture minus raw extraction)",
+     "file": "listen/mix11/spexplus_residual.flac",
+     "key": "spexplus_residual"
+    },
+    {
+     "label": "spexplus: hybrid output (extraction only in overlap)",
+     "file": "listen/mix11/spexplus_hybrid.flac",
+     "key": "spexplus_hybrid"
+    }
+   ]
+  },
+  "mix12": {
+   "files": [
+    {
+     "label": "Original mixture",
+     "file": "listen/mix12/00_mixture.flac",
+     "key": "00_mixture"
+    },
+    {
+     "label": "Clean target reference",
+     "file": "listen/mix12/01_target_reference.flac",
+     "key": "01_target_reference"
+    },
+    {
+     "label": "Enrollment clip (separate recording)",
+     "file": "listen/mix12/02_enrollment.flac",
+     "key": "02_enrollment"
+    },
+    {
+     "label": "Gated baseline (target solo turns only)",
+     "file": "listen/mix12/gated_baseline.flac",
+     "key": "gated_baseline"
+    },
+    {
+     "label": "wesep_bsrnn: raw extraction (model on the whole mixture)",
+     "file": "listen/mix12/wesep_bsrnn_raw.flac",
+     "key": "wesep_bsrnn_raw"
+    },
+    {
+     "label": "wesep_bsrnn: residual (mixture minus raw extraction)",
+     "file": "listen/mix12/wesep_bsrnn_residual.flac",
+     "key": "wesep_bsrnn_residual"
+    },
+    {
+     "label": "wesep_bsrnn: hybrid output (extraction only in overlap)",
+     "file": "listen/mix12/wesep_bsrnn_hybrid.flac",
+     "key": "wesep_bsrnn_hybrid"
+    },
+    {
+     "label": "usef_tse: raw extraction (model on the whole mixture)",
+     "file": "listen/mix12/usef_tse_raw.flac",
+     "key": "usef_tse_raw"
+    },
+    {
+     "label": "usef_tse: residual (mixture minus raw extraction)",
+     "file": "listen/mix12/usef_tse_residual.flac",
+     "key": "usef_tse_residual"
+    },
+    {
+     "label": "usef_tse: hybrid output (extraction only in overlap)",
+     "file": "listen/mix12/usef_tse_hybrid.flac",
+     "key": "usef_tse_hybrid"
+    },
+    {
+     "label": "spexplus: raw extraction (model on the whole mixture)",
+     "file": "listen/mix12/spexplus_raw.flac",
+     "key": "spexplus_raw"
+    },
+    {
+     "label": "spexplus: residual (mixture minus raw extraction)",
+     "file": "listen/mix12/spexplus_residual.flac",
+     "key": "spexplus_residual"
+    },
+    {
+     "label": "spexplus: hybrid output (extraction only in overlap)",
+     "file": "listen/mix12/spexplus_hybrid.flac",
+     "key": "spexplus_hybrid"
+    }
+   ]
+  }
+ },
+ "groups": {
+  "2": "2-speaker mixes (overlap = target + 1)",
+  "3": "3-speaker mixes (overlap = target + 1 or 2 others; only the full-overlap mixes are pure target + 2)"
+ },
+ "peak_vram": "not measured (CPU)"
+}

@@ -13,6 +13,11 @@ from focus_ml.runtime import LocalEngine, offline_inference
 from tools.windows_worker import ConnectionSetupError, NoRedirect, WorkerClient
 
 
+from focus_ml.code_version import ISOLATE_CONTRACT, code_version  # noqa: E402
+import json as _json  # noqa: E402
+CHECK_BODY = _json.dumps({"worker_protocol": 1, "code_version": code_version(),
+                          "isolate_contract": ISOLATE_CONTRACT}).encode()
+
 def test_offline_scope_blocks_and_restores_network():
     original = socket.socket.connect
     with pytest.raises(ModelUnavailableError, match="downloads are disabled"):
@@ -72,7 +77,7 @@ def test_local_trial_requires_opt_in_and_never_uses_preview_key(monkeypatch, tmp
     calls = []
     def open_request(request, timeout):
         calls.append(request)
-        return ResponseBody(b'{"worker_protocol":1}')
+        return ResponseBody(CHECK_BODY)
     monkeypatch.setattr(client.opener, "open", open_request)
     client.preflight()
     assert client.url == "http://127.0.0.1:5000/api"
@@ -93,7 +98,7 @@ def test_preflight_checks_protocol_without_polling_or_loading_models(monkeypatch
     def open_request(request, timeout):
         calls.append(request)
         assert timeout == 60
-        return ResponseBody(b'{"worker_protocol":1}')
+        return ResponseBody(CHECK_BODY)
     monkeypatch.setattr(client.opener, "open", open_request)
     client.preflight()
     request = calls[0]
@@ -130,3 +135,15 @@ def test_models_not_loaded_when_connection_check_fails(monkeypatch, tmp_path):
     monkeypatch.setattr(runtime, "LocalEngine", must_not_load)
     with pytest.raises(ConnectionSetupError, match="redirected"):
         windows_worker.run("https://example.com", str(tmp_path))
+
+
+@pytest.mark.parametrize("handshake", [
+    {"worker_protocol": 1},                                                        # old server: no version
+    {"worker_protocol": 1, "code_version": "0" * 16, "isolate_contract": ISOLATE_CONTRACT},   # other code
+    {"worker_protocol": 1, "code_version": code_version(), "isolate_contract": ISOLATE_CONTRACT + 1},
+])
+def test_preflight_refuses_a_worker_whose_code_differs_from_the_backend(monkeypatch, handshake):
+    client = WorkerClient("https://example.com", "test-secret")
+    monkeypatch.setattr(client, "request", lambda *_: ResponseBody(_json.dumps(handshake).encode()))
+    with pytest.raises(ConnectionSetupError, match="does not match the website"):
+        client.preflight()

@@ -2,11 +2,11 @@
 
 Run it with the DEDICATED ClearerVoice environment python:
 
-    python -m venv A:/Focus_runtime/cv-venv/env
-    A:/Focus_runtime/cv-venv/env/Scripts/python -m pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
-    A:/Focus_runtime/cv-venv/env/Scripts/python -m pip install clearvoice --no-deps
-    A:/Focus_runtime/cv-venv/env/Scripts/python -m pip install torchvision --index-url https://download.pytorch.org/whl/cpu
-    A:/Focus_runtime/cv-venv/env/Scripts/python -m pip install einops gdown huggingface-hub joblib librosa \
+    python -m venv runtime/cv-venv/env
+    runtime/cv-venv/env/Scripts/python -m pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu
+    runtime/cv-venv/env/Scripts/python -m pip install clearvoice --no-deps
+    runtime/cv-venv/env/Scripts/python -m pip install torchvision --index-url https://download.pytorch.org/whl/cpu
+    runtime/cv-venv/env/Scripts/python -m pip install einops gdown huggingface-hub joblib librosa \
         numpy opencv-python packaging pydub python_speech_features rotary_embedding_torch scenedetect \
         scikit-learn scipy soundfile torchinfo tqdm yamlargparse audioop-lts
 

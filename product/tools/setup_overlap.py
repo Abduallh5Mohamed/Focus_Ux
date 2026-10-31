@@ -1,6 +1,6 @@
 """One-time, approval-first setup of the overlap-extraction candidates.
 
-Run with the ORIGINAL Python (A:\\focus\\.venv). Nothing in that environment or its
+Run with the Python that has PyTorch (the .cmd launchers find it; or set FOCUS_PYTHON). Nothing in that environment or its
 model cache is changed: packages, code and weights go to <voice home>\\overlap
 (%LOCALAPPDATA%\\FocusVoice\\overlap) after an explicit "yes". Nothing is downloaded at
 run time; this script is the only thing that downloads.
@@ -31,6 +31,7 @@ PACKAGES = ["hyperpyyaml", "speechbrain", "pyyaml", "soundfile", "scipy", "huggi
             "pyannote.audio>=4.0,<5", "kaldiio", "fire", "tqdm", "gdown"]
 WESEP_SHA = "2a540977a348fbaa92e623210505430e2cec608d"
 WESPEAKER_SHA = "8f53b6485d9f88a207bd17e7f8dba899495ec794"
+USEF_HF_REVISION = "6e2bd14dd3a2d4fcb6abd246cce5f91538c08dbf"   # reviewed Hugging Face revision of the weights
 USEF_SHA = "bdaeb3609735b3a9dbedd1b0625343826f2cb5fe"
 CLEARER_SHA = "6b3774dc79c46ae8bed2a4fa5f706f0ac8c75c61"
 GDRIVE_ID = "1M4UqK2A2EeHmQ0pCevYqBgaYn3RvklgC"
@@ -38,7 +39,8 @@ USEF_CODE_FILES = (
     "models/model_USEF_SepFormer.py", "models/local/PositionalEncoding.py",
     "models/local/TransformerEncoder.py", "models/local/TransformerEncoderCross.py",
     "models/local/attention.py", "models/local/normalization.py", "models/local/activations.py",
-    "models/local/dataio.py", "models/local/get_layer_from_string.py")
+    "models/local/dataio.py", "models/local/get_layer_from_string.py",
+    "models/local/torch_audio_backend.py")
 PIXIT_REPOS = ("pyannote/speech-separation-ami-1.0", "pyannote/separation-ami-1.0",
                "pyannote/wespeaker-voxceleb-resnet34-LM")
 
@@ -59,10 +61,10 @@ Your original Dolphin environment and its cache are not touched.
 class Fetcher:
     """The only place that touches the network (replaced by a fake in tests)."""
 
-    def hf_file(self, repo: str, filename: str, dest: Path, token=None) -> None:
+    def hf_file(self, repo: str, filename: str, dest: Path, token=None, revision=None) -> None:
         from huggingface_hub import hf_hub_download
         with tempfile.TemporaryDirectory() as tmp:
-            p = hf_hub_download(repo_id=repo, filename=filename, local_dir=tmp, token=token)
+            p = hf_hub_download(repo_id=repo, filename=filename, local_dir=tmp, token=token, revision=revision)
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(p, dest)
 
@@ -111,8 +113,10 @@ def step_spexplus(f, home, token):
 
 def step_usef(f, home, token):
     d, c = W.weights_dir("usef_tse", home), W.code_dir("usef_tse", home)
-    f.hf_file("ZBang/USEF-TSE", "chkpt/USEF-SepFormer/config.yaml", d / "config.yaml")
-    f.hf_file("ZBang/USEF-TSE", "chkpt/USEF-SepFormer/wsj0-2mix/temp_best.pth.tar", d / "temp_best.pth.tar")
+    f.hf_file("ZBang/USEF-TSE", "chkpt/USEF-SepFormer/wsj0-2mix/config.yaml", d / "config.yaml",
+              revision=USEF_HF_REVISION)
+    f.hf_file("ZBang/USEF-TSE", "chkpt/USEF-SepFormer/wsj0-2mix/temp_best.pth.tar", d / "temp_best.pth.tar",
+              revision=USEF_HF_REVISION)
     for rel in USEF_CODE_FILES:
         f.url_file(f"https://raw.githubusercontent.com/ZBang/USEF-TSE/{USEF_SHA}/{rel}", c / rel)
     for pkg in ("models", "models/local"):

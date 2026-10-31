@@ -5,6 +5,8 @@ worker protocol are not touched. Code: `product/packages/ml/focus_ml/overlap/`.
 
 ## Decision (current status)
 
+**Update:** the three voice-conditioned candidates have now run on real weights on CPU with English data (see "Measured results" below); the other three have not. The statements in this paragraph about the workspace describe the original situation.
+
 **No default extractor has been chosen by measurement yet.** The Replit workspace has no GPU, no PyTorch, no
 extractor weights and no Egyptian recordings, so none of the six candidates could run here; each reports a
 `missing_weights` blocker (see `python -m focus_ml.voice.cli readiness`, key `overlap_extractors`). Until the
@@ -57,6 +59,38 @@ GPU: one extractor resident at a time (`unload()` between candidates); fp16 auto
 NaN/Inf; batch size from a rough per-candidate VRAM estimate (initial estimates, not measurements) against a
 3500 MiB budget; on out-of-memory the batch halves and, at one window, the candidate is reported blocked
 (`out_of_memory`). Peak VRAM, seconds per window and overlap RTF are logged per run (`last_report`).
+
+## Measured results: real weights on CPU (English LibriSpeech, NOT Egyptian Arabic)
+
+Experiment folder: `product/experiments/real_tse/` (`results/report.html`, `report.json`, `listen/<mix>/` FLAC players,
+`COMPARISON_RULE.md` written before reading results, `conclusion.md`, `RTX3050_COMMANDS.md`). 12 mixes of ~10 s from
+LibriSpeech dev-clean (CC-BY-4.0; seed 83; 6 two-speaker and 6 three-speaker, target -6/0/+6 dB, full and partial overlap),
+separate enrollment clip per target, oracle regions. Device: CPU only, 8 cores. **Not measured on the RTX 3050**
+(the laptop was not reachable from the workspace); peak VRAM not measured.
+
+All three adapters loaded the real checkpoints and ran on all 12 mixes. Pooled over overlap regions, hybrid output
+(SI-SDRi dB / target retention / interferer leakage share):
+
+| | 2-speaker mixes | 3-speaker mixes (overlap = target + 1 or 2 others; only full-overlap mixes are pure target + 2) |
+|---|---|---|
+| gated baseline (mute) | -30.6 / 0 / 0 | -26.9 / 0 / 0 |
+| WeSep BSRNN | +16.1 / 0.94 / ~0 | +4.6 / 0.71 / 0.07 |
+| USEF-TSE | +1.8 / 0.59 / ~0 (29 % muted by voiceprint check) | -11.9 / 0.20 / 0.01 |
+| SpEx+ | -19.8 / 0.15 / 0 (80 % muted) | -9.5 / 0.22 / 0.02 |
+
+Raw whole-mixture extraction (no region knowledge): WeSep +18.0 / +6.0 dB, USEF +12.8 / +5.0, SpEx+ +0.4 / +5.7 (2 / 3 speakers).
+By the pre-stated rule, WeSep and USEF improve on the baseline in 2-speaker overlap; nobody meets it in 3-speaker overlap
+(WeSep: leakage ratio 0.96 > 0.5, dominated by one mix). CPU real-time factor on a 10 s mix: WeSep 0.97, USEF-TSE 5.0, SpEx+ 0.24.
+
+Licences: WeSep weights unclear (not approved for deployment); USEF-TSE academic / non-commercial only; SpEx+ clear
+(Apache-2.0 per model card) but did not improve. Recommended validated model for deployment: **none**. The gated baseline
+stays the default; no production code was changed.
+
+Fixes found only by running real weights (each has a regression test): SpEx+ checkpoint keys carry a `sep_network.` prefix;
+USEF checkpoint needs `weights_only=False` (pinned, trusted) and its config path is `chkpt/USEF-SepFormer/wsj0-2mix/config.yaml`
+plus one more imported helper file; wespeaker imports s3prl/whisper/transformers/peft eagerly (stubbed, never used by
+BSRNN); the WeSep file API needs TorchCodec so the in-memory call is used; all three models output arbitrary polarity and level
+(scale-invariant training), so each window is scaled by <est, mix>/<est, est> (mixture only).
 
 ## How to run (laptop)
 

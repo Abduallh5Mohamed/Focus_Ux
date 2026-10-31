@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
 import shutil
 import subprocess
@@ -29,8 +30,20 @@ def run(command: list[str], timeout: int = 30):
     )
 
 
-def collect(focus: Path, *, test_uploads: bool = False,
+def gpu_python(focus: Path) -> Path | None:
+    """The Python that has PyTorch: FOCUS_PYTHON, else a .venv under the model folder, else the
+    project's own .venv-ml. Presence only; nothing is run."""
+    explicit = os.environ.get("FOCUS_PYTHON")
+    candidates = ([Path(explicit)] if explicit else
+                  [focus / ".venv/Scripts/python.exe", ROOT / ".venv-ml/Scripts/python.exe"])
+    return next((c for c in candidates if c.is_file()), None)
+
+
+def collect(focus: Path | None, *, test_uploads: bool = False,
             require_continuous: bool = False) -> dict:
+    """``focus`` is the folder with Dolphin/ and cache/. ``None`` means the project folder itself."""
+    own_folder = focus is None
+    focus = ROOT if own_folder else focus
     checks = []
 
     def add(name, ok, detail):
@@ -43,9 +56,10 @@ def collect(focus: Path, *, test_uploads: bool = False,
     add("isolated_api_python", local_python.is_file()
         and Path(sys.executable).resolve() == local_python.resolve(),
         "Run with this trial checkout's .venv/Scripts/python.exe")
-    add("separate_checkout", ROOT.resolve() != focus.resolve()
-        and focus.resolve() not in ROOT.resolve().parents,
-        "The trial checkout must be outside the original installation")
+    add("separate_checkout", own_folder or (ROOT.resolve() != focus.resolve()
+        and focus.resolve() not in ROOT.resolve().parents),
+        "The trial checkout must be outside a separate model installation"
+        if not own_folder else "Models are read from the project folder (set FOCUS_HOME to use another)")
 
     revision = None
     for name, args in (
@@ -75,7 +89,6 @@ def collect(focus: Path, *, test_uploads: bool = False,
         "Install frontend dependencies in the trial checkout before starting")
 
     for name, relative, directory in (
-        ("original_python", ".venv/Scripts/python.exe", False),
         ("dolphin_source", "Dolphin/Inference.py", False),
         ("mean_face", "Dolphin/assets/20words_mean_face.npy", False),
         ("hf_cache_directory", "cache/hf", True),
@@ -84,6 +97,10 @@ def collect(focus: Path, *, test_uploads: bool = False,
         asset = focus / relative
         add(name, asset.is_dir() if directory else asset.is_file(),
             "Presence check only; does not establish model completeness")
+
+    python_with_torch = gpu_python(focus)
+    add("gpu_python", python_with_torch is not None,
+        "Presence only: FOCUS_PYTHON, <models>/.venv or .venv-ml in the project")
 
     for module in ("fastapi", "uvicorn", "httpx", "numpy", "pytest"):
         try:
@@ -94,10 +111,9 @@ def collect(focus: Path, *, test_uploads: bool = False,
             add(f"api_{module}", False, "Import failed or timed out")
 
     gpu = None
-    original_python = focus / ".venv/Scripts/python.exe"
-    if windows and original_python.is_file():
+    if windows and python_with_torch is not None:
         try:
-            result = run([str(original_python), "-B", "-c", GPU_PROBE], timeout=60)
+            result = run([str(python_with_torch), "-B", "-c", GPU_PROBE], timeout=60)
             marker = next((line.removeprefix("FOCUS_GPU_INFO=")
                            for line in result.stdout.splitlines()
                            if line.startswith("FOCUS_GPU_INFO=")), None)
@@ -105,10 +121,10 @@ def collect(focus: Path, *, test_uploads: bool = False,
             add("cuda", result.returncode == 0 and bool(gpu and gpu.get("available")),
                 "Read-only CUDA check; no inference benchmark")
         except (OSError, subprocess.TimeoutExpired, ValueError):
-            add("cuda", False, "CUDA probe failed or timed out; original environment unchanged")
+            add("cuda", False, "CUDA probe failed or timed out; nothing was installed or changed")
     else:
         checks.append({"name": "cuda", "status": "skip",
-                       "detail": "Requires native Windows and the existing ML Python"})
+                       "detail": "Requires native Windows and a Python with PyTorch (FOCUS_PYTHON)"})
 
     if require_continuous:
         for relative in ("product/packages/ml/focus_ml/live_stream_backend.py",
@@ -151,13 +167,14 @@ def collect(focus: Path, *, test_uploads: bool = False,
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--focus", type=Path, default=Path("A:/focus"),
-                        help="Read-only original installation")
+    parser.add_argument("--focus", type=Path, default=None,
+                        help="Folder with Dolphin/ and cache/ (default: FOCUS_HOME, else the project folder)")
     parser.add_argument("--test-uploads", action="store_true")
     parser.add_argument("--require-continuous", action="store_true",
                         help="Also check that continuous-stream source has been integrated")
     args = parser.parse_args(argv)
-    report = collect(args.focus, test_uploads=args.test_uploads,
+    focus = args.focus or (Path(os.environ["FOCUS_HOME"]) if os.environ.get("FOCUS_HOME") else None)
+    report = collect(focus, test_uploads=args.test_uploads,
                      require_continuous=args.require_continuous)
     # Report only known, non-secret metadata. Never dump subprocess stderr or env.
     print(json.dumps(report, ensure_ascii=False, indent=2))
