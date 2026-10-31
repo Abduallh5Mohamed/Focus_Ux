@@ -92,7 +92,7 @@ def test_missed_overlap_and_short_overlap():
     a, b = scene([("A", 0, 8)], 8), scene([("B", 3, 3.25)], 8)
     out = routed(ToneExtractor()).extract(mix, [R(0, 3, TARGET), R(3, 3.25, OTHER), R(3.25, 8, TARGET)])
     assert score(out, mix, a, b)["target_retention"] > 0.85       # target kept around/within the short overlap
-    strict = routed(ToneExtractor(), verify_short_by_window=False)
+    strict = routed(ToneExtractor())
     out2 = strict.extract(mix, [R(0, 3, TARGET), R(3, 3.25, UNCERTAIN, "overlap"), R(3.25, 8, TARGET)])
     pieces = strict.hybrid.last_report["pieces"]
     assert pieces[0]["reason"] == "too_short_to_verify" and score(out2, mix, a, b)["leakage"] < 0.02
@@ -278,3 +278,32 @@ def test_missing_enrollment_recording_is_a_clear_error_and_missing_reference_ski
     vp = Voiceprint([1.0, 0, 0, 0], "ecapa", 5.0, {"kind": "voice_file"})
     routed_ = e._routed(scene([("A", 0, 4)], 4), vp, None)
     assert routed_.hybrid is None and routed_.skip_reason
+
+
+def test_short_piece_is_never_authorised_by_target_speech_elsewhere_in_its_window():
+    class Passthrough(ToneExtractor):
+        def _extract_batch(self, windows, voiceprint, enrollment):
+            return [w.copy() for w in windows]       # mostly target A; the wrong speaker B sits in the piece
+    mix = scene([("A", 0, 8), ("B", 3, 3.25)], 8)
+    b = scene([("B", 3, 3.25)], 8)
+    r = routed(Passthrough())
+    out = r.extract(mix, [R(0, 3, TARGET), R(3, 3.25, OTHER), R(3.25, 8, TARGET)])
+    piece = r.hybrid.last_report["pieces"][0]
+    assert piece["status"] == "muted" and piece["reason"] == "too_short_to_verify"
+    assert np.max(np.abs(out[3 * SR + 400:3 * SR + 3600])) < 1e-6
+
+
+def test_recovered_only_result_does_not_claim_silence(tmp_path):
+    from focus_ml.isolation_engines import write_wav
+    from focus_ml.voice.engine import AudioOnlyEngine
+    mix, a, b = quiet_case()
+    path = tmp_path / "m.wav"; write_wav(str(path), mix, SR)
+    from fakes import FakeDiarizer
+    e = AudioOnlyEngine(FakeDiarizer([("B", 0, 8)]), FakeEmbedder(), overlap_extractor=ToneExtractor())
+    vp = voiceprint_for("A")
+    diar = {"speakers": ["B"], "turns": [{"start": 0, "end": 8, "speaker": "B"}], "overlaps": [],
+            "speech": [{"start": 0, "end": 8, "speaker": None}]}
+    res = e.isolate(str(path), vp.as_dict(), diar, str(tmp_path), enrollment_audio_path=None,
+                    reference_audio=enrollment_for("A"))
+    assert not any("result is silent" in w for w in res.warnings)
+    assert res.details["routing_summary"]["route_seconds"]["genuine_extraction"] > 0

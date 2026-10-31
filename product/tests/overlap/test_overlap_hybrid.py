@@ -91,7 +91,7 @@ def test_uncertain_output_is_muted(kw, reason):
 
 def test_too_short_region_is_muted_when_window_verification_is_off():
     x = scene([("A", 0, 4), ("B", 1, 1.3)], 4)
-    h = hybrid(ToneExtractor(), verify_short_by_window=False)
+    h = hybrid(ToneExtractor())
     out = h.extract(x, [R(1, 1.3, UNCERTAIN, "overlap")])
     assert np.abs(out).max() < 1e-6 and h.last_report["pieces"][0]["reason"] == "too_short_to_verify"
 

@@ -51,7 +51,6 @@ class HybridConfig:
     recovery: str = "all"
     max_gain_vs_mixture_db: float = 1.0   # extracted audio may never be louder than the mix it came from
     min_gain_vs_mixture_db: float = -45.0  # output this far below the mixture is residue, not speech
-    verify_short_by_window: bool = True   # pieces < min_check_s are verified through their whole window
     band_match_reference: bool = True     # compare band-limited (8 kHz) output with a band-limited reference
 
     def __post_init__(self):
@@ -297,8 +296,7 @@ class HybridExtractor:
             ext_audio[a:b] = est
             for ca, cb in split_check_chunks(a, b, int(cfg.check_chunk_s * sr), min_check):
                 clamp_db = self._limit_to_mixture(ext_audio, x, ca, cb)
-                ctx = self._window_output(ests, wins, ca, cb) if cb - ca < min_check else None
-                rec_ = self._check_piece(ext_audio, x, ca, cb, min_check, refs, ctx)
+                rec_ = self._check_piece(ext_audio, x, ca, cb, min_check, refs)
                 rec_["source"] = _kind_of(ca, cb, ov, unc)
                 if clamp_db:
                     rec_["quality"]["gain_clamped_db"] = round(clamp_db, 2)
@@ -345,17 +343,10 @@ class HybridExtractor:
         return 0.0
 
     @staticmethod
-    def _window_output(ests, wins, a, b):
-        for (s, e), est in zip(wins, ests):
-            if s <= a and b <= e:
-                return est
-        return None
-
-    @staticmethod
     def _db(v: float) -> float | None:
         return round(20 * float(np.log10(v)), 2) if v > 0 else None
 
-    def _check_piece(self, ext_audio, x, a, b, min_check, refs=None, window_out=None) -> dict:
+    def _check_piece(self, ext_audio, x, a, b, min_check, refs=None) -> dict:
         """Two separate judgements. IDENTITY: does the extracted audio sound like the selected voice
         (cosine, best of the references)? QUALITY: is there usable, non-amplified output? Only the
         identity score is compared with a speaker threshold; quality problems are reported as such."""
@@ -372,14 +363,7 @@ class HybridExtractor:
             return {**rec, "status": "muted", "reason": "silent_output"}
         if quality["negligible"]:
             return {**rec, "status": "muted", "reason": "output_negligible"}
-        if b - a < min_check:
-            if self.config.verify_short_by_window and window_out is not None and rms(window_out) >= SILENT_RMS:
-                score = self._identity(window_out, refs)     # the model's output for the whole window
-                rec.update(score=round(score, 4), identity_score=round(score, 4), verification="window")
-                if score >= self.threshold:
-                    return {**rec, "label": TARGET, "status": "extracted",
-                            "reason": "short_piece_verified_by_window"}
-                return {**rec, "status": "muted", "reason": "below_voiceprint_threshold"}
+        if b - a < min_check:        # identity cannot be judged inside the piece itself: never authorised by its context
             return {**rec, "status": "muted", "reason": "too_short_to_verify"}
         score = self._identity(piece, refs)
         rec.update(score=round(score, 4), identity_score=round(score, 4))

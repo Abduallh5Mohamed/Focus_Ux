@@ -271,7 +271,8 @@ class AudioOnlyEngine:
         warnings = []
         target_s = total([Segment(r.start, r.end) for r in regions if r.label == TARGET])
         fell_back = bool(routing and routing.get("fallback_used"))
-        if target_s <= 0:
+        recovered = bool(routing and (routing.get("route_seconds") or {}).get("genuine_extraction", 0) > 0)
+        if target_s <= 0 and not recovered:
             warnings.append("The enrolled voice was not found in the audio; "
                             + ("the result is only the reduced-volume original mix." if fell_back
                                else "the result is silent."))

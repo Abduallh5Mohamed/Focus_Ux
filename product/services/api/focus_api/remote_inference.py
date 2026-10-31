@@ -63,7 +63,7 @@ class RemoteTask:
 
 class RemoteBridge:
     def __init__(self, token: str, repo, *, timeout_s=900.0, max_audio_s=15.0,
-                 offline_after_s=60.0, silent_after_s=180.0):
+                 offline_after_s=60.0, silent_after_s=None):
         if len(token) < 32:
             raise ValueError("FOCUS_WORKER_TOKEN must contain at least 32 characters")
         self._token = token
@@ -133,7 +133,8 @@ class RemoteBridge:
                             code="TIMEOUT" if kind in ("transcribe", "analyze", "isolate") else "PROCESSING_FAILED",
                         )
                     now = time.monotonic()
-                    if task.claimed and now - task.last_contact > self.silent_after_s:
+                    if (self.silent_after_s and task.claimed
+                            and now - task.last_contact > self.silent_after_s):
                         raise ProviderError(
                             "the inference computer stopped responding while working on this clip "
                             "(worker disconnected); no result was accepted",
