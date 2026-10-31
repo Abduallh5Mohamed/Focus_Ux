@@ -7,7 +7,7 @@ Writes <out>/run (audio, timelines, run.json with settings + environment), <out>
 <out>/report.md and <out>/listening (blind kit; key.json stays with the organiser).
 The report is reproducible from the manifest and the recorded settings: re-run with the same
 dataset fingerprint and the settings stored in report.json (reproducibility.settings).
-The report states plainly when it was NOT produced on the RTX 3050 laptop.
+The report states plainly when it was NOT produced on an NVIDIA GPU.
 """
 from __future__ import annotations
 

@@ -15,6 +15,8 @@ REQUIRED_PACKAGE_DIRS = ("voice", "overlap")
 OVERLAP_TOOLS = ("overlap_minimal_infer.py", "overlap_e2e.py", "overlap_acceptance.py",
                  "Overlap-Validate.cmd", "Overlap-Preflight.cmd", "Setup-Overlap.cmd", "setup_overlap.py",
                  "Start-Worker-Checkout.cmd")
+# Finds the Python with PyTorch and checks the GPU; every .cmd calls focus_env.cmd.
+GPU_TOOLS = ("focus_env.cmd", "Focus-Check-GPU.cmd", "gpu_check.py")
 REFUSAL = ("This worker ZIP is incomplete and cannot run the audio-only worker. "
            "Use the full repo checkout instead: update it with git pull --ff-only and run "
            "product\\tools\\Start-Worker-Checkout.cmd.")
@@ -23,7 +25,7 @@ REFUSAL = ("This worker ZIP is incomplete and cannot run the audio-only worker. 
 def missing_parts() -> list[str]:
     root = PRODUCT_ROOT / "packages/ml/focus_ml"
     missing = [d for d in REQUIRED_PACKAGE_DIRS if not (root / d / "__init__.py").is_file()]
-    missing += [t for t in OVERLAP_TOOLS if not (PRODUCT_ROOT / "tools" / t).is_file()]
+    missing += [t for t in OVERLAP_TOOLS + GPU_TOOLS if not (PRODUCT_ROOT / "tools" / t).is_file()]
     return missing
 
 
@@ -55,6 +57,8 @@ def worker_kit() -> Response:
         archive.writestr("product/services/worker/__init__.py", "")
         archive.write(PRODUCT_ROOT / "services/worker/stream_proto.py",
                       "product/services/worker/stream_proto.py")
+        for name in GPU_TOOLS:
+            archive.write(tools / name, name if name.endswith(".cmd") else "product/tools/" + name)
         for name in OVERLAP_TOOLS:
             if name != "Start-Worker-Checkout.cmd":
                 archive.write(tools / name, name if name.endswith(".cmd") else "product/tools/" + name)
@@ -65,9 +69,11 @@ def worker_kit() -> Response:
         archive.writestr(
             "READ-ME.txt",
             "FOCUS Windows worker\n\n"
-            "Uses A:\\focus\\.venv and existing Dolphin/cache assets read-only.\n"
+            "Uses the Python that has CUDA PyTorch (found by focus_env.cmd, or set FOCUS_PYTHON) and\n"
+            "the Dolphin/cache folders from FOCUS_HOME (default: this folder), read-only. Any NVIDIA GPU.\n"
+            "Run Focus-Check-GPU.cmd first: it reports GPU, driver, free VRAM, Python and model folders.\n"
             "No package installs, weight downloads, listening ports or tunnels.\n"
-            "1. Extract this ZIP into a NEW folder (not A:\\focus).\n"
+            "1. Extract this ZIP into a NEW folder.\n"
             "2. Run Setup-Key.cmd. It copies a private worker key to the clipboard.\n"
             "3. Paste ONLY into Replit Secrets named FOCUS_WORKER_TOKEN, never chat.\n"
             "4. Configure FOCUS_INFERENCE_MODE=remote and restart the web application.\n"
@@ -78,7 +84,7 @@ def worker_kit() -> Response:
             "stay available through FOCUS_ISOLATION_ENGINE on the server and --engine here.\n"
             "Optional stronger lip-based isolation engines (off by default):\n"
             "Run Setup-ClearerVoice.cmd once and type yes. It uses its own folder\n"
-            "(%LOCALAPPDATA%\\FocusClearerVoice), not A:\\focus. Then compare engines with\n"
+            "(%LOCALAPPDATA%\\FocusClearerVoice). Then compare engines with\n"
             "product/tools/engine_compare.py and choose one with FOCUS_ISOLATION_ENGINE\n"
             "(dolphin, av_mossformer2 or separate_select). Details: docs/ISOLATION_ENGINES.md.\n\n"
             "If the connection fails:\n"

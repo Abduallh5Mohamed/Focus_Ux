@@ -1,6 +1,6 @@
 """One-time, approval-first setup of the overlap-extraction candidates.
 
-Run with the ORIGINAL Python (A:\\focus\\.venv). Nothing in that environment or its
+Run with the Python that has PyTorch (the .cmd launchers find it; or set FOCUS_PYTHON). Nothing in that environment or its
 model cache is changed: packages, code and weights go to <voice home>\\overlap
 (%LOCALAPPDATA%\\FocusVoice\\overlap) after an explicit "yes". Nothing is downloaded at
 run time; this script is the only thing that downloads.

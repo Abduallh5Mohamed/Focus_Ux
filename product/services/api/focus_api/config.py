@@ -53,8 +53,8 @@ def load_speed_limit(path: str) -> tuple[int, str]:
         when = str(data.get("measured_at") or "unknown date")
     except (OSError, ValueError, KeyError) as exc:
         raise ValueError(f"FOCUS_API_SPEED_LIMITS {path!r} is not a usable speed-limits file: {exc}") from exc
-    if data.get("measured_on_target_laptop") is not True or "3050" not in device:
-        raise ValueError(f"FOCUS_API_SPEED_LIMITS {path!r} was not measured on the RTX 3050 demo laptop")
+    if data.get("measured_on_target_laptop") is not True or device in ("unknown device", "cpu only"):
+        raise ValueError(f"FOCUS_API_SPEED_LIMITS {path!r} was not measured on a real NVIDIA GPU")
     if data.get("format") != "focus-speed-limits/1" or not isinstance(seconds, (int, float)) or seconds <= 0:
         raise ValueError(f"FOCUS_API_SPEED_LIMITS {path!r} has no measured supported length")
     return int(seconds * 1000), f"the longest length measured on {device} on {when} that met the speed target"

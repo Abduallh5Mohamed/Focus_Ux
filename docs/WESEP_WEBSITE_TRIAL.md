@@ -1,5 +1,7 @@
 # WeSep in the website: research-only Windows trial
 
+> للتشغيل على أي كارت NVIDIA بدون مسارات ثابتة (`A:\focus`) شوف `docs/LOCAL_GPU_GUIDE.md`؛ الأوامر هنا مكتوبة بمثال `A:\focus` وتتغير حسب `FOCUS_HOME` و`FOCUS_PYTHON`.
+
 Status: **wired, not measured.** Nothing in this repository claims a real GPU result for WeSep.
 The checkpoint licence is unresolved, so this is a research trial only, never a product setting.
 By default (`FOCUS_OVERLAP_EXTRACTOR` unset) the website output is exactly the strict gated output.

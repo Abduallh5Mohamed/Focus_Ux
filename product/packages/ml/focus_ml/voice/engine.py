@@ -225,6 +225,15 @@ class AudioOnlyEngine:
                      if s.duration >= self.enrollment.min_span_s]
         return trim_enrollment(np.concatenate([slice_samples(samples, s) for s in spans])) if spans else None
 
+    def _hybrid_config(self):
+        """Window length and batch size from the GPU's free VRAM (and explicit FOCUS_OVERLAP_* settings).
+        Only on CUDA: a CPU or test extractor keeps the defaults."""
+        from .. import hardware
+        from ..overlap.hybrid import HybridConfig
+        if not str(getattr(self.overlap_extractor, "device", "cpu")).startswith("cuda"):
+            return HybridConfig()
+        return HybridConfig(**hardware.hybrid_overrides(self.overlap_extractor.info))
+
     def _routed(self, samples, enrollment: Voiceprint, enrollment_audio_path: str | None, diar=None,
                 reference=None):
         if self._explicit_extractor:
@@ -237,7 +246,8 @@ class AudioOnlyEngine:
                 routed.skip_reason = "no clean enrollment audio is available for the target-conditioned model"
             else:
                 from ..overlap.hybrid import HybridExtractor
-                routed.hybrid = HybridExtractor(self.overlap_extractor, enrollment, ref, self.embedder)
+                routed.hybrid = HybridExtractor(self.overlap_extractor, enrollment, ref, self.embedder,
+                                                self._hybrid_config())
         return routed
 
     def isolate(self, audio_path: str, voiceprint: dict, diarization: dict, job_dir: str,

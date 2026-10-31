@@ -1,7 +1,8 @@
 """Outbound-only Windows CUDA worker. Uses the user's existing environment.
 
 No dependency installation, model downloads, listener, tunnel or training.
-Run from the extracted worker kit; original A:/focus files remain read-only.
+Run from the extracted worker kit or a full checkout. Model folders come from FOCUS_HOME (default:
+this folder) or the FOCUS_MODEL_* settings; they are only read.
 """
 from __future__ import annotations
 
@@ -372,14 +373,20 @@ def run(url, focus, *, local_api=False, engine=None):
     print("Checking website connection before loading models...", flush=True)
     client.preflight()
     print("FOCUS connection verified.", flush=True)
-    focus = Path(focus).resolve()
-    os.environ.update({
-        "HF_HOME": str(focus / "cache" / "hf"),
-        "TORCH_HOME": str(focus / "cache" / "torch"),
-        "FOCUS_MODEL_SOURCE": str(focus / "Dolphin"),
-        "FOCUS_MODEL_CACHE": str(focus / "cache" / "hf"),
-        "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1",
-    })
+    from focus_ml import hardware
+    from focus_ml.local_paths import focus_home, missing_model_assets, model_environment
+    gpu = hardware.detect()
+    if not gpu["usable"]:
+        raise RuntimeError("No usable NVIDIA GPU for this worker: " + "; ".join(gpu["blockers"]) +
+                           ". Run Focus-Check-GPU.cmd for details.")
+    print(f"GPU: {gpu['device']} (driver {gpu['driver']}, {gpu['vram_free_mib']} of "
+          f"{gpu['vram_total_mib']} MiB free, compute capability "
+          f"{gpu['compute_capability'][0]}.{gpu['compute_capability'][1]}).", flush=True)
+    settings = model_environment(focus_home(focus))
+    problems = missing_model_assets(settings)
+    if problems:
+        raise RuntimeError("Local models are not set up: " + "; ".join(problems))
+    os.environ.update(settings)
     engine_name = engine or os.environ.get("FOCUS_ISOLATION_ENGINE") or "audio_only"
     # audio_only handles the voice tasks; the lip engine setting below still
     # serves face detection and any lip-based job the website is set to.
@@ -448,7 +455,8 @@ def main():
     parser.add_argument("--engine", choices=ENGINES,
                         help="Isolation engine (default: FOCUS_ISOLATION_ENGINE or audio_only)")
     parser.add_argument("--url")
-    parser.add_argument("--focus", default="A:/focus")
+    parser.add_argument("--focus", default=None,
+                        help="Folder with Dolphin/ and cache/ (default: FOCUS_HOME, else this project folder)")
     parser.add_argument("--local-api", action="store_true",
                         help="Use only the loopback trial API and its separate local credential")
     args = parser.parse_args()

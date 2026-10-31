@@ -3,7 +3,7 @@
 One pretrained model, one enrollment recording, one 5-10 s two-speaker mixture. It runs the GPU
 preflight first and refuses to continue when a check fails; nothing is simulated.
 
-  A:\\focus\\.venv\\Scripts\\python.exe product\\tools\\overlap_minimal_infer.py ^
+  %FOCUS_PY% product\\tools\\overlap_minimal_infer.py ^
       --candidate wesep_bsrnn --enrollment target_enroll.wav --mixture two_speakers.wav --out minimal-out
 
 Writes: preflight.json, mixture.wav, enrollment.wav, extracted_target.wav, gpu_log.txt, report.json.

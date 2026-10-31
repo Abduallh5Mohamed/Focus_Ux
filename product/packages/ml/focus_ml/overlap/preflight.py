@@ -4,11 +4,10 @@ nothing is assumed. ``probes`` lets tests inject observations."""
 from __future__ import annotations
 
 import importlib.util
-import subprocess
 
+from ..hardware import plan_for, real_probes, required_free_mib
 from .base import BlockedError
 
-MIN_FREE_VRAM_MIB = 2500          # one extractor window + embedder on a 4 GB RTX 3050
 # import name per candidate (what the adapter needs besides torch)
 DEPENDENCIES = {
     "wesep_bsrnn": ("yaml", "soundfile", "scipy"),
@@ -24,32 +23,18 @@ def _check(name: str, status: str, detail: str, **extra) -> dict:
     return {"name": name, "status": status, "detail": detail, **extra}
 
 
-def real_probes() -> dict:
-    out: dict = {"torch": None}
+def _candidate_info(candidate: str):
     try:
-        import torch
-        out["torch"] = {"version": torch.__version__, "cuda_build": torch.version.cuda,
-                        "cuda_available": bool(torch.cuda.is_available())}
-        if out["torch"]["cuda_available"]:
-            free, total = torch.cuda.mem_get_info(0)
-            p = torch.cuda.get_device_properties(0)
-            out["gpu"] = {"name": p.name, "capability": list(torch.cuda.get_device_capability(0)),
-                          "total_mib": round(total / 2**20), "free_mib": round(free / 2**20)}
-    except ImportError:
-        pass
-    try:
-        r = subprocess.run(["nvidia-smi", "--query-gpu=name,driver_version,memory.total,memory.free",
-                            "--format=csv,noheader,nounits"], capture_output=True, text=True, timeout=10)
-        if r.returncode == 0 and r.stdout.strip():
-            n, d, t, f = [v.strip() for v in r.stdout.splitlines()[0].split(",")]
-            out["driver"] = {"name": n, "driver": d, "total_mib": int(float(t)), "free_mib": int(float(f))}
-    except (OSError, subprocess.SubprocessError, ValueError):
-        pass
-    return out
+        from types import SimpleNamespace
+
+        from .candidates import build_candidate
+        return build_candidate(candidate, embedder=SimpleNamespace(name="probe")).info
+    except Exception:   # unknown candidate or missing optional code: the dependency checks report it
+        return None
 
 
 def run_preflight(candidate: str, *, probes: dict | None = None, ready=None,
-                  has_module=None, min_free_mib: int = MIN_FREE_VRAM_MIB) -> dict:
+                  has_module=None, min_free_mib: float | None = None) -> dict:
     """``ready`` is a callable raising BlockedError when weights/code are missing
     (default: the candidate's own ``check_ready``)."""
     pr = real_probes() if probes is None else probes
@@ -72,8 +57,15 @@ def run_preflight(candidate: str, *, probes: dict | None = None, ready=None,
         checks.append(_check("gpu_model", "pass", f"{gpu['name']} (compute capability "
                              f"{gpu['capability'][0]}.{gpu['capability'][1]})"))
         free = gpu["free_mib"]
-        checks.append(_check("free_vram", "pass" if free >= min_free_mib else "fail",
-                             f"{free} MiB free of {gpu['total_mib']} MiB (need >= {min_free_mib})", free_mib=free))
+        info = _candidate_info(candidate)
+        need = min_free_mib if min_free_mib is not None else (required_free_mib(info) if info else 0)
+        extra = {}
+        if info:
+            plan = plan_for(info, free, gpu["total_mib"], gpu_name=gpu["name"])
+            extra["sizing"] = plan.as_dict()
+        checks.append(_check("free_vram", "pass" if free >= need else "fail",
+                             f"{free} MiB free of {gpu['total_mib']} MiB (estimated need >= {need:.0f} MiB; "
+                             "an estimate from the model's size, not a measurement)", free_mib=free, **extra))
         if t and t["cuda_build"] and gpu["capability"][0] < 5:
             checks.append(_check("pytorch_gpu_compat", "fail", "GPU capability is older than PyTorch CUDA builds support"))
         else:

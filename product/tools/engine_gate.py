@@ -24,7 +24,7 @@ def main():
     ap.add_argument("--set", required=True, type=Path, help="output folder of three_speaker_set.py")
     ap.add_argument("--out", required=True, type=Path)
     ap.add_argument("--listening", type=Path, help="JSON {engine: true/false}")
-    ap.add_argument("--focus", default="A:/focus")
+    ap.add_argument("--focus", default=None, help="default: FOCUS_HOME, else the project folder")
     ap.add_argument("--engines", nargs="+", default=list(ENGINES), choices=ENGINES)
     args = ap.parse_args()
 

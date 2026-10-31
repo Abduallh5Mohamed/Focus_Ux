@@ -213,11 +213,13 @@ def test_real_time_factor_is_end_to_end_wall_time_not_the_sum_of_stages(tmp_path
     assert profile_pipeline.limits_from_runs([dict(r, peak_vram_mib=2000.0)], LAPTOP, rtf_target=0.02)["supported_audio_s"] is None
 
 
-def test_laptop_limit_still_needs_target_device_and_default_stays_180s(monkeypatch):
+def test_limit_needs_a_real_gpu_and_default_stays_180s(monkeypatch):
     import profile_pipeline
     from services.api.focus_api.config import DEFAULT_MAX_VIDEO_MS, Settings
     run = {"audio_seconds": 60.0, "real_time_factor": 0.3, "peak_vram_mib": 2000.0, "ok": True}
-    assert profile_pipeline.limits_from_runs([run], {"gpu_name": "NVIDIA A100", "gpu_total_vram_mib": 40000}, 0.8)["supported_audio_s"] is None
+    # any real NVIDIA GPU with a VRAM reading can set the limit; a CPU-only run cannot
+    assert profile_pipeline.limits_from_runs([run], {"gpu_name": "NVIDIA A100", "gpu_total_vram_mib": 40000}, 0.8)["supported_audio_s"] == 60.0
+    assert profile_pipeline.limits_from_runs([run], {"gpu_name": None, "gpu_total_vram_mib": None}, 0.8)["supported_audio_s"] is None
     monkeypatch.delenv("FOCUS_API_SPEED_LIMITS", raising=False)
     monkeypatch.delenv("FOCUS_API_MAX_VIDEO_MS", raising=False)
     assert DEFAULT_MAX_VIDEO_MS == 180_000 and Settings.from_env().max_video_ms == 180_000

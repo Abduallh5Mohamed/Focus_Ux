@@ -41,7 +41,7 @@ class HybridConfig:
     check_chunk_s: float = 3.0       # post-extraction voiceprint check granularity
     min_check_s: float = 0.5         # shorter output cannot be verified -> muted
     accept_threshold: float | None = None   # cosine; None = the embedder's target threshold
-    vram_budget_mib: float = 3500.0  # a 4 GB RTX 3050 minus headroom
+    vram_budget_mib: float = 3500.0  # used only when no GPU reading is available; see focus_ml.hardware
     batch_size: int | None = None    # None = derived from the extractor's VRAM model
     # Which regions the extractor may try to recover (the voiceprint check still decides what is kept):
     #   "overlap"   only diarized overlap (the old behaviour)
@@ -49,6 +49,7 @@ class HybridConfig:
     #   "all"       also regions labelled OTHER: a quiet target missed by diarization or by the
     #               matcher is otherwise lost without any attempt to find it
     recovery: str = "all"
+    plan: dict | None = None         # how the window/batch settings were chosen (hardware.hybrid_overrides)
     max_gain_vs_mixture_db: float = 1.0   # extracted audio may never be louder than the mix it came from
     min_gain_vs_mixture_db: float = -45.0  # output this far below the mixture is residue, not speech
     band_match_reference: bool = True     # compare band-limited (8 kHz) output with a band-limited reference
@@ -323,6 +324,7 @@ class HybridExtractor:
             "seconds_per_window": round(extract_s / len(flat), 4) if flat else None,
             "rtf_overlap": round(extract_s / (ov_s + rec_s), 4) if (ov_s + rec_s) else None,
             "peak_vram_mib": max(peaks) if peaks else None,
+            "window_s": cfg.window_s, "vram_budget_mib": cfg.vram_budget_mib, "sizing": cfg.plan,
             "batches": per_batch, "batch_size": meta["batch_size"], "oom_backoffs": meta["oom_backoffs"],
             "window_details": meta["details"], "pieces": region_log,
             "uncertain_muted_seconds": round(sum((r["end"] - r["start"]) for r in lost), 3),

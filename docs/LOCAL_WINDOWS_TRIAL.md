@@ -1,5 +1,7 @@
 # تجربة Windows محلية — من غير لمس النسخة القديمة
 
+> للتشغيل على أي كارت NVIDIA بدون مسارات ثابتة (`A:\focus`) شوف `docs/LOCAL_GPU_GUIDE.md`؛ الأوامر هنا مكتوبة بمثال `A:\focus` وتتغير حسب `FOCUS_HOME` و`FOCUS_PYTHON`.
+
 الوجهة الحالية: **https://github.com/Abduallh5Mohamed/Focus_Ux — فرع `main`**.
 دي تجربة على جهازك، مش نشر عام. موديلات الجهاز مش موجودة في المستودع.
 نتائج فحص النسخة: [LOCAL_TRIAL_VERIFICATION.md](LOCAL_TRIAL_VERIFICATION.md).

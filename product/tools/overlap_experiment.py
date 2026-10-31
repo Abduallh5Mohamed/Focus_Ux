@@ -55,7 +55,7 @@ def cmd_run(a):
     basis = {"data": "LibriSpeech dev-clean solo recordings mixed with exact references (CC-BY-4.0)",
              "device": device, "regions": "oracle (ground truth from the mixing plan)", "seed": a.seed,
              "cpu_threads": threads, "embedder": a.embedder, "versions": package_versions(),
-             "caveat": "English, non-Egyptian read speech. Not an Egyptian-Arabic or RTX 3050 result."}
+             "caveat": "English, non-Egyptian read speech. Not an Egyptian-Arabic or target-GPU result."}
     cfg = HybridConfig(batch_size=a.batch_size)
     report = run_experiment(a.set, a.out, a.candidates, build, embedder, basis, INFO, cfg, a.max_mixes)
     print("Wrote", a.out / "report.json")
