@@ -210,6 +210,9 @@ class AudioOnlyEngine:
         the clean spans the voiceprint was made from (spans of this same audio)."""
         from ..overlap.base import trim_enrollment
         if path:
+            if not os.path.isfile(path):
+                raise EnrollmentError("The enrollment recording is missing, so the selected voice cannot "
+                                      "be used as a reference. Upload it again.")
             return trim_enrollment(load_canonical(path))
         if reference is not None and len(reference):
             return trim_enrollment(reference)

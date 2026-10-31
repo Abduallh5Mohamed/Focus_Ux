@@ -110,7 +110,9 @@ def test_summary_lists_each_region_with_route_and_status(tmp_path):
     a, vp = analysis(e, path)
     s = e.isolate(path, vp, a["diarization"], str(tmp_path)).details["routing_summary"]
     assert s["regions"] and all({"start_ms", "end_ms", "route", "status"} <= r.keys() for r in s["regions"])
-    assert s["regions"][0]["route"] == "fake" and s["regions"][0]["status"] == "extracted"
+    got = [r for r in s["regions"] if r["status"] == "extracted"]
+    assert got and all(r["route"] == "fake" for r in got)
+    assert all(r["route"] == "strict_muting" for r in s["regions"] if r["status"] != "extracted")
     assert summarize_routing(None)["overlap_extraction"] == "disabled"
 
 

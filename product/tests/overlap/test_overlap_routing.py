@@ -50,7 +50,7 @@ def test_strict_routes_overlap_to_extractor_and_mutes_other_only():
     ex = ToneExtractor()
     r = RoutedExtractor(hyb(ex))
     out = r.extract(X, REGS)
-    assert len(out) == len(X) and ex.batches == [1]            # one inference, one window
+    assert len(out) == len(X) and ex.batches == [2]            # one inference: the overlap window + the OTHER recovery window
     assert np.abs(out[5 * SR:7 * SR]).max() > 0.1             # overlap was extracted, not muted
     assert np.abs(out[8 * SR + 400:]).max() < 1e-6            # other-only suppressed
     assert r.last_report["overlap_extraction"] == "ran" and r.last_report["fallback_used"] is False
@@ -69,12 +69,13 @@ def test_continuity_plays_reduced_mix_smoothly_and_flags_fallback():
     rep = r.last_report
     assert rep["fallback_used"] and rep["isolation_claim"] == "not_isolation" and CONTINUITY_NOTICE in rep["notices"]
     assert "not speaker isolation" in CONTINUITY_NOTICE
-    seg = out[9 * SR:11 * SR]
-    ratio = np.abs(seg).max() / np.abs(X[9 * SR:11 * SR]).max()
+    seg = out[5 * SR:7 * SR]
+    ratio = np.abs(seg).max() / np.abs(X[5 * SR:7 * SR]).max()
     assert ratio == pytest.approx(10 ** (-18 / 20), rel=0.02) and np.abs(seg).max() > 0     # reduced, not silent
+    assert np.abs(out[9 * SR:11 * SR]).max() < 1e-6          # speech confidently from ANOTHER speaker stays muted
     assert np.abs(np.diff(out)).max() < 0.05                                              # no clicks
     assert np.abs(out[:3 * SR] - X[:3 * SR]).max() < 1e-3                                  # target untouched
-    assert rep["fallback_seconds"] == pytest.approx(8.0, abs=0.2)
+    assert rep["fallback_seconds"] == pytest.approx(4.0, abs=0.2)
 
 
 def test_continuity_never_clips_and_reports_no_fallback_when_everything_kept():
@@ -116,6 +117,7 @@ def test_blocked_extractor_in_continuity_uses_labelled_fallback_not_isolation():
     assert rep["overlap_extraction"] == "failed" and rep["fallback_used"] is True
     assert rep["isolation_claim"] == "not_isolation" and CONTINUITY_NOTICE in rep["notices"]
     assert 0 < np.abs(out[5 * SR:7 * SR]).max() < 0.98
+    assert "extraction_failed" in rep["route_labels"] and "continuity_fallback" in rep["route_labels"]
 
 
 # ---- engine integration
@@ -144,14 +146,14 @@ def test_engine_with_overlap_extractor_uses_enrollment_audio_and_loads_once(tmp_
     out = load_canonical(res.wav_path)
     assert len(out) == len(src) and np.abs(out[16 * SR + 800:18 * SR - 800]).max() > 0.1
     assert res.details["routing"]["overlap_extraction"] == "ran"
-    assert ex.batches == [1]                                  # inference ran once for the one window
+    assert ex.batches == [3]                                  # one inference call: overlap + OTHER-recovery windows
 
 
 def test_engine_continuity_reports_fallback_in_result_and_warnings(tmp_path):
     res, _ = run_engine(tmp_path, routing=RoutingConfig(mode=CONTINUITY))
     assert res.details["routing"]["fallback_used"] and CONTINUITY_NOTICE in res.warnings
     out = load_canonical(res.wav_path)
-    assert np.abs(out[7 * SR:11 * SR]).max() > 0
+    assert np.abs(out[16 * SR + 800:18 * SR - 800]).max() > 0    # the unconfirmed overlap plays quietly
 
 
 def test_voice_file_enrollment_without_audio_skips_extraction_visibly(tmp_path):
