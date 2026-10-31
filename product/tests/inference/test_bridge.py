@@ -97,7 +97,9 @@ def test_private_preview_auth_separate_and_check_does_not_mark_online(remote):
     }
     result = client.get("/worker/check", headers=headers)
     assert result.status_code == 200
-    assert result.json() == {"worker_protocol": 1}
+    body = result.json()
+    from focus_ml.code_version import ISOLATE_CONTRACT, code_version
+    assert body == {"worker_protocol": 1, "code_version": code_version(), "isolate_contract": ISOLATE_CONTRACT}
     assert not bridge.status()["connected"]
     assert client.get("/worker/check", headers={
         "Authorization": AUTH["Authorization"][7:],

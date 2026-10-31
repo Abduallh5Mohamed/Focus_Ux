@@ -246,7 +246,8 @@ class InferenceProviders:
         reference_b64 = voiceprint.pop("reference_wav_b64", None)
         on_progress("matching", 0.0)
         if self.bridge:
-            payload = {"voiceprint": voiceprint, "diarization": diarization}
+            from focus_ml.code_version import ISOLATE_CONTRACT
+            payload = {"voiceprint": voiceprint, "diarization": diarization, "contract": ISOLATE_CONTRACT}
             if reference_b64:
                 payload["reference_wav_b64"] = reference_b64
             data, duration, engine, regions, *rest = self.bridge.call(
@@ -281,6 +282,7 @@ class InferenceProviders:
         ]
         warnings = [ENGINE_WARNING + engine]
         if routing:
+            warnings += [t for t in routing.get("notices") or [] if t not in warnings]
             warnings.append(ROUTING_PREFIX + json.dumps(routing, separators=(",", ":")))
         if not any(r["label"] == "target" for r in regions):
             warnings.append("The enrolled voice was not found in the audio; the result is silent.")

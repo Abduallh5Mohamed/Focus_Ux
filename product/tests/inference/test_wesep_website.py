@@ -105,7 +105,7 @@ def test_reference_travels_in_the_isolate_payload_and_routing_is_kept_with_the_j
     assert "reference_wav_b64" not in bridge.payload["voiceprint"]
     stored = [w for w in result.warnings if w.startswith(inference.ROUTING_PREFIX)]
     assert json.loads(stored[0][len(inference.ROUTING_PREFIX):])["extractor_ran"] is True
-    assert set(bridge.payload) == {"voiceprint", "diarization", "reference_wav_b64"}   # audio data only
+    assert set(bridge.payload) == {"voiceprint", "diarization", "reference_wav_b64", "contract"}   # audio data only
 
 
 def test_without_reference_or_routing_nothing_extra_is_sent(tmp_path):
@@ -114,7 +114,7 @@ def test_without_reference_or_routing_nothing_extra_is_sent(tmp_path):
     out = tmp_path / "job"
     out.mkdir()
     result = p.extract(job, str(out), lambda *a: None)
-    assert set(bridge.payload) == {"voiceprint", "diarization"}
+    assert set(bridge.payload) == {"voiceprint", "diarization", "contract"}
     assert not any(w.startswith(inference.ROUTING_PREFIX) for w in result.warnings)
 
 
