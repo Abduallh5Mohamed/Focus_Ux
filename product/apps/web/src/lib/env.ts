@@ -4,7 +4,9 @@ function readFlag(value: unknown): boolean {
   return value === true || value === '1' || value === 'true';
 }
 
-export const API_BASE_URL = String(import.meta.env.VITE_API_BASE_URL ?? '').trim();
+export const API_BASE_URL = String(
+  import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? '/api' : ''),
+).trim();
 
 /**
  * Dev mock mode. Must be switched on explicitly (npm run dev:mock / VITE_DEV_MOCK_API=1).

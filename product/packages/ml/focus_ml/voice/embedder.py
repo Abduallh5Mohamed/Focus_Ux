@@ -62,8 +62,10 @@ class EcapaEmbedder:
             from speechbrain.inference.speaker import EncoderClassifier
         except ImportError:
             from speechbrain.pretrained import EncoderClassifier
+        from speechbrain.utils.fetching import LocalStrategy
         self._model = EncoderClassifier.from_hparams(
             source=src, savedir=str(src / ".sb_run"), run_opts={"device": self.device},
+            local_strategy=LocalStrategy.COPY,
             overrides={"pretrained_path": str(src)})   # never fetch from the Hub
         self._model.eval()
 

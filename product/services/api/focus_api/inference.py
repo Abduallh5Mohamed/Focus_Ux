@@ -94,6 +94,9 @@ class InferenceProviders:
                     max_video_seconds=self.settings.max_video_ms / 1000,
                     max_upload_mb=self.settings.max_upload_mb,
                 ),
+                # The audio-only engine never reads a frame, so the picture is
+                # kept as it is instead of being re-encoded to 25 fps.
+                fps=None if self.settings.audio_only else 25,
             )
             if abs(normalized.duration_ms - video.duration_ms) > 80:
                 raise ProviderError("normalization changed the source timeline", retryable=False)
@@ -265,6 +268,8 @@ class InferenceProviders:
             for r in regions
         ]
         warnings = [ENGINE_WARNING + engine]
+        if not self.bridge:
+            warnings.extend(result.warnings)
         if not any(r["label"] == "target" for r in regions):
             warnings.append("The enrolled voice was not found in the audio; the result is silent.")
         return TargetRunResult(str(path), duration, source_offset_ms=0, warnings=warnings,

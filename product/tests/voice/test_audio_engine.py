@@ -79,7 +79,7 @@ def test_enroll_range_refuses_short_and_mixed_ranges(audio):
         e.enroll_range(audio, diar, 5.0, 5.0)
 
 
-def test_isolate_keeps_target_mutes_others_and_labels_uncertain(audio, tmp_path):
+def test_isolate_keeps_target_ducks_others_and_labels_uncertain(audio, tmp_path):
     e = engine()
     analysis = e.analyze(audio)
     vp = next(s for s in analysis["speakers"] if s["speaker"] == "A")["voiceprint"]
@@ -87,14 +87,37 @@ def test_isolate_keeps_target_mutes_others_and_labels_uncertain(audio, tmp_path)
     out = load_canonical(result.wav_path)
     src = load_canonical(audio)
     assert len(out) == len(src) and result.engine == "audio_only" and result.source_offset_ms == 0
+    assert result.details["extractor"] == "ducked_baseline"
     sr = 16000
-    assert np.abs(out[1 * sr:5 * sr]).max() > 0.2          # target speaks
-    assert np.abs(out[7 * sr:11 * sr]).max() < 1e-3        # other voice muted
-    assert np.abs(out[16 * sr:18 * sr]).max() < 1e-3       # overlap muted
+    assert np.abs(out[1 * sr:5 * sr]).max() > 0.2          # target speaks at its own level
+    # Everything outside the target is ducked by the floor, never deleted:
+    # the hard gate wrote digital silence here, which chopped the timeline.
+    floor = 10 ** (result.details["extractor_params"]["floor_db"] / 20)
+    other = np.abs(out[7 * sr:11 * sr]).max()
+    overlap = np.abs(out[16 * sr:18 * sr]).max()
+    src_other = np.abs(src[7 * sr:11 * sr]).max()
+    src_overlap = np.abs(src[16 * sr:18 * sr]).max()
+    assert other == pytest.approx(src_other * floor, rel=0.25)
+    assert overlap == pytest.approx(src_overlap * floor, rel=0.25)
+    assert other > 0 and overlap > 0                       # no digital silence
     wire = regions_to_wire(result.details["regions"])
     assert wire and all(r["label"] in ("target", "uncertain") for r in wire)
     assert any(r["label"] == "target" and r["start_ms"] <= 1000 and r["end_ms"] >= 5000 for r in wire)
     assert all(a["end_ms"] <= b["start_ms"] for a, b in zip(wire, wire[1:]))
+
+
+def test_isolate_with_the_old_gate_still_mutes_others(audio, tmp_path):
+    """The previous contract stays reachable for an A/B listening comparison."""
+    from focus_ml.voice.extractor import GatedBaseline
+
+    e = AudioOnlyEngine(FakeDiarizer(TURNS), FakeEmbedder(), extractor=GatedBaseline())
+    analysis = e.analyze(audio)
+    vp = next(s for s in analysis["speakers"] if s["speaker"] == "A")["voiceprint"]
+    result = e.isolate(audio, vp, analysis["diarization"], str(tmp_path))
+    out = load_canonical(result.wav_path)
+    sr = 16000
+    assert np.abs(out[7 * sr:11 * sr]).max() < 1e-3        # other voice muted
+    assert np.abs(out[16 * sr:18 * sr]).max() < 1e-3       # overlap muted
 
 
 def test_isolate_has_no_video_parameter_at_all():

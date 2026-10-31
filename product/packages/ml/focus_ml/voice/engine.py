@@ -29,7 +29,7 @@ from .enroll import (
     enroll_from_range,
 )
 from .errors import EnrollmentError
-from .extractor import Extractor, GatedBaseline
+from .extractor import Extractor, build_extractor
 from .match import MatchConfig, classify_regions
 from .profile import ResidencyPolicy
 from .preprocess import load_canonical, slice_samples
@@ -64,7 +64,9 @@ class AudioOnlyEngine:
         self.residency = residency or ResidencyPolicy()
         self.log = log   # optional StageLog/StageProfiler; None = no profiling
         self.match = match or MatchConfig.for_embedder(embedder.name)
-        self.extractor = extractor or GatedBaseline()
+        # Default is the ducked baseline: the hard gate wrote digital silence
+        # for 41.7 % of a real job (docs/AUDIO_ISOLATION_DIAGNOSIS.md).
+        self.extractor = extractor or build_extractor()
         self.enrollment = enrollment or EnrollmentConfig()
 
     @classmethod
@@ -183,8 +185,14 @@ class AudioOnlyEngine:
     def isolate(self, audio_path: str, voiceprint: dict, diarization: dict, job_dir: str,
                 on_progress=None) -> EngineResult:
         """Audio + enrollment + the cached diarization in; isolated.wav and the
-        labelled timeline out. Overlap and unmatched speech are muted."""
+        labelled timeline out. Unmatched speech is muted; separation-based
+        extractors keep overlap only where the evidence supports it - see
+        ``details["identity"]``."""
         t0 = time.perf_counter()
+        # Fail before diarization/embedding when the chosen extractor needs
+        # something that is not installed (e.g. the Demucs environment).
+        if hasattr(self.extractor, "check_ready"):
+            self.extractor.check_ready()
         samples = load_canonical(audio_path)
         enrollment = Voiceprint.from_dict(voiceprint)
         diar = Diarization.from_dict(diarization)
@@ -192,25 +200,63 @@ class AudioOnlyEngine:
             on_progress("matching", 0.0)
         with self._stage("match"):
             regions = classify_regions(samples, diar, enrollment, self.embedder, self.match)
-        self._release("embedder")
+        # Separation-based extractors re-check source identity against the
+        # enrollment inside extract(), so the embedder must stay loaded until
+        # after that final identity use; the mask extractors release it now.
+        identity_capable = hasattr(self.extractor, "set_context")
+        if identity_capable:
+            self.extractor.set_context(enrollment, self.embedder, self.match)
+        else:
+            self._release("embedder")
         if on_progress:
             on_progress("matching", 1.0)
             on_progress("separating", 0.0)
-        with self._stage("extract"):
-            out = self.extractor.extract(samples, regions)
+        try:
+            with self._stage("extract"):
+                out = self.extractor.extract(samples, regions)
+        finally:
+            if identity_capable:
+                self._release("embedder")
+                identity_params = self.extractor.params() if hasattr(self.extractor, "params") else {}
+                if hasattr(self.extractor, "clear_context"):
+                    self.extractor.clear_context()
         path = os.path.join(str(job_dir), "isolated.wav")
         write_wav(path, out, SAMPLE_RATE)
         if on_progress:
             on_progress("separating", 1.0)
         warnings = []
         target_s = total([Segment(r.start, r.end) for r in regions if r.label == TARGET])
-        if target_s <= 0:
+        if target_s <= 0 and not np.any(out):
             warnings.append("The enrolled voice was not found in the audio; the result is silent.")
+        identity = getattr(self.extractor, "last_identity", None) if identity_capable else None
+        if identity is not None and identity.get("warnings"):
+            warnings += list(identity["warnings"])
+        if identity is not None and identity.get("refusal") is None \
+                and identity.get("selection") == "enrollment_embedding" \
+                and identity.get("overlap", {}).get("kept_s"):
+            warnings.append("Speech overlapping other voices was kept from the separated "
+                            "sources where it matched the enrolled voice; this overlap "
+                            "handling is provisional and has not been validated on real "
+                            "recordings.")
+        extractor_params = identity_params if identity_capable else (
+            self.extractor.params() if hasattr(self.extractor, "params") else {})
+        output_regions = [r.as_dict() for r in regions if r.label in (TARGET, UNCERTAIN)]
+        if identity is not None and identity.get('source_output') == 'full_selected_stem':
+            output_regions = [{'start': 0.0, 'end': len(out) / SAMPLE_RATE, 'label': TARGET,
+                               'reason': 'global_separated_source_match', 'speaker': None,
+                               'score': max(s for s in identity['similarities'] if s is not None)}]
         return EngineResult(
             wav_path=path, duration_ms=duration_ms_from_samples(len(samples), SAMPLE_RATE),
             source_offset_ms=0, timings={"total": round(time.perf_counter() - t0, 2)},
             warnings=warnings, engine=ENGINE_NAME,
-            details={"regions": [r.as_dict() for r in regions if r.label in (TARGET, UNCERTAIN)]})
+            details={"regions": output_regions,
+                     # Which mask ran, so a result can never be mistaken for a
+                     # separation model's output.
+                     "extractor": self.extractor.name, "extractor_params": extractor_params,
+                     # Evidence behind the selected source (selection method,
+                     # stem similarities, refusal, overlap stats); None exactly
+                     # when the running extractor makes no identity claim.
+                     "identity": identity})
 
 
 def regions_to_wire(regions: list[dict]) -> list[dict]:

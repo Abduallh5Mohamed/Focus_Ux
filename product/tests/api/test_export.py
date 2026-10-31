@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from services.api.focus_api import mix
 from services.worker.interfaces import TargetRunResult
 
 from .fakes import FakeExtractionRunner
@@ -88,6 +89,39 @@ def _probe(path: Path, stream: str, entries: str):
     return json.loads(out)
 
 
+def _decode_audio(path: Path, rate: int = mix.WORK_RATE) -> np.ndarray:
+    raw = subprocess.run(
+        ["ffmpeg", "-loglevel", "error", "-nostdin", "-i", str(path), "-vn",
+         "-map", "0:a:0", "-f", "f32le", "-ac", "1", "-ar", str(rate), "pipe:1"],
+        capture_output=True, check=True,
+    ).stdout
+    usable = len(raw) - len(raw) % 4
+    return np.frombuffer(raw[:usable], dtype="<f4").astype(np.float32)
+
+
+def _expected_alignment(base: Path, source: Path, duration_ms: int = 2000):
+    """Reproduce the server's analysis on the same decoded inputs."""
+    original = mix.decode_mono(source)
+    original = mix.fit_length(original, int(round(duration_ms * mix.WORK_RATE / 1000)))
+    isolated = mix.decode_mono(base / "iso16.wav")
+    result = mix.align(original, isolated, offset_ms=0.0)
+    assert result.reliable, result.reason
+    return result
+
+
+def _nrmse(actual: np.ndarray, expected: np.ndarray, skip_ms: float = 50.0) -> float:
+    """Normalised RMS error of the decoded AAC against the exact server render.
+
+    The leading/trailing AAC frames are skipped because codec priming adds
+    samples at both ends; over the steady-state middle this is fair.
+    """
+    length = min(len(actual), len(expected))
+    skip = int(mix.WORK_RATE * skip_ms / 1000.0)
+    a = np.asarray(actual[skip:length - skip], dtype=np.float64)
+    e = np.asarray(expected[skip:length - skip], dtype=np.float64)
+    return float(np.sqrt(np.mean((a - e) ** 2)) / np.sqrt(np.mean(e ** 2)))
+
+
 def _wait_ready(api, job, export, token):
     for _ in range(200):
         state = api.client.get(f"/jobs/{job}/exports/{export}", headers=api.auth(token)).json()
@@ -161,6 +195,37 @@ def test_export_is_in_sync_and_video_unchanged(make_api, real_video):
          "-ac", "1", "pipe:1"], capture_output=True, check=True).stdout
     peak = float(np.max(np.abs(np.frombuffer(raw, dtype="<f4"))))
     assert peak <= 1.0
+
+    # The final AAC track is the exact server-side mix (voice 1.5, residual 0.2,
+    # light high-pass), not the source or a re-gained variant.
+    alignment = _expected_alignment(base, source)
+    expected = mix.render_mix(alignment, mix.MixSettings(1.5, 0.2, "light"))
+    assert _nrmse(_decode_audio(out), expected) < 0.06
+
+
+@pytest.mark.parametrize('explicit_settings', [False, True], ids=['empty-body-default', 'explicit-target-only'])
+def test_target_only_export_excludes_the_original_residual(make_api, real_video, explicit_settings):
+    base, source = real_video
+    api, _vid, token, job, _s = _job(make_api, real_video)
+    settings = dict(voice_level=1, others_level=0, noise_reduction="off") if explicit_settings else {}
+    started = _export(api, job, token, **settings)
+    assert started.status_code == 202
+    export = started.json()["export_id"]
+    assert _wait_ready(api, job, export, token)["status"] == "ready"
+    response = api.client.get(f"/jobs/{job}/exports/{export}/file", headers=api.auth(token))
+    assert response.status_code == 200
+    out = base / "target_only.mp4"
+    out.write_bytes(response.content)
+
+    alignment = _expected_alignment(base, source)
+    expected_target = mix.render_mix(alignment, mix.MixSettings(1.0, 0.0, "off"))
+    expected_full = mix.render_mix(alignment, mix.MixSettings(1.0, 1.0, "off"))
+    decoded = _decode_audio(out)
+
+    # Close to the target-only render...
+    assert _nrmse(decoded, expected_target) < 0.06
+    # ...and clearly not the source or a residual-containing mix.
+    assert _nrmse(decoded, expected_full) > 0.3
 
 
 def test_export_access_control_and_deletion(make_api, real_video):

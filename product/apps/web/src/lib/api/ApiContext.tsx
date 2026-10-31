@@ -3,7 +3,8 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { createHttpApi, type FocusApi } from './client';
 import { createMockApi } from './mock';
 import { API_BASE_URL, IS_DEV_MOCK } from '../env';
-import { getToken, saveSession } from '../session';
+import { clearSession, getToken, saveSession } from '../session';
+import { isApiError } from './errors';
 
 interface ApiContextValue {
   api: FocusApi;
@@ -16,11 +17,22 @@ const ApiContext = createContext<ApiContextValue | null>(null);
  * Wraps the transport so the session token handed back by the first upload is persisted
  * exactly once, in the API layer instead of in each screen.
  */
-function withSessionCapture(api: FocusApi): FocusApi {
+export function withSessionCapture(api: FocusApi): FocusApi {
   return {
     ...api,
     async uploadVideo(file, options) {
-      const response = await api.uploadVideo(file, options);
+      const previousToken = getToken();
+      let response;
+      try {
+        response = await api.uploadVideo(file, options);
+      } catch (error) {
+        // A rejected old session must not permanently block a new upload.
+        // Only retry a definitive 401, never ambiguous network errors or 403s.
+        if (!previousToken || !isApiError(error) || error.status !== 401 ||
+            options?.signal?.aborted || getToken() !== previousToken) throw error;
+        clearSession();
+        response = await api.uploadVideo(file, options);
+      }
       if (response.session_token) saveSession({ token: response.session_token });
       if (response.video_id) saveSession({ videoId: response.video_id, jobId: null });
       return response;

@@ -36,6 +36,15 @@ MIN_VOICE_RMS = 1e-4
 LIMITER_CEILING = 0.98  # about -0.18 dBFS
 LIMITER_LOOKAHEAD_MS = 5.0
 DECODE_TIMEOUT_S = 60.0
+# The level match is fitted on the isolated voice's loud frames only (see
+# ``_active_gain``). A whole-file least-squares fit is pulled around by the
+# muted or ducked background and came out at 1.39 on a real job, which
+# amplified the background bed by +2.8 dB instead of leaving it alone.
+# Numerical sanity bound on the fitted gain, not a level policy: a genuinely
+# quieter isolated signal (a model's output at -14 dB) must still be matched
+# up. Hitting these bounds means the fit itself is suspect.
+MIN_GAIN = 0.05
+MAX_GAIN = 20.0
 
 NOISE_MODES = ("off", "light", "strong")
 # (high-pass Hz, low-pass Hz or None). Same corner frequencies are used by the
@@ -61,7 +70,7 @@ class MixError(Exception):
 @dataclass(frozen=True)
 class MixSettings:
     voice_level: float = 1.0
-    others_level: float = 0.25
+    others_level: float = 0.0
     noise_reduction: str = "off"
 
     def validated(self) -> "MixSettings":
@@ -86,6 +95,7 @@ class Alignment:
     coverage: float
     reliable: bool
     reason: str | None       # why unreliable (English, for logs/tests)
+    gain_clamped: bool = False
 
 
 # -- decoding ---------------------------------------------------------------
@@ -140,6 +150,34 @@ def _best_lag(original: np.ndarray, voice: np.ndarray, center: int, radius: int)
     return best
 
 
+def _active_gain(original: np.ndarray, placed: np.ndarray, rate: int,
+                 fallback: float) -> float:
+    """Least-squares level match fitted on the loud frames of ``placed``.
+
+    Whole-file fitting mixes the target's speech with the muted (or ducked)
+    background, and the background pulls the fitted gain up: on a real job the
+    gain came out at 1.39, which amplified the bed by +2.8 dB instead of
+    leaving it at its own level. Restricting the fit to frames near the loud
+    end recovers 1.0 for a gate and the true ratio for a genuinely quieter
+    model output.
+    """
+    frame = max(1, int(0.05 * rate))
+    frames = len(placed) // frame
+    if frames < 4:
+        return fallback
+    vf = placed[: frames * frame].reshape(frames, frame)
+    of = original[: frames * frame].reshape(frames, frame)
+    energy = np.mean(vf * vf, axis=1)
+    loud = energy >= 0.5 * float(np.percentile(energy, 90))
+    loud &= energy > 0.0
+    if not loud.any():
+        return fallback
+    denominator = float(np.sum(vf[loud] * vf[loud]))
+    if denominator <= 0.0:
+        return fallback
+    return float(np.sum(of[loud] * vf[loud])) / denominator
+
+
 def align(
     original: np.ndarray,
     isolated: np.ndarray,
@@ -186,7 +224,14 @@ def align(
     numerator = float(np.dot(o, placed))
     norm = float(np.sqrt(np.dot(o, o) * denominator))
     correlation = numerator / norm if norm > 0 else 0.0
-    gain = numerator / denominator
+    # Fit the level on the isolated voice's LOUD frames only. Over the whole
+    # file the muted/ducked background drags the fit up (measured 1.39 on a
+    # real job = +2.8 dB on the background bed, so the export came out louder
+    # than its source). Loud-frame fitting gives 1.0 for a gate and the true
+    # match for a model whose output is quieter than the mix.
+    gain = _active_gain(o, placed, rate, numerator / denominator)
+    gain_clamped = not MIN_GAIN <= gain <= MAX_GAIN
+    gain = float(min(max(gain, MIN_GAIN), MAX_GAIN))
     lag_ms = lag * 1000.0 / rate
 
     reason = None
@@ -201,7 +246,7 @@ def align(
     others = o - voice
     return Alignment(
         voice.astype(np.float32), others.astype(np.float32), gain, lag_ms,
-        correlation, coverage, True, None,
+        correlation, coverage, True, None, gain_clamped,
     )
 
 

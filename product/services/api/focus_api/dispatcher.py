@@ -36,6 +36,10 @@ from .db import FaceRecord, SqliteRepository, VideoRecord
 from .identity import make_face_id, ordered_unique
 from .interfaces import DetectedFace, ExtractionRunner, FaceCandidateProvider
 from .lock import DispatcherLock
+
+# Stand-in candidate id used when the audio-only engine cannot detect faces:
+# the picker and the enrollment row still key on a face_id.
+PLACEHOLDER_FACE_ID = "audio-only"
 from .storage import Storage
 
 logger = logging.getLogger("focus_api.dispatcher")
@@ -370,6 +374,24 @@ class Dispatcher:
             if not isinstance(message, str) or not message:
                 message = "face detection failed"
             logger.warning("face detection failed for %s: %s", video_id, message)
+            if self.settings.audio_only:
+                # The audio-only engine identifies the speaker by voiceprint; the
+                # face list only feeds the picker and the optional lip suggestion.
+                # When detection is unavailable (no lip models on this machine)
+                # the picker would be empty and the flow would dead-end, so one
+                # placeholder candidate is kept and the status stays usable.
+                logger.warning("audio-only: keeping one placeholder candidate for %s", video_id)
+                self.repo.replace_faces(video.video_id, [FaceRecord(
+                    video_id=video.video_id,
+                    face_id=PLACEHOLDER_FACE_ID,
+                    timestamp_ms=0,
+                    bbox=(0, 0, video.width, video.height),
+                    frame_size=(video.width, video.height),
+                    thumbnail_path=None,
+                    thumbnail_mime=None,
+                )])
+                self.repo.set_faces_status(video.video_id, "ready")
+                return
             self.repo.set_faces_status(
                 video_id,
                 "failed",

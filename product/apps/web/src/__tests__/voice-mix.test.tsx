@@ -9,6 +9,7 @@ import type { MixInfo } from '../lib/api/types';
 import { VoiceMixPanel } from '../features/results/VoiceMixPanel';
 
 const gainTargets: number[] = [];
+const masterTargets: number[] = [];
 const sourcesStarted = vi.fn();
 
 function fakeParam(record?: number[]) {
@@ -25,8 +26,21 @@ class FakeAudioContext {
   sampleRate = 48_000;
   destination = {};
   createGain() {
-    const gain = fakeParam(gainTargets);
-    return { gain, connect: vi.fn() };
+    const node: { gain: ReturnType<typeof fakeParam>; connect: ReturnType<typeof vi.fn>; isMaster?: boolean } = {
+      gain: fakeParam(),
+      connect: vi.fn(),
+    };
+    node.connect = vi.fn((target: unknown) => {
+      if (target === this.destination) node.isMaster = true;
+    });
+    node.gain = {
+      value: 0,
+      setTargetAtTime: vi.fn((v: number) => {
+        gainTargets.push(v);
+        if (node.isMaster) masterTargets.push(v);
+      }),
+    };
+    return node;
   }
   createBiquadFilter() {
     return { type: '', Q: { value: 0 }, frequency: fakeParam(), connect: vi.fn() };
@@ -63,6 +77,7 @@ beforeEach(() => {
     };
   }
   gainTargets.length = 0;
+  masterTargets.length = 0;
   sourcesStarted.mockClear();
   (window as unknown as { AudioContext: unknown }).AudioContext = FakeAudioContext;
   window.HTMLMediaElement.prototype.load = vi.fn();
@@ -115,11 +130,32 @@ describe('VoiceMixPanel', () => {
     await waitFor(() => expect(screen.getByRole('radio', { name: 'الميكس الحالي' })).toBeEnabled());
     const video = screen.getByLabelText('فيديو المقارنة') as HTMLVideoElement;
     expect(video.muted).toBe(true);
+    await waitFor(() => expect(masterTargets).toContain(1));
     await userEvent.click(screen.getByRole('radio', { name: 'الصوت الأصلي' }));
     expect(video.muted).toBe(false);
+    await waitFor(() => expect(masterTargets[masterTargets.length - 1]).toBe(0));
     await userEvent.click(screen.getByRole('radio', { name: 'الميكس الحالي' }));
     expect(video.muted).toBe(true);
+    await waitFor(() => expect(masterTargets[masterTargets.length - 1]).toBe(1));
     expect(screen.getAllByLabelText('فيديو المقارنة')).toHaveLength(1);
+  });
+
+  it('never sends a residual to the exporter when the server says it is unreliable', async () => {
+    const startExport = vi.fn(async () => ({ export_id: 'e3', status: 'rendering' as const }));
+    renderPanel({
+      getMixInfo: async () => ({
+        ...INFO, others_available: false, others_unavailable_reason: 'isolated audio does not match the original',
+      }),
+      startExport,
+      getExport: async () => ({ export_id: 'e3', status: 'ready' as const }),
+      fetchExport: async () => new Blob(['mp4'], { type: 'video/mp4' }),
+    });
+    const button = screen.getByRole('button', { name: /تصدير الفيديو/ });
+    await waitFor(() => expect(button).toBeEnabled());
+    await userEvent.click(button);
+    expect(startExport).toHaveBeenCalledWith('job_test', {
+      voice_level: 1, others_level: 0, noise_reduction: 'off',
+    });
   });
 
   it('disables the other-voices slider with a plain message when unreliable', async () => {
@@ -132,11 +168,11 @@ describe('VoiceMixPanel', () => {
     expect(screen.getByLabelText('مستوى الأصوات التانية')).toBeDisabled();
   });
 
-  it('exports with others at zero when unreliable and offers the download', async () => {
+  it('exports target-only by default even when other voices are available', async () => {
     const startExport = vi.fn(async () => ({ export_id: 'e1', status: 'rendering' as const }));
     const getExport = vi.fn(async () => ({ export_id: 'e1', status: 'ready' as const }));
     renderPanel({
-      getMixInfo: async () => ({ ...INFO, others_available: false, others_unavailable_reason: 'x' }),
+      getMixInfo: async () => ({ ...INFO, others_available: true }),
       startExport, getExport,
       fetchExport: async () => new Blob(['mp4'], { type: 'video/mp4' }),
     });

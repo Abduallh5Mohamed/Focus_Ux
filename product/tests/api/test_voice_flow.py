@@ -293,3 +293,61 @@ def test_old_database_gains_job_columns(tmp_path):
     cols = {r[1] for r in repo._conn.execute("PRAGMA table_info(jobs)")}
     assert {"enrollment_id", "follow_periods"} <= cols
     repo.close()
+
+
+def test_audio_only_keeps_one_placeholder_when_face_detection_fails(make_api, tmp_path):
+    """No lip models on the machine must not dead-end the picker.
+
+    The audio-only engine identifies the speaker by voiceprint, so a failed face
+    detection only costs the (optional) lip suggestion. Without this fallback the
+    UI would show an empty candidate list and the user could never enroll.
+    """
+    class NoFaces(FakeAudioProvider):
+        def detect(self, *, video_id, video_path):
+            raise ProviderError("real face detection failed", retryable=True)
+
+    api = make_api(provider=NoFaces(), runner=FakeAudioOnlyRunner(),
+                   settings=make_settings(tmp_path / "nofaces", isolation_engine="audio_only"))
+    video_id, token, _ = api.upload_ok()
+    api.drain()
+
+    body = api.get_faces(video_id, token).json()
+    assert body["status"] == "ready"
+    assert [f["face_id"] for f in body["faces"]] == ["audio-only"]
+    assert body["faces"][0]["thumbnail_url"].endswith("/audio-only/thumbnail")
+
+    # ...and the flow still reaches an enrollment with that placeholder.
+    analysis = _get(api, f"/videos/{video_id}/analysis", token).json()
+    usable = next(v for v in analysis["voices"] if v["usable"])
+    enroll = _post(api, f"/videos/{video_id}/enrollments", token,
+                   json={"face_id": "audio-only", "source": "voice", "voice_id": usable["voice_id"]})
+    assert enroll.status_code == 202 and enroll.json()["status"] == "ready"
+
+
+def test_audio_only_keeps_one_placeholder_when_face_detection_fails(make_api, tmp_path):
+    """No lip models on the machine must not dead-end the picker.
+
+    The audio-only engine identifies the speaker by voiceprint, so a failed face
+    detection only costs the (optional) lip suggestion. Without this fallback the
+    UI would show an empty candidate list and the user could never enroll.
+    """
+    class NoFaces(FakeAudioProvider):
+        def detect(self, *, video_id, video_path):
+            raise ProviderError("real face detection failed", retryable=True)
+
+    api = make_api(provider=NoFaces(), runner=FakeAudioOnlyRunner(),
+                   settings=make_settings(tmp_path / "nofaces", isolation_engine="audio_only"))
+    video_id, token, _ = api.upload_ok()
+    api.drain()
+
+    body = api.get_faces(video_id, token).json()
+    assert body["status"] == "ready"
+    assert [f["face_id"] for f in body["faces"]] == ["audio-only"]
+    assert body["faces"][0]["thumbnail_url"].endswith("/audio-only/thumbnail")
+
+    # ...and the flow still reaches an enrollment with that placeholder.
+    analysis = _get(api, f"/videos/{video_id}/analysis", token).json()
+    usable = next(v for v in analysis["voices"] if v["usable"])
+    enroll = _post(api, f"/videos/{video_id}/enrollments", token,
+                   json={"face_id": "audio-only", "source": "voice", "voice_id": usable["voice_id"]})
+    assert enroll.status_code == 202 and enroll.json()["status"] == "ready"

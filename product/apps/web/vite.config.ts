@@ -4,6 +4,11 @@ import react from '@vitejs/plugin-react';
 
 const srcDir = fileURLToPath(new URL('./src', import.meta.url));
 
+// Overridable so a second dev server can run beside the trial deployment
+// (A:\FocusLocalTrial on :5000) and talk to its own API.
+const apiTarget = process.env.FOCUS_API_TARGET ?? 'http://127.0.0.1:8000';
+const devPort = Number(process.env.FOCUS_WEB_PORT ?? 5000);
+
 export default defineConfig({
   plugins: [react()],
   resolve: {
@@ -13,12 +18,12 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 5000,
+    port: devPort,
     strictPort: true,
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:8000',
+        target: apiTarget,
         rewrite: (path) => path.replace(/^\/api/, ''),
       },
     },

@@ -115,21 +115,35 @@ def build_normalize_command(
     src: str,
     out_video: str,
     out_audio: str,
-    fps: int = 25,
+    fps: Optional[int] = 25,
 ) -> tuple[list[str], list[str]]:
-    """Two invocations: (1) 25 fps H.264 video with AAC 16 k mono audio kept
-    in the container (the engine timeline single source of truth), (2) the
-    legacy-shaped 16k mono PCM wav for the engine mix. Returns
-    (video_command, audio_command) as argument lists (no shell)."""
-    video_cmd = [
-        ffmpeg_exe, "-y", "-hide_banner", "-loglevel", "error", "-i", src,
-        "-map", "0:v:0",
-        "-filter:v", f"fps={fps}",
-        "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
-        "-pix_fmt", "yuv420p",
-        "-map", "0:a:0?", "-c:a", "aac", "-ar", "16000", "-ac", "1", "-b:a", "128k",
-        out_video,
-    ]
+    """Two invocations: (1) the canonical video, (2) the legacy-shaped 16k mono
+    PCM wav for the engine mix. Returns (video_command, audio_command) as
+    argument lists (no shell).
+
+    ``fps=None`` means "keep the picture untouched": the video stream is
+    copied instead of being re-encoded to a fixed frame rate. That is what the
+    audio-only engine uses - no model ever reads its frames, and forcing 25 fps
+    re-encoded a 30 fps upload, which judders and triples the bitrate for
+    nothing (measured on a real job: 30 fps 293 kb/s -> 25 fps 816 kb/s)."""
+    if fps is None:
+        video_cmd = [
+            ffmpeg_exe, "-y", "-hide_banner", "-loglevel", "error", "-i", src,
+            "-map", "0:v:0",
+            "-c:v", "copy",
+            "-map", "0:a:0?", "-c:a", "aac", "-ar", "16000", "-ac", "1", "-b:a", "128k",
+            out_video,
+        ]
+    else:
+        video_cmd = [
+            ffmpeg_exe, "-y", "-hide_banner", "-loglevel", "error", "-i", src,
+            "-map", "0:v:0",
+            "-filter:v", f"fps={fps}",
+            "-c:v", "libx264", "-preset", "veryfast", "-crf", "18",
+            "-pix_fmt", "yuv420p",
+            "-map", "0:a:0?", "-c:a", "aac", "-ar", "16000", "-ac", "1", "-b:a", "128k",
+            out_video,
+        ]
     audio_cmd = [
         ffmpeg_exe, "-y", "-hide_banner", "-loglevel", "error", "-i", src,
         "-vn", "-ar", "16000", "-ac", "1", "-c:a", "pcm_s16le", out_audio,
@@ -157,11 +171,18 @@ def normalize_input(
     ffmpeg_exe: Optional[str] = None,
     prober=None,
     runner=None,
+    fps: Optional[int] = 25,
 ) -> NormalizedMedia:
-    """Normalize ANY upload into 25 fps video + 16k mono audio inside
+    """Normalize ANY upload into a canonical video plus 16k mono audio inside
     ``job_dir`` (created on demand). Refuses (LimitError) before any encode
     when the source exceeds the clip limits (refuse_limit) or when an output
     path would collide with the source file itself.
+
+    ``fps=25`` (the default) is what the lip engines need. Pass ``fps=None``
+    for the audio-only engine: the picture is then stream-copied untouched,
+    because nothing in that path reads a frame. If the copy is impossible
+    (a codec MP4 cannot carry), it falls back to a re-encode at the source
+    frame rate rather than dropping frames.
 
     ``prober`` and ``runner`` are injectable seams for tests; production
     callers omit them and real ffmpeg probes/encodes run."""
@@ -206,8 +227,18 @@ def normalize_input(
 
     if on_progress is not None:
         on_progress("normalizing", 0.0)
-    video_cmd, audio_cmd = build_normalize_command(ff, video_path, out_video, out_audio)
+    video_cmd, audio_cmd = build_normalize_command(ff, video_path, out_video, out_audio, fps=fps)
     video_run = runner(video_cmd)
+    if video_run.returncode != 0 and fps is None:
+        # Stream copy is not always legal (e.g. a codec MP4 cannot carry).
+        # Re-encode instead, but keep the source frame rate: dropping to 25 fps
+        # is only required by the lip engines.
+        keep_fps = int(round(source_fps)) if source_fps else 25
+        warnings.append(
+            f"the picture could not be copied unchanged; it was re-encoded at "
+            f"the source frame rate ({keep_fps} fps)")
+        video_cmd, _ = build_normalize_command(ff, video_path, out_video, out_audio, fps=keep_fps)
+        video_run = runner(video_cmd)
     if video_run.returncode != 0:
         raise ProcessingError(
             "video normalization failed; nothing was produced for this job",
@@ -243,10 +274,10 @@ def normalize_input(
             f"source {duration_s:.2f} s beyond tolerance"
         )
 
-    if source_fps is not None and abs(source_fps - cfg.fps) > 0.02:
+    if fps is not None and source_fps is not None and abs(source_fps - fps) > 0.02:
         warnings.append(
             f"source ran at {source_fps:.2f} fps and was resampled to "
-            f"{cfg.fps} fps (frames dropped/duplicated on the original "
+            f"{fps} fps (frames dropped/duplicated on the original "
             f"timeline to preserve duration)"
         )
     source_rate = info.get("sample_rate")

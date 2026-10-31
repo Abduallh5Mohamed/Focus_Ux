@@ -19,7 +19,7 @@ interface VoiceMixPanelProps {
   audioReady: boolean;
 }
 
-const DEFAULTS: MixSettings = { voice_level: 1, others_level: 0.25, noise_reduction: 'off' };
+const DEFAULTS: MixSettings = { voice_level: 1, others_level: 0, noise_reduction: 'off' };
 
 const NOISE_LABEL: Record<NoiseReduction, string> = {
   off: 'بدون',

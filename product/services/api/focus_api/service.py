@@ -438,7 +438,7 @@ class ApiService:
         try:
             settings = MixSettings(
                 voice_level=float(payload.get("voice_level", 1.0)),
-                others_level=float(payload.get("others_level", 0.25)),
+                others_level=float(payload.get("others_level", 0.0)),
                 noise_reduction=str(payload.get("noise_reduction", "off")),
             )
             record = self.mixer.start_export(
