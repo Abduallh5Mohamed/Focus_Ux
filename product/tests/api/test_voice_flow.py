@@ -316,3 +316,20 @@ def test_job_response_shows_the_routing_summary_and_not_its_storage_marker(audio
     result = api.get_job(job.json()["job_id"], token).json()["result"]
     assert result["routing"] == summary
     assert not any(w.startswith("routing:") for w in result.get("warnings", []))
+
+
+def test_stored_reference_audio_is_deleted_with_the_voice_data(audio_api):
+    class WithReference(FakeAudioProvider):
+        def enroll_file(self, *, video_id, wav_path):
+            result = super().enroll_file(video_id=video_id, wav_path=wav_path)
+            return {**result, "reference_wav_b64": "UklGRg=="}      # stand-in bytes, not real audio
+
+    api, _p, video_id, token, face = audio_api(provider=WithReference())
+    r = api.client.post(f"/videos/{video_id}/enrollments/upload", headers=api.auth(token),
+                        data={"face_id": face}, files={"file": ("me.wav", _wav(6), "audio/wav")})
+    api.drain()
+    eid = r.json()["enrollment_id"]
+    assert api.repo.get_enrollment(eid)["voiceprint"]["reference_wav_b64"] == "UklGRg=="
+    assert not list(api.settings.media_dir.glob(f"{video_id}.voice-*"))
+    api.repo.delete_voice_data(video_id)
+    assert api.repo.get_enrollment(eid) is None

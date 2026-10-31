@@ -102,6 +102,20 @@ export interface OverlapRouting {
   fallback_used: boolean;
   fallback_seconds: number;
   isolation_claim: 'strict_isolation' | 'not_isolation';
+  /** strict = isolation that mutes unconfirmed speech; continuity = reduced original mix, not isolation. */
+  mode?: 'strict' | 'continuity';
+  /** Paths the job really took (never inferred from settings). */
+  route_labels?: Array<
+    | 'genuine_extraction'
+    | 'gated_baseline'
+    | 'strict_muting'
+    | 'continuity_fallback'
+    | 'extraction_skipped'
+    | 'extraction_failed'
+  >;
+  /** Seconds of uncertain speech with no confirmed target audio (possibly lost in strict mode). */
+  unconfirmed_seconds?: number;
+  target_may_be_lost?: boolean;
 }
 
 export interface JobResult {
