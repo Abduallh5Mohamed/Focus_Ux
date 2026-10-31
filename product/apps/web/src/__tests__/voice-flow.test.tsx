@@ -149,6 +149,37 @@ describe('FaceSelect in the audio-only flow', () => {
   });
 });
 
+describe('FaceSelect voice-only fallback', () => {
+  it('shows an Arabic notice with the reason and continues by voice without a picture card', async () => {
+    const api = createMockApi({ latencyMs: 0, facesReadyMs: 0, engine: 'audio_only' });
+    vi.spyOn(api, 'getFaces').mockResolvedValue({
+      status: 'ready',
+      faces: [{
+        face_id: 'audio-only', thumbnail_url: null, bbox: { x: 0, y: 0, width: 640, height: 360 },
+        timestamp_ms: 0, frame_size: { width: 640, height: 360 },
+      }],
+      voice_only_fallback: true,
+      detector_error: { code: 'MODEL_UNAVAILABLE', message: 'no face detector could run on this computer' },
+    });
+    const fetchMedia = vi.spyOn(api, 'fetchMedia');
+    const chosen = vi.fn();
+    render(
+      <ApiProvider api={api} isMock>
+        <MemoryRouter>
+          <FaceSelect videoId="vid1" onJobCreated={vi.fn()} onFaceChosen={chosen} />
+        </MemoryRouter>
+      </ApiProvider>,
+    );
+    expect(await screen.findByText(/معرفناش نعرض الوجوه/)).toBeTruthy();
+    expect(screen.getByText(/no face detector could run/)).toBeTruthy();
+    expect(screen.queryByText('الصورة مش متاحة')).toBeNull();
+    expect(screen.queryAllByRole('radio')).toHaveLength(0);
+    await userEvent.click(screen.getByRole('button', { name: /كمّل لاختيار الصوت/ }));
+    expect(chosen).toHaveBeenCalledWith('audio-only');
+    expect(fetchMedia).not.toHaveBeenCalled();
+  });
+});
+
 function job(over: Partial<JobState> = {}): JobState {
   return {
     job_id: 'j1', status: 'processing', stage: 'matching', selected_face_id: 'f', audio_status: 'pending',

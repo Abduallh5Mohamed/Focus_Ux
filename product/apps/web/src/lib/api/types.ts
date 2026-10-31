@@ -51,7 +51,8 @@ export interface UploadVideoResponse {
 export interface FaceCandidate {
   face_id: FaceId;
   /** Protected media URL: must be fetched with the session token, never used directly. */
-  thumbnail_url: string;
+  /** Null when the face has no picture (never a URL that would 404). */
+  thumbnail_url: string | null;
   bbox: BBox;
   timestamp_ms: number;
   frame_size: FrameSize;
@@ -61,6 +62,12 @@ export interface FacesResponse {
   status: FacesStatus;
   faces: FaceCandidate[];
   error?: ApiErrorPayload | null;
+  /** Which detector produced the faces (real detection only). */
+  detector?: string | null;
+  /** True when no detector could run and a single voice-only placeholder is returned. */
+  voice_only_fallback?: boolean;
+  /** Why the voice-only fallback was used. */
+  detector_error?: { code: string; message: string } | null;
 }
 
 export type JobStatus = 'queued' | 'processing' | 'completed' | 'failed' | 'cancelled';

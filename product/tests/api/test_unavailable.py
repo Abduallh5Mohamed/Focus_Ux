@@ -16,6 +16,7 @@ def test_unavailable_detector_reports_failure_without_fake_faces(make_api):
         "status": "failed", "faces": [],
         "error": {"code": "PROCESSING_FAILED",
                   "message": "face candidate provider is not configured", "retryable": True},
+        "detector": None, "voice_only_fallback": False, "detector_error": None,
     }
     assert not list(api.settings.thumbs_dir.iterdir())
 

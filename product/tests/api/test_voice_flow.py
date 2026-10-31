@@ -314,7 +314,7 @@ def test_audio_only_keeps_one_placeholder_when_face_detection_fails(make_api, tm
     body = api.get_faces(video_id, token).json()
     assert body["status"] == "ready"
     assert [f["face_id"] for f in body["faces"]] == ["audio-only"]
-    assert body["faces"][0]["thumbnail_url"].endswith("/audio-only/thumbnail")
+    assert body["voice_only_fallback"] is True
 
     # ...and the flow still reaches an enrollment with that placeholder.
     analysis = _get(api, f"/videos/{video_id}/analysis", token).json()
@@ -324,7 +324,7 @@ def test_audio_only_keeps_one_placeholder_when_face_detection_fails(make_api, tm
     assert enroll.status_code == 202 and enroll.json()["status"] == "ready"
 
 
-def test_audio_only_keeps_one_placeholder_when_face_detection_fails(make_api, tmp_path):
+def test_audio_only_placeholder_has_no_thumbnail_and_exposes_the_reason(make_api, tmp_path):
     """No lip models on the machine must not dead-end the picker.
 
     The audio-only engine identifies the speaker by voiceprint, so a failed face
@@ -343,7 +343,11 @@ def test_audio_only_keeps_one_placeholder_when_face_detection_fails(make_api, tm
     body = api.get_faces(video_id, token).json()
     assert body["status"] == "ready"
     assert [f["face_id"] for f in body["faces"]] == ["audio-only"]
-    assert body["faces"][0]["thumbnail_url"].endswith("/audio-only/thumbnail")
+    # The placeholder has no picture: no URL that would 404, the reason is exposed.
+    assert body["faces"][0]["thumbnail_url"] is None
+    assert body["voice_only_fallback"] is True and body["detector"] is None
+    assert body["detector_error"]["message"] == "real face detection failed"
+    assert _get(api, f"/videos/{video_id}/faces/audio-only/thumbnail", token).status_code == 404
 
     # ...and the flow still reaches an enrollment with that placeholder.
     analysis = _get(api, f"/videos/{video_id}/analysis", token).json()
@@ -351,3 +355,30 @@ def test_audio_only_keeps_one_placeholder_when_face_detection_fails(make_api, tm
     enroll = _post(api, f"/videos/{video_id}/enrollments", token,
                    json={"face_id": "audio-only", "source": "voice", "voice_id": usable["voice_id"]})
     assert enroll.status_code == 202 and enroll.json()["status"] == "ready"
+
+
+def test_real_faces_report_the_detector_and_no_fallback(audio_api):
+    class Labelled(FakeAudioProvider):
+        def detect(self, *, video_id, video_path):
+            faces = super().detect(video_id=video_id, video_path=video_path)
+            for face in faces:
+                face.detector = "opencv_haar"
+            return faces
+
+    api, _provider, video_id, token, _face = audio_api(provider=Labelled())
+    body = api.get_faces(video_id, token).json()
+    assert body["voice_only_fallback"] is False and body["detector_error"] is None
+    assert body["detector"] == "opencv_haar"
+    assert all(f["thumbnail_url"] for f in body["faces"])
+
+
+def test_healthz_reports_face_detector_status(make_api, tmp_path):
+    class Status(FakeAudioProvider):
+        def face_detector_status(self):
+            return {"detector": None, "error": "no face detector could run"}
+
+    api = make_api(provider=Status(), runner=FakeAudioOnlyRunner(),
+                   settings=make_settings(tmp_path / "health", isolation_engine="audio_only"))
+    detector = api.client.get("/healthz").json()["inference"]["face_detector"]
+    assert detector == {"detector": None, "last_error": "no face detector could run",
+                        "voice_only_fallback": True}

@@ -19,7 +19,7 @@ from services.worker.models import AudioStatus, Job, JobStage, JobStatus, Transc
 
 from .config import LIP_ENGINE_MAX_VIDEO_MS, VOICE_FILE_MAX_BYTES, VOICE_FILE_MAX_MS, Settings
 from .db import FaceRecord, JobNotFound, SqliteRepository, VideoRecord
-from .dispatcher import Dispatcher
+from .dispatcher import PLACEHOLDER_FACE_ID, Dispatcher
 from .errors import (
     ApiError,
     face_not_found,
@@ -227,13 +227,28 @@ class ApiService:
                 "message": video.faces_error_message or "face detection failed",
                 "retryable": video.faces_error_retryable,
             }
-        return {"status": video.faces_status, "faces": items, "error": error}
+        fallback = (video.faces_status == "ready"
+                    and any(face.face_id == PLACEHOLDER_FACE_ID for face in faces))
+        detector_error = None
+        if fallback:
+            detector_error = {
+                "code": video.faces_error_code or "PROCESSING_FAILED",
+                "message": video.faces_error_message or "face detection failed",
+            }
+        return {
+            "status": video.faces_status, "faces": items, "error": error,
+            "detector": video.faces_detector if video.faces_status == "ready" and not fallback else None,
+            "voice_only_fallback": fallback,
+            "detector_error": detector_error,
+        }
 
     def _face_wire(self, video_id: str, face: FaceRecord) -> dict:
         prefix = self.settings.thumbnail_url_prefix
+        has_thumbnail = bool(face.thumbnail_path)
         return {
             "face_id": face.face_id,
-            "thumbnail_url": f"{prefix}/videos/{video_id}/faces/{face.face_id}/thumbnail",
+            "thumbnail_url": (f"{prefix}/videos/{video_id}/faces/{face.face_id}/thumbnail"
+                              if has_thumbnail else None),
             "bbox": bbox_to_wire(face.bbox),
             "timestamp_ms": face.timestamp_ms,
             "frame_size": frame_size_to_wire(face.frame_size),

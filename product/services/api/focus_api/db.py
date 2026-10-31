@@ -67,6 +67,7 @@ class VideoRecord:
     faces_error_retryable: bool
     created_at: float
     deleted_at: Optional[float]
+    faces_detector: Optional[str] = None  # which detector produced the candidates
 
     @property
     def deleted(self) -> bool:
@@ -230,6 +231,9 @@ class SqliteRepository:
             for name, decl in _JOB_COLUMNS:
                 if name not in have:
                     self._conn.execute(f"ALTER TABLE jobs ADD COLUMN {name} {decl}")
+            have = {row["name"] for row in self._conn.execute("PRAGMA table_info(videos)")}
+            if "faces_detector" not in have:
+                self._conn.execute("ALTER TABLE videos ADD COLUMN faces_detector TEXT")
 
     def close(self) -> None:
         with self._lock:
@@ -308,15 +312,16 @@ class SqliteRepository:
         error_code: str | None = None,
         error_message: str | None = None,
         retryable: bool = False,
+        detector: str | None = None,
     ) -> None:
         with self._lock:
             self._conn.execute(
                 """
                 UPDATE videos SET faces_status=?, faces_error_code=?,
-                    faces_error_message=?, faces_error_retryable=?
+                    faces_error_message=?, faces_error_retryable=?, faces_detector=?
                 WHERE video_id=?
                 """,
-                (status, error_code, error_message, 1 if retryable else 0, video_id),
+                (status, error_code, error_message, 1 if retryable else 0, detector, video_id),
             )
 
     def replace_faces(self, video_id: str, faces: list[FaceRecord]) -> None:
@@ -739,6 +744,7 @@ def _row_to_video(row: sqlite3.Row) -> VideoRecord:
         faces_error_retryable=bool(row["faces_error_retryable"]),
         created_at=row["created_at"],
         deleted_at=row["deleted_at"],
+        faces_detector=row["faces_detector"],
     )
 
 

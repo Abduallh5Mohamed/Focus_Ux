@@ -366,7 +366,9 @@ class Dispatcher:
             )
             faces = self._persist_candidates(video, detected)
             self.repo.replace_faces(video.video_id, faces)
-            self.repo.set_faces_status(video.video_id, "ready")
+            names = sorted({d.detector for d in detected if getattr(d, "detector", None)})
+            self.repo.set_faces_status(
+                video.video_id, "ready", detector=", ".join(names) or None)
         except Exception as exc:  # provider errors are reported honestly
             message = getattr(exc, "message", None)
             code = getattr(exc, "code", "PROCESSING_FAILED")
@@ -390,7 +392,11 @@ class Dispatcher:
                     thumbnail_path=None,
                     thumbnail_mime=None,
                 )])
-                self.repo.set_faces_status(video.video_id, "ready")
+                # Status stays "ready" but keeps the detector error, so the faces
+                # response can say the voice-only fallback was used and why.
+                self.repo.set_faces_status(
+                    video.video_id, "ready", error_code=str(code), error_message=message,
+                    retryable=retryable)
                 return
             self.repo.set_faces_status(
                 video_id,

@@ -14,7 +14,8 @@ from pathlib import Path
 from .adapter import LegacyDolphinAdapter
 from .config import AdapterConfig
 from .isolation_engines import build_engine
-from .errors import MediaError, ModelUnavailableError
+from .errors import FaceNotFoundError, MediaError, ModelUnavailableError
+from .face_detector import DetectionOnlyBackend
 
 
 @contextmanager
@@ -42,6 +43,7 @@ class LocalEngine:
         self.config = config
         self.adapter = LegacyDolphinAdapter(config)
         self.models = None
+        self.face_detector = DetectionOnlyBackend(config)
         self.isolation = build_engine(config, self.adapter, lambda: self.models)
 
     def initialize(self):
@@ -61,21 +63,36 @@ class LocalEngine:
         with offline_inference():
             self.models = self.adapter.load_models(self.config)
 
-    def detect(self, video_id: str, video_path: str) -> list[dict]:
-        self.initialize()
+    def _detector(self):
+        """Detection-only path: no Dolphin weights, landmarks or isolation engine.
+
+        Reuses the legacy detector of an already-initialized lip engine."""
+        if self.models is not None:
+            return "dolphin_legacy", self.models.detect_faces
         with offline_inference():
-            candidates = self.adapter.detect_candidates(
-                video_path, self.config, video_id=video_id
-            )
+            backend = self.face_detector.load()
+        return backend.name, backend.detect_faces
+
+    def face_detector_status(self) -> dict:
+        return self.face_detector.status()
+
+    def detect(self, video_id: str, video_path: str) -> list[dict]:
+        from .adapter import _bgr_to_rgb, _build_first_frame_candidates
+
+        with offline_inference():
+            if not os.path.isfile(video_path):
+                raise MediaError("media file not found")
+            detector_name, detect_faces = self._detector()
+            first = self.adapter._read_first_frame(video_path)
+            if first is None:
+                raise MediaError("the first video frame could not be read")
+            frame, frame_size = first
+            detections = self.adapter._detect_frame(detect_faces, _bgr_to_rgb(frame))
+            if not detections:
+                raise FaceNotFoundError("no face detected on the first frame of the requested media")
+            candidates, _ = _build_first_frame_candidates(detections, video_id, frame_size, self.config)
             import cv2
 
-            capture = cv2.VideoCapture(video_path)
-            try:
-                ok, frame = capture.read()
-            finally:
-                capture.release()
-            if not ok or frame is None:
-                raise MediaError("the first video frame could not be read")
             results = []
             for face in candidates:
                 x, y, w, h = face.bbox
@@ -89,7 +106,7 @@ class LocalEngine:
                     raise MediaError("face thumbnail could not be encoded")
                 results.append({
                     "bbox": face.bbox, "frame_size": face.frame_size,
-                    "timestamp_ms": face.timestamp_ms,
+                    "timestamp_ms": face.timestamp_ms, "detector": detector_name,
                     "thumbnail": base64.b64encode(encoded.tobytes()).decode("ascii"),
                 })
             return results
@@ -125,12 +142,13 @@ class LocalEngine:
 
     def face_visibility(self, video_path, bbox, frame_size):
         """On-screen spans of the chosen face; used only to rank voice candidates."""
-        self.initialize()
         from .adapter import _bgr_to_rgb, _corners_to_xywh
         from .voice.visibility import read_samples, track_visibility
 
+        _name, detect_faces = self._detector()
+
         def detect(frame):
-            corners = self.adapter._detect_frame(self.models.detect_faces, _bgr_to_rgb(frame))
+            corners = self.adapter._detect_frame(detect_faces, _bgr_to_rgb(frame))
             return [tuple(float(v) for v in _corners_to_xywh(c, frame_size)[0]) for c in corners]
 
         with offline_inference():

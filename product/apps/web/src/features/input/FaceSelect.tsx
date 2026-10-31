@@ -192,6 +192,37 @@ export function FaceSelect(props: FaceSelectProps): JSX.Element {
     );
   }
 
+  if (status === 'ready' && response?.voice_only_fallback && onFaceChosen) {
+    const noFace = response.detector_error?.code === 'FACE_NOT_FOUND';
+    return (
+      <Card>
+        <CardHead title="اختار المتكلم" hint="الوجوه مش ظاهرة، فهنكمل باختيار الصوت بالسمع." />
+        <div className="stack">
+          <Notice
+            tone="warn"
+            title={noFace ? 'ملقيناش وجه واضح في أول لقطة' : 'معرفناش نعرض الوجوه على الجهاز ده'}
+            code={response.detector_error?.code}
+          >
+            {noFace
+              ? 'هنكمل باختيار الصوت: اسمع كل صوت واختار صوت الشخص اللي عايزه.'
+              : 'كشف الوجوه مشتغلش، فمفيش صور وجوه تختار منها. هنكمل باختيار الصوت: اسمع كل صوت واختار صوت الشخص اللي عايزه.'}{' '}
+            {response.detector_error?.message ? `السبب: ${response.detector_error.message}` : null}
+          </Notice>
+          <div className="row row--between">
+            <p className="hint">ترتيب الأصوات هيبقى حسب مدة الكلام بس.</p>
+            <Button
+              variant="primary"
+              iconEnd="arrow-left"
+              onClick={() => onFaceChosen(faces[0].face_id)}
+            >
+              كمّل لاختيار الصوت
+            </Button>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   if (status === 'ready') {
     return (
       <Card>
@@ -373,6 +404,10 @@ function FaceThumbnail({ face }: { face: FaceCandidate }) {
     setUrl(null);
     setFailed(false);
     setShowsFullFrame(false);
+    if (!face.thumbnail_url) {
+      setFailed(true);
+      return;
+    }
 
     api
       .fetchMedia(face.thumbnail_url, controller.signal)

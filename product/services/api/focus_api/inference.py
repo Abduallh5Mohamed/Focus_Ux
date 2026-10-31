@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import base64
 import os
+import re
 import subprocess
 import tempfile
 import threading
@@ -35,9 +36,12 @@ def decode_faces(items):
         thumbnail = base64.b64decode(item["thumbnail"], validate=True)
         if not thumbnail.startswith(b"\xff\xd8") or len(thumbnail) > 64 * 1024:
             raise ProviderError("invalid detector thumbnail", retryable=False)
+        detector = item.get("detector")
+        if detector is not None and not (isinstance(detector, str) and re.fullmatch(r"[a-z0-9_]{1,32}", detector)):
+            raise ProviderError("invalid detector label", retryable=False)
         faces.append(DetectedFace(
             bbox=tuple(bbox), frame_size=tuple(size), timestamp_ms=0,
-            thumbnail_bytes=thumbnail,
+            thumbnail_bytes=thumbnail, detector=detector,
         ))
     return faces
 
@@ -72,6 +76,11 @@ class InferenceProviders:
         self.settings, self.repo = settings, repo
         self.bridge, self.engine = bridge, engine
         self._canon_lock = threading.Lock()  # detection and analysis start together
+        self._detector_state = {"detector": None, "error": None}
+
+    def face_detector_status(self) -> dict:
+        """Which face detector last ran here and the last detector error."""
+        return dict(self._detector_state)
 
     def _canonical(self, video_id, source):
         with self._canon_lock:
@@ -128,12 +137,23 @@ class InferenceProviders:
                 raise ProviderError("media was deleted", retryable=False)
             if any(face.frame_size != (video.width, video.height) for face in faces):
                 raise ProviderError("detector geometry differs from canonical media", retryable=False)
+            names = {face.detector for face in faces if face.detector}
+            self._detector_state = {
+                "detector": ", ".join(sorted(names)) or None,
+                "error": (self.engine.face_detector_status().get("error")
+                          if self.engine is not None and hasattr(self.engine, "face_detector_status")
+                          else None),
+            }
             return faces
-        except ProviderError:
+        except ProviderError as exc:
+            self._detector_state = {"detector": None, "error": exc.message}
             raise
         except Exception as exc:
+            from focus_ml.face_detector import safe_reason
+            reason = safe_reason(getattr(exc, "detail", "") or getattr(exc, "message", "") or "")
+            self._detector_state = {"detector": None, "error": reason or type(exc).__name__}
             raise ProviderError(
-                "real face detection failed; check the model runtime",
+                "face detection failed" + (f": {reason}" if reason else "; check the model runtime"),
                 code=getattr(exc, "code", "PROCESSING_FAILED"),
                 retryable=getattr(exc, "retryable", True),
             ) from exc

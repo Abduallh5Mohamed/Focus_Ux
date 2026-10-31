@@ -267,9 +267,18 @@ def create_app(
 
     @app.get("/healthz")
     def healthz():
+        inference = bridge.status() if bridge else {"mode": settings.inference_mode}
+        status_of = getattr(provider, "face_detector_status", None)
+        if status_of is not None:
+            detector = status_of()
+            inference["face_detector"] = {
+                "detector": detector.get("detector"),
+                "last_error": detector.get("error"),
+                "voice_only_fallback": bool(detector.get("error")) and not detector.get("detector"),
+            }
         return {
             "status": "ok", "dispatcher": bool(dispatcher.lock_acquired),
-            "inference": bridge.status() if bridge else {"mode": settings.inference_mode},
+            "inference": inference,
         }
 
     from .live_routes import add_live_routes

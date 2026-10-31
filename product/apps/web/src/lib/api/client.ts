@@ -245,6 +245,9 @@ export function createHttpApi(options: HttpApiOptions): FocusApi {
         (body) => ({
           ...body,
           faces: (body.faces ?? []).map(normalizeFace),
+          detector: body.detector ?? null,
+          voice_only_fallback: body.voice_only_fallback === true,
+          detector_error: body.detector_error ?? null,
         }),
       );
     },
@@ -504,6 +507,7 @@ export function normalizeBBox(raw: unknown): BBox {
 function normalizeFace(face: FaceCandidate): FaceCandidate {
   return {
     ...face,
+    thumbnail_url: face.thumbnail_url || null,
     bbox: normalizeBBox(face.bbox),
     frame_size: {
       width: Number(face.frame_size?.width ?? 0),

@@ -39,6 +39,7 @@ class DetectedFace:
     timestamp_ms: int = 0
     frame_size: tuple[int, int] = (0, 0)
     thumbnail_bytes: Optional[bytes] = None
+    detector: Optional[str] = None  # which detector found this face
     thumbnail_mime: str = "image/jpeg"
     warnings: list[str] = field(default_factory=list)
 
