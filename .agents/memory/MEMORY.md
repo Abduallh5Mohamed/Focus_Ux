@@ -14,3 +14,4 @@
 - [Speed and final evaluation](speed-final-eval.md) — tooling done, nothing measured on the laptop; decode cache read-only; dropout policy split; limits must be raised together.
 - [Real-weights quirks](real-weights-quirks.md) — level/polarity of TSE outputs, WeSep import shims, voiceprint check mutes 8 kHz output, restarts wipe /tmp.
 - [Overlap production routing](overlap-production.md) — dormant until a real GPU validation; preflight+scripts exist, nothing measured.
+- [Quiet-speaker repair](quiet-speaker-repair.md) — recovery default, continuity scope, worker handshake, unmeasured items.
