@@ -51,6 +51,8 @@ def _subtract(spans, cuts):
 def rank_voices(analysis: dict, visible: list[dict] | None) -> dict:
     """``analysis`` is the stored analysis; ``visible`` the face's on-screen spans
     in ms, or None when visibility could not be measured."""
+    if isinstance(visible, dict) and visible.get('kind') == 'av_sync_v1':
+        return rank_sync(analysis, visible)
     diar = analysis["diarization"]
     overlaps = _merge([[o["start"], o["end"]] for o in diar["overlaps"]])
     seen = _merge([[v["start_ms"] / 1000, v["end_ms"] / 1000] for v in visible or []])
@@ -76,3 +78,43 @@ def rank_voices(analysis: dict, visible: list[dict] | None) -> dict:
         row["suggested"] = row["index"] == suggested
     return {"evidence": "on_screen" if on_screen else "talk_time_only", "candidates": rows,
             "note": SUGGESTION_NOTE}
+
+
+def rank_sync(analysis, evidence):
+    """Compare ASD scores during distinct solo turns. Abstain on all-overlap clips.
+
+    Raw TalkNet scores are logits, not confidence percentages. These thresholds
+    are provisional and must not authorize an irreversible/automatic enrollment.
+    """
+    import math
+    diar=analysis['diarization'];rows=[]
+    cuts=_merge([[o['start'],o['end']] for o in diar['overlaps']])
+    for i,speaker in enumerate(analysis['speakers']):
+        own=_merge([[t['start'],t['end']] for t in diar['turns'] if t['speaker']==speaker['speaker']])
+        solo=_subtract(own,cuts);weighted=0.;seconds=0.;positive=0.
+        for window in evidence.get('windows',[]):
+            value=window.get('score')
+            if not isinstance(value,(int,float)) or not math.isfinite(value):continue
+            a,b=window['start_ms']/1000,window['end_ms']/1000
+            dt=_overlap(solo,[[a,b]])
+            if dt<=0:continue
+            seconds+=dt;weighted+=dt*value;positive+=dt*(value>0)
+        score=weighted/seconds if seconds else None
+        rows.append({'index':i,'talk_s':round(sum(b-a for a,b in own),2),
+            'visible_talk_s':round(seconds,2),'sync_score':score,
+            'positive_fraction':positive/seconds if seconds else 0.,
+            'eligible':bool(speaker.get('usable')) and seconds>=1.5})
+    rows.sort(key=lambda r: -(r['sync_score'] if r['sync_score'] is not None else -1e9))
+    eligible=[r for r in rows if r['eligible']];chosen=None
+    # A single usable voice cannot discriminate identities. Never turn absence
+    # of a competing fingerprint into evidence that the selected face matches.
+    if len(eligible)>=2:
+        a,b=eligible[:2]
+        if a['sync_score']>0 and a['sync_score']-b['sync_score']>=1 and a['positive_fraction']>=.7:
+            chosen=a['index']
+    for rank,row in enumerate(rows,1):
+        row['rank']=rank;row['suggested']=row['index']==chosen
+    note='اقتراح تجريبي من تزامن الوجه والصوت؛ أكّد الهوية بالسماع قبل العزل.'
+    if chosen is None:
+        note='تزامن الوجه والصوت لم يحسم الهوية. التداخل أو نقص عينات مستقلة يمنع الربط التلقائي؛ اختار بالسماع أو ارفع تسجيلًا للشخص وحده.'
+    return {'evidence':'av_sync','candidates':rows,'note':note}

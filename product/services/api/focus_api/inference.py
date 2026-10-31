@@ -118,6 +118,9 @@ class InferenceProviders:
             if self.bridge:
                 self.bridge.ensure_ready()
             canonical = self._canonical(video_id, video_path)
+            if self.settings.audio_only and not self.bridge:
+                from .face_picker import detect_picker_faces
+                return detect_picker_faces(canonical)
             raw = (
                 self.bridge.call(kind="detect", video_id=video_id, video_path=canonical)
                 if self.bridge else self.engine.detect(video_id, canonical)
@@ -220,6 +223,9 @@ class InferenceProviders:
         def run():
             video = self._live_video(video_id)
             canonical = self._canonical(video_id, video.canonical_path or video.original_path)
+            if self.settings.audio_only and not self.bridge and os.environ.get('FOCUS_TALKNET_PYTHON'):
+                from .av_sync import score_face
+                return score_face(canonical, self.audio_path(video_id), face, self.settings.tmp_dir)
             payload = {"bbox": list(face.bbox), "frame_size": list(face.frame_size)}
             if self.bridge:
                 raw = self.bridge.call(kind="visibility", video_id=video_id, video_path=canonical,

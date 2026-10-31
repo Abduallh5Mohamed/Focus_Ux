@@ -213,7 +213,7 @@ export interface SuggestionCandidate {
 export interface SuggestionResponse {
   status: 'pending' | 'ready' | 'failed';
   candidates: SuggestionCandidate[];
-  evidence: 'on_screen' | 'talk_time_only' | null;
+  evidence: 'on_screen' | 'talk_time_only' | 'av_sync' | null;
   /** States that this is a suggestion only. */
   note: string;
   notice?: string;

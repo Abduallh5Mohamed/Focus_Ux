@@ -572,7 +572,10 @@ class ApiService:
         if self.repo.get_face(video_id, face_id) is None:
             raise face_not_found("selected face candidate is not available")
         record = self.repo.get_suggestion(video_id, face_id)
-        if record is None or record["status"] == "failed":
+        import os
+        outdated = (record is not None and record['status'] == 'ready' and
+                    os.environ.get('FOCUS_TALKNET_PYTHON') and not isinstance(record['visible'], dict))
+        if record is None or record["status"] == "failed" or outdated:
             self.repo.set_suggestion(video_id, face_id, "pending")
             self.dispatcher.enqueue_suggestion(video_id, face_id)
             record = {"status": "pending"}
