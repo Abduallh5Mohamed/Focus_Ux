@@ -6,8 +6,8 @@
 Both variants run the whole dataset in this process, one after the other (baseline first);
 repeat with the order swapped to expose warm-up or thermal bias. The decision is
 ``focus_eval.gate``: quality must not drop on ANY target, every clip needs its own RTF,
-the RTF must be <= the target and faster than the baseline's. Run on the target NVIDIA GPU;
-anywhere else the verdict says nothing about that GPU.
+the RTF must be <= the target and faster than the baseline's. Run on the RTX 3050 laptop;
+anywhere else the verdict says nothing about the laptop.
 """
 from __future__ import annotations
 

@@ -119,11 +119,9 @@ class LocalEngine:
         with offline_inference():
             return self.audio.enroll_file(audio_path)
 
-    def isolate_audio(self, audio_path, voiceprint, diarization, job_dir, on_progress=None,
-                      reference_audio=None):
+    def isolate_audio(self, audio_path, voiceprint, diarization, job_dir, on_progress=None):
         with offline_inference():
-            return self.audio.isolate(audio_path, voiceprint, diarization, job_dir, on_progress,
-                                      reference_audio=reference_audio)
+            return self.audio.isolate(audio_path, voiceprint, diarization, job_dir, on_progress)
 
     def face_visibility(self, video_path, bbox, frame_size):
         """On-screen spans of the chosen face; used only to rank voice candidates."""

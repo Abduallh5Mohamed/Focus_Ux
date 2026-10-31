@@ -1,10 +1,10 @@
 """The six extraction candidates behind the one interface (see ``base``).
 
 Call shapes follow each project's public inference code (links in
-``docs/OVERLAP_EXTRACTION.md``). The three target-conditioned candidates (WeSep,
-USEF-TSE, SpEx+) have been run on real weights on CPU (see ``product/experiments/real_tse``);
-the three blind separators have not. Any candidate that cannot run is reported as
-blocked, with the concrete error as evidence.
+``docs/OVERLAP_EXTRACTION.md``). They have NOT been executed against real
+weights in the Replit workspace (no GPU, no torch there): run the bake-off on
+the Windows laptop, which reports any candidate that cannot run as blocked,
+with the concrete error as evidence.
 """
 from __future__ import annotations
 
@@ -47,34 +47,13 @@ def _load_module(path: Path, alias: str):
     return mod
 
 
-# The USEF checkpoint is a pickle (it contains numpy objects), so loading it needs weights_only=False, which can
-# run code. It is therefore loaded only when its SHA-256 equals the one reviewed here (the file fetched from
-# ZBang/USEF-TSE revision 6e2bd14dd3a2d4fcb6abd246cce5f91538c08dbf).
-USEF_CHECKPOINT_SHA256 = "a0515c8c90eee2b2b39cc02eca8f3cc4f2749660131e60fbee3224e97cb193b9"
-
-
-def verify_sha256(path: Path, expected: str) -> None:
-    import hashlib
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for block in iter(lambda: f.read(1 << 20), b""):
-            h.update(block)
-    if h.hexdigest() != expected:
-        raise BlockedError(f"{path.name} is not the reviewed checkpoint, so it is not loaded (unsafe pickle); "
-                           + W.SETUP_HINT, "broken_code", f"sha256 {h.hexdigest()} != expected {expected}")
-
-
-def _strip_state(obj, prefix: str = "") -> dict:
-    """A checkpoint's weights, whichever key the trainer used, without 'module.'
-    (and without ``prefix``, e.g. SpEx+'s ``sep_network.`` wrapper)."""
+def _strip_state(obj) -> dict:
+    """A checkpoint's weights, whichever key the trainer used, without 'module.'."""
     for key in ("model_state_dict", "model", "state_dict"):
         if isinstance(obj, dict) and key in obj and isinstance(obj[key], dict):
             obj = obj[key]
             break
-    out = {k.replace("module.", "", 1): v for k, v in obj.items()}
-    if prefix:
-        out = {(k[len(prefix):] if k.startswith(prefix) else k): v for k, v in out.items()}
-    return out
+    return {k.replace("module.", "", 1): v for k, v in obj.items()}
 
 
 def _namespace(d):
@@ -83,64 +62,12 @@ def _namespace(d):
     return d
 
 
-def match_to_mixture(est, mixture) -> np.ndarray:
-    """Give ``est`` the polarity and level it has inside ``mixture``: scale by <est, mix> / <est, est>
-    (the least-squares share of the mixture that is est). The three real checkpoints are trained with
-    scale-invariant (SI-SDR) losses, so their output level and even polarity are arbitrary: SpEx+ peaks
-    at ~1e5 on a +-0.6 mixture, USEF-TSE came out inverted and 3x too loud. Without this the hybrid
-    would cross-fade a polarity-flipped signal into the target's own audio. Uses only the mixture, never
-    a reference; the same step is applied to all three candidates."""
-    est = np.asarray(est, dtype=np.float32)
-    denom = float(np.dot(est.astype(np.float64), est.astype(np.float64)))
-    if denom < 1e-12:
-        return est
-    return (est * (float(np.dot(est.astype(np.float64), np.asarray(mixture, np.float64))) / denom)).astype(np.float32)
-
-
 class _Stateful:
     home: Path | None = None
     _model = None
 
     def _unload(self):
         self._model = None
-
-
-def _shim_optional_frontends() -> None:
-    """wespeaker's frontend package imports the s3prl, whisper and w2v-bert (transformers) frontends
-    eagerly, but only those frontends (not used by the BSRNN extractor) need them,
-    and they do not import under the newer torch/torchaudio or Python 3.12. When a
-    real package cannot be imported, a stub that raises on use takes its place;
-    the BSRNN path never touches it."""
-    import types
-    W.activate_overlap_site()
-    try:
-        import setuptools  # noqa: F401  -- gives Python 3.12 the distutils s3prl wants
-    except ImportError:
-        pass
-
-    def _unavailable(*_a, **_k):
-        raise RuntimeError("this wespeaker frontend is not available in this environment")
-
-    def _getattr(name):
-        if name.startswith("__"):
-            raise AttributeError(name)
-        return _unavailable
-    for top, subs in (("s3prl", ("s3prl.nn",)), ("whisper", ()), ("transformers", ()), ("peft", ())):
-        try:
-            for m in (top, *subs):
-                importlib.import_module(m)
-            continue
-        except Exception:
-            for k in [k for k in sys.modules if k == top or k.startswith(top + ".")]:
-                del sys.modules[k]
-        pkg = types.ModuleType(top)
-        pkg.__getattr__ = _getattr          # any public attribute raises on use
-        sys.modules[top] = pkg
-        for m in subs:
-            sub = types.ModuleType(m)
-            sub.__getattr__ = _getattr
-            sys.modules[m] = sub
-            setattr(pkg, m.split(".")[-1], sub)
 
 
 # ---------------------------------------------------------------- 1. WeSep
@@ -166,12 +93,6 @@ class WesepBsrnn(_Stateful, OverlapExtractor):
         code = str(W.code_dir(self.info.name, self.home))
         if code not in sys.path:
             sys.path.append(code)
-        W.activate_overlap_site()
-        try:                  # wespeaker's s3prl frontend imports distutils (removed in Python 3.12);
-            import setuptools  # noqa: F401  -- importing setuptools first provides it
-        except ImportError:
-            pass
-        _shim_optional_frontends()
         wesep = _import("wesep", self.info.title)
         m = wesep.load_model_local(str(W.weights_dir(self.info.name, self.home)))
         m.set_resample_rate(SAMPLE_RATE)
@@ -181,17 +102,18 @@ class WesepBsrnn(_Stateful, OverlapExtractor):
         self._model = m
 
     def _extract_batch(self, windows, voiceprint, enrollment):
-        # The in-memory entry point: the file one needs torchaudio.load, which newer
-        # torchaudio only provides with TorchCodec (not installed). Same pre/post-processing.
-        import torch
-        enroll = torch.from_numpy(trim_enrollment(enrollment)).reshape(1, -1)
+        enroll = trim_enrollment(enrollment)
         outs = []
-        for w in windows:
-            mix = torch.from_numpy(w).reshape(1, -1)
-            speech = self._guarded(lambda: self._model.extract_speech_from_pcm(mix, SAMPLE_RATE, enroll, SAMPLE_RATE))
-            if speech is None:
-                raise BlockedError("the model returned no audio", "broken_code", "extract_speech_from_pcm -> None")
-            outs.append(match_to_mixture(speech[0].float().cpu().numpy().reshape(-1), w))
+        with tempfile.TemporaryDirectory(prefix="focus-wesep-") as tmp:
+            en = os.path.join(tmp, "enroll.wav")
+            write_wav(en, enroll, SAMPLE_RATE)
+            for i, w in enumerate(windows):
+                mix = os.path.join(tmp, f"mix{i}.wav")
+                write_wav(mix, w, SAMPLE_RATE)
+                speech = self._guarded(lambda: self._model.extract_speech(mix, en))
+                if speech is None:
+                    raise BlockedError("the model returned no audio", "broken_code", "extract_speech -> None")
+                outs.append(np.asarray(speech[0], dtype=np.float32).reshape(-1))
         return outs
 
 
@@ -220,14 +142,13 @@ class UsefTse(_Stateful, OverlapExtractor):
             sys.path.insert(0, code)         # the config refers to models.model_USEF_SepFormer
         hp = _import("hyperpyyaml", self.info.title)
         wdir = W.weights_dir(self.info.name, self.home)
-        verify_sha256(wdir / "temp_best.pth.tar", USEF_CHECKPOINT_SHA256)
         try:
             with open(wdir / "config.yaml", encoding="utf-8") as f:
                 cfg = hp.load_hyperpyyaml(f)
             model = cfg["modules"]["masknet"]
-            state = torch.load(wdir / "temp_best.pth.tar", map_location="cpu", weights_only=False)   # hash-verified above
+            state = torch.load(wdir / "temp_best.pth.tar", map_location="cpu")
             model.load_state_dict(_strip_state(state))
-        except Exception as exc:     # hyperpyyaml wraps import errors in its own type
+        except (ImportError, KeyError, RuntimeError, OSError) as exc:
             raise BlockedError("the USEF-TSE model could not be built from its config and code",
                                "broken_code", f"{type(exc).__name__}: {exc}") from exc
         self._model = model.to(self.device).eval()
@@ -250,7 +171,7 @@ class UsefTse(_Stateful, OverlapExtractor):
                     return self._model(m, a).float().cpu().numpy().reshape(len(idxs), -1)
             est = self._guarded(run)
             for j, i in enumerate(idxs):
-                res[i] = resample(match_to_mixture(est[j], mix[j]), self.info.model_rate, SAMPLE_RATE)
+                res[i] = resample(est[j], self.info.model_rate, SAMPLE_RATE)
         return [res[i] for i in range(len(windows))]
 
 
@@ -264,9 +185,7 @@ class SpExPlus(_Stateful, OverlapExtractor):
         notes="Trained on clean English 2-speaker WSJ0-2mix only: weaker on noise, Arabic and 3+ voices "
               "is expected. The audio-only checkpoint lives in the training code, not the clearvoice "
               "inference package, so the model class is imported from the pinned source file.",
-        fp16_note="fp16 autocast with fp32 fallback. Output level and polarity are arbitrary "
-                  "(scale-invariant training); matched to the mixture by least squares.",
-        vram_base_mib=500.0, vram_per_window_s_mib=50.0)
+        fp16_note="fp16 autocast with fp32 fallback.", vram_base_mib=500.0, vram_per_window_s_mib=50.0)
 
     def __init__(self, device="cpu", fp16=True, home=None):
         super().__init__(device, fp16)
@@ -283,8 +202,7 @@ class SpExPlus(_Stateful, OverlapExtractor):
         try:
             cfg = _namespace(yaml.safe_load((wdir / "config.yaml").read_text("utf-8")))
             model = mod.SpEx_plus(cfg)
-            model.load_state_dict(_strip_state(torch.load(wdir / "last_best_checkpoint.pt", map_location="cpu"),
-                                              "sep_network."))
+            model.load_state_dict(_strip_state(torch.load(wdir / "last_best_checkpoint.pt", map_location="cpu")))
         except (AttributeError, KeyError, RuntimeError, OSError) as exc:
             raise BlockedError("the SpEx+ model could not be built from its config and checkpoint",
                                "broken_code", f"{type(exc).__name__}: {exc}") from exc
@@ -308,7 +226,7 @@ class SpExPlus(_Stateful, OverlapExtractor):
                     return self._model(m, a, alen)[0].float().cpu().numpy().reshape(len(idxs), -1)
             est = self._guarded(run)
             for j, i in enumerate(idxs):
-                res[i] = resample(match_to_mixture(est[j], mix[j]), self.info.model_rate, SAMPLE_RATE)
+                res[i] = resample(est[j], self.info.model_rate, SAMPLE_RATE)
         return [res[i] for i in range(len(windows))]
 
 

@@ -473,7 +473,7 @@ class LiveManager:
         if job.status is JobStatus.COMPLETED and job.audio_status is AudioStatus.READY:
             c.state, c.wav_path = "ready", job.wav_path
             s.anchor = tuple(face.bbox)
-            c.warnings.extend(w for w in job.audio_warnings if not w.startswith("routing: "))
+            c.warnings.extend(job.audio_warnings)
         else:
             c.state = "failed"
             e = job.error

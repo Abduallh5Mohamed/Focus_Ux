@@ -9,7 +9,7 @@ that file to set the upload limit and to word its refusal message.
       --limits-out speed_limits.json
   python product/tools/profile_pipeline.py --make-long clip.wav --seconds 600 --out long10.wav
 
-Nothing here is a result until it has been run on the target NVIDIA GPU; the
+Nothing here is a result until it has been run on the RTX 3050 laptop; the
 file records the device so a CPU or other-GPU profile is never mistaken for one.
 """
 from __future__ import annotations
@@ -82,15 +82,15 @@ def profile_clips(engine, paths: list[str], *, device: str = "cpu", prefetch: bo
 def limits_from_runs(runs: list[dict], env: dict, rtf_target: float, ram_budget_mib: float | None = None) -> dict:
     measured = list(runs)   # every attempted clip counts, failed ones included
     total = env.get("gpu_total_vram_mib")
-    on_target = bool(env.get("gpu_name")) and bool(total)   # any real GPU with a VRAM reading
+    on_target = "3050" in (env.get("gpu_name") or "") and bool(total)
     res = supported_audio_seconds(measured, rtf_target, vram_budget_mib=total * 0.9 if total else None,
                                   ram_budget_mib=ram_budget_mib)
     if not runs:
         res["supported_audio_s"] = None
         res["not_installable_reason"] = "no clips were profiled"
-    elif not on_target:   # only a run on a real GPU can raise the limit
+    elif not on_target:   # only a run on the demo laptop can raise the limit
         res["supported_audio_s"] = None
-        res["not_installable_reason"] = "not measured on a real NVIDIA GPU with VRAM readings"
+        res["not_installable_reason"] = "not measured on the RTX 3050 demo laptop with VRAM readings"
     return {"format": SPEED_LIMITS_FORMAT, **res, "measured_on_target_laptop": on_target,
             "device": env.get("gpu_name") or "cpu only",
             "measured_at": time.strftime("%Y-%m-%d"), "runs": [
@@ -135,7 +135,7 @@ def main(argv=None) -> int:
     runs = result["runs"]
     env = environment_info()
     report = {"environment": env, "settings": settings, "warmup": a.warmup, "runs": runs, "audio_decodes": result["audio_decodes"],
-              "measured_on_target_laptop": bool(env.get("gpu_name"))}
+              "measured_on_target_laptop": "3050" in (env.get("gpu_name") or "")}
     Path(a.out).write_text(json.dumps(report, indent=1), encoding="utf-8")
     if a.limits_out:
         Path(a.limits_out).write_text(json.dumps(limits_from_runs(runs, env, a.rtf_target), indent=1), encoding="utf-8")

@@ -55,7 +55,7 @@ def test_visibility_independence_checks_video_blacked_out_video_and_audio_only(d
 def test_report_says_when_not_measured_on_the_laptop(dataset, tmp_path):
     rep = final_eval.run_final(str(dataset), str(tmp_path / "o"), make_engine(), settings(visibility_check=False))
     assert rep["measured_on_target_laptop"] is False
-    assert "NOT measured on an NVIDIA GPU" in rep["headline_warning"]
+    assert "NOT measured on the RTX 3050" in rep["headline_warning"]
     assert rep["metrics"]["visibility_independence"]["status"] == "not_run"
 
 

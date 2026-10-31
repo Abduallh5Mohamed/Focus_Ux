@@ -30,6 +30,7 @@ from .voice_metrics import eer, far_frr, gate_metrics, to_frames
 from .voice_mix import activity_segments
 
 REPORT_FORMAT = "focus-final-report/1"
+TARGET_DEVICE_MARKER = "3050"            # the demo laptop's GPU
 LEAVES_FRAME_TAG = "face_disappears"
 LIMITATION_TAGS = ("similar_voices", "whisper", "shout", "noise", "reverb", "no_solo_enrollment")
 
@@ -170,13 +171,13 @@ def build_report(ds: Dataset, run_dir: str | Path, *, margin_db: float = DEFAULT
     device_name = (env.get("gpu_name") or "")
     profile = meta.get("profile_by_clip") or {}
     settings = meta.get("settings")
-    on_target = bool(device_name)          # a real GPU was used; no particular model is assumed
+    on_target = TARGET_DEVICE_MARKER in device_name
     manifest_sha = hashlib.sha256((ds.root / "manifest.json").read_bytes()).hexdigest()
     return {
         "format": REPORT_FORMAT, "schema_version": SCHEMA_VERSION, "evaluation_policy": EVALUATION_POLICY,
         "measured_on_target_laptop": on_target,
         "headline_warning": None if on_target else (
-            "NOT measured on an NVIDIA GPU (device: %s). Speed and VRAM figures do not count as "
+            "NOT measured on the RTX 3050 laptop (device: %s). Speed and VRAM figures do not count as "
             "met targets." % (device_name or "no GPU / unknown")),
         "reproducibility": {
             "dataset_id": ds.dataset_id, "dataset_fingerprint": ds.fingerprint(), "manifest_sha256": manifest_sha,

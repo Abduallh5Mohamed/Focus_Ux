@@ -80,8 +80,7 @@ def test_enroll_range_refuses_short_and_mixed_ranges(audio):
 
 
 def test_isolate_keeps_target_ducks_others_and_labels_uncertain(audio, tmp_path):
-    from focus_ml.voice.extractor import DuckedBaseline
-    e = AudioOnlyEngine(FakeDiarizer(TURNS), FakeEmbedder(), extractor=DuckedBaseline())
+    e = engine()
     analysis = e.analyze(audio)
     vp = next(s for s in analysis["speakers"] if s["speaker"] == "A")["voiceprint"]
     result = e.isolate(audio, vp, analysis["diarization"], str(tmp_path))

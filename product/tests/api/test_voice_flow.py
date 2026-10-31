@@ -324,41 +324,30 @@ def test_audio_only_keeps_one_placeholder_when_face_detection_fails(make_api, tm
     assert enroll.status_code == 202 and enroll.json()["status"] == "ready"
 
 
-def test_job_response_shows_the_routing_summary_and_not_its_storage_marker(audio_api):
-    import json
+def test_audio_only_keeps_one_placeholder_when_face_detection_fails(make_api, tmp_path):
+    """No lip models on the machine must not dead-end the picker.
 
-    summary = {"extractor_requested": "wesep_bsrnn", "extractor_ran": True, "overlap_extraction": "ran",
-               "overlap_seconds": 3.0, "pieces_extracted": 1, "pieces_muted": 0, "fallback_used": False,
-               "isolation_claim": "strict_isolation"}
+    The audio-only engine identifies the speaker by voiceprint, so a failed face
+    detection only costs the (optional) lip suggestion. Without this fallback the
+    UI would show an empty candidate list and the user could never enroll.
+    """
+    class NoFaces(FakeAudioProvider):
+        def detect(self, *, video_id, video_path):
+            raise ProviderError("real face detection failed", retryable=True)
 
-    class Runner(FakeAudioOnlyRunner):
-        def extract(self, job, job_dir, on_progress):
-            result = super().extract(job, job_dir, on_progress)
-            result.warnings = list(result.warnings) + ["routing: " + json.dumps(summary)]
-            return result
-
-    api, _p, video_id, token, face = audio_api(runner=Runner())
-    eid = _post(api, f"/videos/{video_id}/enrollments", token,
-                json={"face_id": face, "source": "voice", "voice_id": "voice-0"}).json()["enrollment_id"]
-    job = _post(api, "/jobs", token, json={"video_id": video_id, "enrollment_id": eid, "client_request_id": "r"})
+    api = make_api(provider=NoFaces(), runner=FakeAudioOnlyRunner(),
+                   settings=make_settings(tmp_path / "nofaces", isolation_engine="audio_only"))
+    video_id, token, _ = api.upload_ok()
     api.drain()
-    result = api.get_job(job.json()["job_id"], token).json()["result"]
-    assert result["routing"] == summary
-    assert not any(w.startswith("routing:") for w in result.get("warnings", []))
 
+    body = api.get_faces(video_id, token).json()
+    assert body["status"] == "ready"
+    assert [f["face_id"] for f in body["faces"]] == ["audio-only"]
+    assert body["faces"][0]["thumbnail_url"].endswith("/audio-only/thumbnail")
 
-def test_stored_reference_audio_is_deleted_with_the_voice_data(audio_api):
-    class WithReference(FakeAudioProvider):
-        def enroll_file(self, *, video_id, wav_path):
-            result = super().enroll_file(video_id=video_id, wav_path=wav_path)
-            return {**result, "reference_wav_b64": "UklGRg=="}      # stand-in bytes, not real audio
-
-    api, _p, video_id, token, face = audio_api(provider=WithReference())
-    r = api.client.post(f"/videos/{video_id}/enrollments/upload", headers=api.auth(token),
-                        data={"face_id": face}, files={"file": ("me.wav", _wav(6), "audio/wav")})
-    api.drain()
-    eid = r.json()["enrollment_id"]
-    assert api.repo.get_enrollment(eid)["voiceprint"]["reference_wav_b64"] == "UklGRg=="
-    assert not list(api.settings.media_dir.glob(f"{video_id}.voice-*"))
-    api.repo.delete_voice_data(video_id)
-    assert api.repo.get_enrollment(eid) is None
+    # ...and the flow still reaches an enrollment with that placeholder.
+    analysis = _get(api, f"/videos/{video_id}/analysis", token).json()
+    usable = next(v for v in analysis["voices"] if v["usable"])
+    enroll = _post(api, f"/videos/{video_id}/enrollments", token,
+                   json={"face_id": "audio-only", "source": "voice", "voice_id": usable["voice_id"]})
+    assert enroll.status_code == 202 and enroll.json()["status"] == "ready"

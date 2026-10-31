@@ -24,31 +24,6 @@ sys.path[:0] = [str(ROOT / "product" / "packages" / "eval"), str(ROOT / "product
 
 SR = 16000
 ENROLL_S = 12
-EXPERIMENT_S = 10.0       # length of every mix in the "experiment" layout
-
-
-def experiment_plan(n_overlap: int, scenario: str, target: str, others: list[str]) -> list[dict]:
-    """~10 s mixes. ``full``: every speaker talks the whole time (fully overlapped).
-    ``partial``: a conversational timeline with solo turns, 2-person and (for 3) 3-person overlap."""
-    if scenario == "full":
-        return [{"speaker": s, "start": 0.0, "length": EXPERIMENT_S} for s in [target, *others[:n_overlap - 1]]]
-    if scenario != "partial":
-        raise ValueError(f"unknown scenario {scenario!r}")
-    if n_overlap == 2:
-        return [{"speaker": target, "start": 0.0, "length": 5.0},
-                {"speaker": others[0], "start": 2.5, "length": 5.0},
-                {"speaker": target, "start": 8.0, "length": 2.0}]
-    return [{"speaker": target, "start": 0.0, "length": 5.0},
-            {"speaker": others[0], "start": 2.0, "length": 5.0},
-            {"speaker": others[1], "start": 3.0, "length": 5.0},
-            {"speaker": target, "start": 8.5, "length": 1.5}]
-
-
-def experiment_grid(replicates: int = 1) -> list[dict]:
-    """2- and 3-speaker groups x full/partial overlap x target -6/0/+6 dB, no noise."""
-    return [{"n_overlap": n, "scenario": sc, "target_rel_db": g, "snr_db": None}
-            for n in (2, 3) for sc in ("full", "partial") for g in (-6.0, 0.0, 6.0)
-            for _ in range(replicates)]
 
 
 def _noise_bank(noise_dir: Path | None, load):
@@ -61,7 +36,7 @@ def _noise_bank(noise_dir: Path | None, load):
 
 
 def build(solo_dir: Path, out: Path, language: str, count: int | None, noise_dir: Path | None,
-          seed: int = 0, layout: str = "grid", replicates: int = 1) -> list[dict]:
+          seed: int = 0) -> list[dict]:
     from focus_eval.audio import load_audio
     from focus_eval.overlap_mix import condition_grid, regions_from_plan, scenario_plan
     from focus_eval.voice_mix import build_mix
@@ -85,13 +60,11 @@ def build(solo_dir: Path, out: Path, language: str, count: int | None, noise_dir
     rng = np.random.default_rng(seed)
     names = sorted(audio)
     metas = []
-    conds = experiment_grid(replicates) if layout == "experiment" else condition_grid(count)
-    for i, cond in enumerate(conds):
+    for i, cond in enumerate(condition_grid(count)):
         target = names[i % len(names)]
         pool = [s for s in names if s != target]
         others = [str(s) for s in rng.choice(pool, cond["n_overlap"] - 1, replace=False)]
-        plan = (experiment_plan(cond["n_overlap"], cond["scenario"], target, others)
-                if layout == "experiment" else scenario_plan(cond["n_overlap"], target, others))
+        plan = scenario_plan(cond["n_overlap"], target, others)
         clips = {}
         for s in {target, *others}:
             need = int(SR * sum(p["length"] for p in plan if p["speaker"] == s))
@@ -119,8 +92,7 @@ def build(solo_dir: Path, out: Path, language: str, count: int | None, noise_dir
         metas.append(meta)
     (out / "set.json").write_text(json.dumps({
         "language": language, "noise_dir": str(noise_dir) if noise_dir else None, "mixes": len(metas),
-        "region_truth": "turn-level, from the mixing plan (oracle)", "seed": seed,
-        "layout": layout, "replicates": replicates}, indent=1), encoding="utf-8")
+        "region_truth": "turn-level, from the mixing plan (oracle)", "seed": seed}, indent=1), encoding="utf-8")
     return metas
 
 
@@ -133,12 +105,8 @@ def main():
     ap.add_argument("--noise-dir", type=Path)
     ap.add_argument("--count", type=int, help="subset size (default: every condition, 24 mixes)")
     ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--layout", choices=("grid", "experiment"), default="grid",
-                    help="grid: the original 24-mix noise grid; experiment: ~10 s clean mixes, 2- and 3-speaker "
-                         "groups x full/partial overlap x target -6/0/+6 dB")
-    ap.add_argument("--replicates", type=int, default=1, help="mixes per experiment condition")
     a = ap.parse_args()
-    metas = build(a.solo_dir, a.out, a.language, a.count, a.noise_dir, a.seed, a.layout, a.replicates)
+    metas = build(a.solo_dir, a.out, a.language, a.count, a.noise_dir, a.seed)
     print(f"Built {len(metas)} overlap mixes in {a.out}")
 
 

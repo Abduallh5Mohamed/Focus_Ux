@@ -59,26 +59,18 @@ def extractor_status() -> dict:
     return candidate_status()
 
 
-# The audio-only pipeline loads one model at a time and was sized for GPUs of about this much memory.
-# It is a VRAM amount, not a GPU model; set FOCUS_MIN_VRAM_MIB to change it for your machine.
-DEFAULT_MIN_VRAM_MIB = 3500
-
-
-def collect(url: str | None = None, local_api: bool = False, min_vram_mib: int | None = None) -> dict:
-    import os
-    if min_vram_mib is None:
-        min_vram_mib = int(os.environ.get("FOCUS_MIN_VRAM_MIB") or DEFAULT_MIN_VRAM_MIB)
+def collect(url: str | None = None, local_api: bool = False, min_vram_mib: int = 3500) -> dict:
     gpu = gpu_info()
     weights = weight_status()
     checks = {
         "gpu_found": bool(gpu["gpu"]),
         "cuda_usable": gpu["cuda_available"],
-        "vram_sufficient": bool(gpu["vram_mib"] and gpu["vram_mib"] >= min_vram_mib),
+        "vram_fits_4gb_class": bool(gpu["vram_mib"] and gpu["vram_mib"] >= min_vram_mib),
         "weights_present": all(weights.values()),
     }
     conn = worker_connection(url, local_api)
     extractors = extractor_status()
-    return {"python": sys.version.split()[0], "vram_required_mib": min_vram_mib, "voice_home": str(voice_home()), "gpu": gpu,
+    return {"python": sys.version.split()[0], "voice_home": str(voice_home()), "gpu": gpu,
             "weights": weights, "worker": conn,
             "overlap_extractors": extractors,
             "overlap_extractors_ready": sorted(n for n, v in extractors.items() if v["ready"]), "checks": checks,

@@ -1,6 +1,6 @@
 """One-time setup of the extra isolation engines (ClearerVoice-Studio, Apache-2.0).
 
-Run with the Python that has PyTorch (the .cmd launchers find it; or set FOCUS_PYTHON). Nothing in that environment or
+Run with the ORIGINAL Python (A:\\focus\\.venv). Nothing in that environment or
 in its model cache is changed: packages and weights go to a separate folder
 (%LOCALAPPDATA%\\FocusClearerVoice) after an explicit "yes".
 

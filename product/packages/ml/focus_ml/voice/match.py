@@ -34,7 +34,6 @@ class MatchConfig:
     other_threshold: float = 0.3581
     min_region_s: float = MIN_EMBED_S
     max_chunk_s: float = 3.0
-    short_join_gap_s: float = 0.3   # a too-short turn touching a confirmed target turn of the same speaker
 
     def __post_init__(self):
         if self.other_threshold > self.target_threshold:
@@ -85,21 +84,4 @@ def classify_regions(samples, diar: Diarization, voiceprint: Voiceprint, embedde
         score = cosine(voiceprint.vector, vec)
         label = classify_score(score, cfg)
         regions.append(LabelledRegion(seg.start, seg.end, label, seg.speaker, score, "voice_match"))
-    return sorted(_join_short_turns(regions, cfg), key=lambda r: (r.start, r.end))
-
-
-def _join_short_turns(regions: list[LabelledRegion], cfg: MatchConfig) -> list[LabelledRegion]:
-    """A turn shorter than the embedder can measure is no evidence against the target. When it touches
-    (within ``short_join_gap_s``) a confirmed target region carrying the SAME diarization label, it
-    joins the target instead of staying uncertain: fragmented speech of the selected voice is not lost.
-    Anything else stays uncertain (and may still be recovered by an extractor)."""
-    anchors = [r for r in regions if r.label == TARGET and r.reason == "voice_match" and r.speaker]
-    out = []
-    for r in regions:
-        if r.reason == "too_short" and r.speaker and any(
-                a.speaker == r.speaker and (0 <= r.start - a.end <= cfg.short_join_gap_s
-                                            or 0 <= a.start - r.end <= cfg.short_join_gap_s)
-                for a in anchors):
-            r = LabelledRegion(r.start, r.end, TARGET, r.speaker, None, "short_turn_joined_to_target")
-        out.append(r)
-    return out
+    return sorted(regions, key=lambda r: (r.start, r.end))

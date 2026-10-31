@@ -2,7 +2,7 @@
 
 Loads the original Dolphin models once and builds each isolation engine on top
 of them. Same offline rules as the worker: no downloads, original environment
-and caches read-only. Run with the Python that has PyTorch (see focus_env.cmd).
+and caches read-only. Run with the original Python (A:\\focus\\.venv).
 """
 from __future__ import annotations
 
@@ -20,12 +20,15 @@ CLEARERVOICE_DIR = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "FocusCle
 
 
 class Harness:
-    def __init__(self, focus: str | None = None):
-        from focus_ml.local_paths import focus_home, model_environment
-        settings = model_environment(focus_home(focus))
+    def __init__(self, focus: str):
+        focus = Path(focus).resolve()
         clearervoice = Path(os.environ.get("FOCUS_CLEARERVOICE_DIR") or CLEARERVOICE_DIR)
         os.environ.update({
-            **settings, "FOCUS_CLEARERVOICE_DIR": str(clearervoice),
+            "HF_HOME": str(focus / "cache" / "hf"), "TORCH_HOME": str(focus / "cache" / "torch"),
+            "FOCUS_MODEL_SOURCE": str(focus / "Dolphin"),
+            "FOCUS_MODEL_CACHE": str(focus / "cache" / "hf"),
+            "FOCUS_CLEARERVOICE_DIR": str(clearervoice),
+            "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1",
         })
         sys.path.append(str(clearervoice / "site"))
         from focus_ml.config import AdapterConfig

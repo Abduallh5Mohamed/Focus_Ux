@@ -108,11 +108,11 @@ def test_build_extractor_defaults_to_ducked_and_reads_the_environment():
         build_extractor(env={"FOCUS_VOICE_EXTRACTOR": "magic"})
 
 
-def test_audio_only_engine_accepts_the_ducked_extractor_explicitly():
+def test_audio_only_engine_defaults_to_the_ducked_extractor():
     from focus_ml.voice.engine import AudioOnlyEngine
     from fakes import FakeDiarizer, FakeEmbedder
 
-    engine = AudioOnlyEngine(FakeDiarizer([]), FakeEmbedder(), extractor=build_extractor(env={}))
+    engine = AudioOnlyEngine(FakeDiarizer([]), FakeEmbedder())
     assert engine.extractor.name == "ducked_baseline"
     assert engine.extractor.params() == {"floor_db": DEFAULT_FLOOR_DB, "fade_ms": 30.0,
                                          "bridge_ms": 250.0}

@@ -55,7 +55,7 @@ def main():
                                clearervoice_dir=clearer)
 
     basis = {"data": "synthetic mixes from solo recordings", "device": device, "regions": "oracle (ground truth)",
-             "caveat": "Only an Egyptian-Arabic set run on the target NVIDIA GPU counts as the acceptance measurement."}
+             "caveat": "Only an Egyptian-Arabic set run on the RTX 3050 counts as the acceptance measurement."}
     cfg = HybridConfig(vram_budget_mib=a.vram_budget_mib, batch_size=a.batch_size)
     report = run_bakeoff(a.set, a.out, a.candidates, build, embedder, basis, INFO, cfg, a.real_dir,
                          max_mixes=a.max_mixes)

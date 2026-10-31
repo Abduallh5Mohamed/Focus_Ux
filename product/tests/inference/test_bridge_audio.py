@@ -182,8 +182,7 @@ def test_isolate_needs_regions_first_then_accepts_a_three_minute_wav(remote):
     assert wrong_engine.status_code == 400
     assert client.post(url + "/audio", headers=headers, content=wav_bytes(100)).status_code == 400
     assert client.post(url + "/audio", headers=headers, content=wav_bytes(180)).status_code == 200
-    data, duration, engine, regions, routing = future.result(5)
-    assert routing is None
+    data, duration, engine, regions = future.result(5)
     assert (duration, engine, len(regions)) == (180_000, "audio_only", 2)
     pool.shutdown()
 

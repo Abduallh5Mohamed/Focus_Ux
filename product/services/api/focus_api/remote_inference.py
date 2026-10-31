@@ -53,21 +53,17 @@ class RemoteTask:
     payload: dict | None = None
     task_id: str = field(default_factory=lambda: uuid.uuid4().hex)
     claimed: bool = False
-    last_contact: float = 0.0   # monotonic time of the worker's last request about this task
     finished: bool = False
     result: object = None
     error: ProviderError | None = None
     regions: list | None = None
-    routing: dict | None = None
 
 
 class RemoteBridge:
-    def __init__(self, token: str, repo, *, timeout_s=900.0, max_audio_s=15.0,
-                 offline_after_s=60.0, silent_after_s=None):
+    def __init__(self, token: str, repo, *, timeout_s=900.0, max_audio_s=15.0):
         if len(token) < 32:
             raise ValueError("FOCUS_WORKER_TOKEN must contain at least 32 characters")
         self._token = token
-        self.offline_after_s, self.silent_after_s = offline_after_s, silent_after_s
         self.repo = repo
         self.timeout_s = timeout_s
         self._condition = threading.Condition()
@@ -132,17 +128,6 @@ class RemoteBridge:
                             "the inference computer disconnected or timed out; no result was accepted",
                             code="TIMEOUT" if kind in ("transcribe", "analyze", "isolate") else "PROCESSING_FAILED",
                         )
-                    now = time.monotonic()
-                    if (self.silent_after_s and task.claimed
-                            and now - task.last_contact > self.silent_after_s):
-                        raise ProviderError(
-                            "the inference computer stopped responding while working on this clip "
-                            "(worker disconnected); no result was accepted",
-                            code="TIMEOUT" if kind in ("transcribe", "analyze", "isolate") else "PROCESSING_FAILED")
-                    if not task.claimed and now - self._last_poll > self.offline_after_s:
-                        raise ProviderError(
-                            "the inference computer went offline before taking this task; start the "
-                            "Windows worker and try again", retryable=True)
                     self._condition.wait(min(remaining, 0.5))
                 if task.error:
                     raise task.error
@@ -162,7 +147,6 @@ class RemoteBridge:
             or not task.claimed or task.finished or (kinds and task.kind not in kinds)
         ):
             raise not_found("inference task expired or unavailable")
-        task.last_contact = time.monotonic()
         video = self.repo.get_video(task.video_id)
         if video is None or video.deleted:
             raise not_found("inference media is unavailable")
@@ -184,7 +168,6 @@ class RemoteBridge:
             # Computed from the actual canonical bytes, not a client filename.
             digest = hashlib.sha256(Path(task.path).read_bytes()).hexdigest()
             task.claimed = True
-            task.last_contact = time.monotonic()
             body = {
                 "task_id": task.task_id, "kind": task.kind,
                 "video_id": task.video_id, "face_id": task.face_id,
@@ -282,7 +265,6 @@ MAX_TURNS = 4000
 MAX_SPEAKERS = 8
 MAX_VECTOR = 1024
 MAX_REGIONS = 4000
-MAX_REF_B64 = 450_000  # a 10 s clean reference clip is about 427 kB in base64
 MAX_CLIP_B64 = 400_000  # an 8 s, 16 kHz, mono PCM16 clip is about 340 kB in base64
 _STR = 120
 
@@ -419,25 +401,8 @@ def validate_enrollment(body) -> dict:
         raise ValueError("bad enrollment")
     if body.get("refused") is not None:
         return {"refused": _text(body["refused"], 400)}
-    out = {"voiceprint": validate_voiceprint(body.get("voiceprint")),
-           "warnings": [_text(w, 400) for w in (body.get("warnings") or [])[:10]]}
-    ref = body.get("reference_wav_b64")
-    if ref is not None:
-        import base64
-        if not isinstance(ref, str) or len(ref) > MAX_REF_B64:
-            raise ValueError("bad reference audio")
-        raw = base64.b64decode(ref, validate=True)
-        try:
-            with wave.open(io.BytesIO(raw), "rb") as audio:
-                if (audio.getnchannels(), audio.getframerate(), audio.getsampwidth()) != (1, 16000, 2):
-                    raise ValueError("bad reference audio")
-                frames = audio.getnframes()
-                if not 0 < frames <= 16_000 * 10.5 or len(audio.readframes(frames + 1)) != frames * 2:
-                    raise ValueError("bad reference audio")
-        except (wave.Error, EOFError):
-            raise ValueError("bad reference audio") from None
-        out["reference_wav_b64"] = ref
-    return out
+    return {"voiceprint": validate_voiceprint(body.get("voiceprint")),
+            "warnings": [_text(w, 400) for w in (body.get("warnings") or [])[:10]]}
 
 
 def validate_visibility(body, expected_ms: int) -> list[dict]:
@@ -451,15 +416,6 @@ def validate_visibility(body, expected_ms: int) -> list[dict]:
             raise ValueError("bad span")
         out.append({"start_ms": start, "end_ms": min(end, expected_ms)})
     return out
-
-
-def decode_reference(b64: str):
-    """Reference clip (already checked at enrollment) as float32 samples."""
-    import base64
-    import numpy as np
-    with wave.open(io.BytesIO(base64.b64decode(b64)), "rb") as audio:
-        raw = audio.readframes(audio.getnframes())
-    return np.frombuffer(raw, dtype="<i2").astype(np.float32) / 32768.0
 
 
 def validate_regions(body, expected_ms: int) -> list[dict]:
@@ -477,89 +433,12 @@ def validate_regions(body, expected_ms: int) -> list[dict]:
     return out
 
 
-_ROUTE_NUMS = ("overlap_seconds", "muted_seconds", "fallback_seconds", "recovery_seconds", "unconfirmed_seconds")
-_ROUTE_LABELS = ("genuine_extraction", "gated_baseline", "strict_muting", "continuity_fallback",
-                 "extraction_skipped", "extraction_failed")
-_ROUTE_SECONDS = ("target_passthrough", "genuine_extraction", "strict_muted_unconfirmed", "continuity_fallback")
-_ROUTE_INTS = ("windows", "pieces_extracted", "pieces_muted")
-_ROUTE_STATES = ("disabled", "ran", "skipped", "failed")
-
-
-def validate_routing(body, expected_ms: int) -> dict:
-    """The worker's routing summary, rebuilt field by field. Anything unexpected is refused."""
-    if not isinstance(body, dict):
-        raise ValueError("routing missing")
-    state = body.get("overlap_extraction")
-    claim = body.get("isolation_claim")
-    if state not in _ROUTE_STATES or claim not in ("strict_isolation", "not_isolation"):
-        raise ValueError("bad routing")
-    if not all(isinstance(body.get(k), bool) for k in ("extractor_ran", "fallback_used")):
-        raise ValueError("bad routing")
-    if claim == "strict_isolation" and body["fallback_used"]:
-        raise ValueError("a fallback cannot be reported as isolation")
-    if body.get("mode", "strict") not in ("strict", "continuity"):
-        raise ValueError("bad routing mode")
-    labels = body.get("route_labels") or []
-    if not isinstance(labels, list) or any(label not in _ROUTE_LABELS for label in labels):
-        raise ValueError("bad routing labels")
-    if "continuity_fallback" in labels and claim == "strict_isolation":
-        raise ValueError("a continuity fallback cannot be reported as isolation")
-    if "genuine_extraction" in labels and state != "ran":
-        raise ValueError("extraction cannot be reported as genuine when it did not run")
-    out = {
-        "extractor_requested": (None if body.get("extractor_requested") is None
-                                else _text(body["extractor_requested"], 80)),
-        "extractor_ran": body["extractor_ran"], "overlap_extraction": state,
-        "reason": None if body.get("reason") is None else _text(body["reason"], 400),
-        "mode": _text(body.get("mode", "strict"), 20),
-        "fallback_used": body["fallback_used"], "isolation_claim": claim,
-        "route_labels": list(labels),
-        "notices": [_text(t, 400) for t in (body.get("notices") or [])][:6],
-        "engine_path": "extractor" if body.get("engine_path") == "extractor" else "gated_baseline",
-        "target_may_be_lost": bool(body.get("target_may_be_lost")),
-        "route_seconds": {k: _num((body.get("route_seconds") or {}).get(k, 0), 0, 1e6) for k in _ROUTE_SECONDS},
-    }
-    for key in _ROUTE_NUMS:
-        out[key] = _num(body.get(key, 0), 0, 1e6)
-    for key in _ROUTE_INTS:
-        value = body.get(key, 0)
-        if type(value) is not int or not 0 <= value <= 1_000_000:
-            raise ValueError("bad routing")
-        out[key] = value
-    regions = body.get("regions") or []
-    if not isinstance(regions, list) or len(regions) > 200:
-        raise ValueError("bad routing")
-    out["regions"] = []
-    for item in regions:
-        start, end = item["start_ms"], item["end_ms"]
-        if type(start) is not int or type(end) is not int or not 0 <= start < end <= expected_ms + 200:
-            raise ValueError("bad routing region")
-        out["regions"].append({"start_ms": start, "end_ms": min(end, expected_ms),
-                               "route": _text(item.get("route") or "muted", 80),
-                               "status": _text(item.get("status", ""), 20),
-                               "reason": _text(item.get("reason", ""), 80)})
-    return out
-
-
-def validate_regions_body(body, expected_ms: int) -> dict:
-    checked = {"regions": validate_regions(body, expected_ms), "routing": None}
-    if isinstance(body, dict) and body.get("routing") is not None:
-        checked["routing"] = validate_routing(body["routing"], expected_ms)
-    return checked
-
-
-def server_code_info() -> dict:
-    """What the running backend is: the worker refuses to run when its own copy differs."""
-    from focus_ml.code_version import ISOLATE_CONTRACT, code_version
-    return {"code_version": code_version(), "isolate_contract": ISOLATE_CONTRACT}
-
-
 def add_remote_routes(app, bridge: RemoteBridge):
     """No CORS additions; token is only for the operator's native worker."""
     @app.get("/worker/check")
     def check(request: Request):
         bridge.authorize(request)
-        return {"worker_protocol": 1, **server_code_info()}
+        return {"worker_protocol": 1}
 
     @app.post("/worker/poll")
     def poll(request: Request):
@@ -598,7 +477,7 @@ def add_remote_routes(app, bridge: RemoteBridge):
         bridge.authorize(request)
         with bridge._condition:
             task = bridge._current(task_id, kind=("extract", "isolate"))
-            expected, kind, regions, routing = task.duration_ms, task.kind, task.regions, task.routing
+            expected, kind, regions = task.duration_ms, task.kind, task.regions
             if kind == "isolate" and regions is None:
                 raise ApiError("INVALID_REQUEST", "regions must be sent before the audio",
                                status_code=400)
@@ -608,7 +487,7 @@ def add_remote_routes(app, bridge: RemoteBridge):
         engine = request.headers.get("x-focus-engine", "audio_only" if kind == "isolate" else "dolphin")
         if engine not in KNOWN_ENGINES or (kind == "isolate") != (engine == "audio_only"):
             raise ApiError("INVALID_REQUEST", "unknown isolation engine", status_code=400)
-        result = (data, duration, engine, regions, routing) if kind == "isolate" else (data, duration, engine)
+        result = (data, duration, engine, regions) if kind == "isolate" else (data, duration, engine)
         bridge.complete(task_id, result, kind=kind)
         return {"accepted": True}
 
@@ -641,7 +520,7 @@ def add_remote_routes(app, bridge: RemoteBridge):
 
     @app.post("/worker/tasks/{task_id}/enrollment")
     async def enrollment(task_id: str, request: Request):
-        return await _accept(task_id, request, "enroll", 640 * 1024,
+        return await _accept(task_id, request, "enroll", 256 * 1024,
                              lambda body, _ms: validate_enrollment(body))
 
     @app.post("/worker/tasks/{task_id}/visibility")
@@ -651,8 +530,8 @@ def add_remote_routes(app, bridge: RemoteBridge):
     @app.post("/worker/tasks/{task_id}/regions")
     async def regions(task_id: str, request: Request):
         def store(task, checked):
-            task.regions, task.routing = checked["regions"], checked["routing"]
-        return await _accept(task_id, request, "isolate", 512 * 1024, validate_regions_body, store=store)
+            task.regions = checked
+        return await _accept(task_id, request, "isolate", 512 * 1024, validate_regions, store=store)
 
     @app.post("/worker/tasks/{task_id}/transcript")
     async def transcript(task_id: str, request: Request):

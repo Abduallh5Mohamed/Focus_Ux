@@ -16,16 +16,15 @@ if ($Service -eq 'web') {
     exit $LASTEXITCODE
 }
 
-# FOCUS_PYTHON (a python.exe with CUDA PyTorch) wins; otherwise the project's .venv-ml.
-$focusPython = if ($env:FOCUS_PYTHON) { $env:FOCUS_PYTHON } else { Join-Path $focusRoot '.venv-ml\Scripts\python.exe' }
+$focusPython = Join-Path $focusRoot '.venv-ml\Scripts\python.exe'
 if (-not (Test-Path -LiteralPath $focusPython)) {
-    throw "Missing GPU Python: $focusPython. Create .venv-ml in the project or set FOCUS_PYTHON to your python.exe."
+    throw 'Missing project-local GPU environment: .venv-ml'
 }
 $env:PYTHONPATH = "$focusRoot\product;$focusRoot\product\packages\ml"
-if (-not $env:FOCUS_MODEL_SOURCE) { $env:FOCUS_MODEL_SOURCE = Join-Path $focusRoot 'model-assets\Dolphin-runtime' }
-if (-not $env:FOCUS_MODEL_CACHE) { $env:FOCUS_MODEL_CACHE = Join-Path $focusRoot 'model-assets\cache\hf' }
+$env:FOCUS_MODEL_SOURCE = Join-Path $focusRoot 'model-assets\Dolphin-runtime'
+$env:FOCUS_MODEL_CACHE = Join-Path $focusRoot 'model-assets\cache\hf'
 $env:HF_HOME = $env:FOCUS_MODEL_CACHE
-if (-not $env:TORCH_HOME) { $env:TORCH_HOME = Join-Path $focusRoot 'model-assets\cache\torch' }
+$env:TORCH_HOME = Join-Path $focusRoot 'model-assets\cache\torch'
 $env:HF_HUB_OFFLINE = '1'
 $env:TRANSFORMERS_OFFLINE = '1'
 $env:KERAS_HOME = Join-Path $focusRoot 'model-assets\cache\keras'

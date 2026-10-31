@@ -10,7 +10,6 @@ import type { JobState, TranscriptResponse } from '../../lib/api/types';
 import { formatDuration, formatTimestamp } from '../../lib/format';
 import { forgetUpload, getRememberedUpload } from '../../lib/localMedia';
 import { ComparePlayer, type TrackMode } from './ComparePlayer';
-import { isolationModeLabel, overlapNote } from './overlapNote';
 import { VoiceMixPanel } from './VoiceMixPanel';
 import { TranscriptPanel } from './TranscriptPanel';
 import { useAudioTransport } from './useAudioTransport';
@@ -304,12 +303,6 @@ export function ResultView({ job, videoId, onDeleted }: ResultViewProps): JSX.El
                   {audioFailed ? 'فشل' : isolatedReady ? 'جاهز' : 'بيتجهز'}
                 </dd>
               </div>
-              {isolationModeLabel(job.result?.routing) ? (
-                <div className="facts__item">
-                  <dt className="facts__key">وضع العزل</dt>
-                  <dd className="facts__val">{isolationModeLabel(job.result?.routing)}</dd>
-                </div>
-              ) : null}
               {job.result?.engine ? (
                 <div className="facts__item">
                   <dt className="facts__key">محرك العزل</dt>
@@ -317,13 +310,6 @@ export function ResultView({ job, videoId, onDeleted }: ResultViewProps): JSX.El
                 </div>
               ) : null}
             </dl>
-
-            {(() => {
-              const note = overlapNote(job.result?.routing);
-              return note ? (
-                <Notice tone={note.tone === 'warn' ? 'warn' : 'info'} title={note.text} />
-              ) : null;
-            })()}
 
             <div className="row">
               <Button

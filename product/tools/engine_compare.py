@@ -25,7 +25,7 @@ def main():
     ap.add_argument("--video", required=True)
     ap.add_argument("--face", type=int, required=True, help="1-based, from the left")
     ap.add_argument("--out", required=True, type=Path)
-    ap.add_argument("--focus", default=None, help="default: FOCUS_HOME, else the project folder")
+    ap.add_argument("--focus", default="A:/focus")
     ap.add_argument("--engines", nargs="+", default=list(ENGINES), choices=ENGINES)
     ap.add_argument("--reference", help="clean WAV of the chosen speaker (optional)")
     args = ap.parse_args()

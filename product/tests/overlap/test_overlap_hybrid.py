@@ -61,7 +61,7 @@ def test_hybrid_passthrough_mute_extract_and_length():
     x = scene([("A", 0, 4), ("A", 4, 8), ("B", 4, 8), ("B", 8, 12)], 12)
     ref = scene([("A", 0, 8)], 12)
     regs = [R(0, 4, TARGET), R(4, 8, UNCERTAIN, "overlap"), R(8, 12, OTHER)]
-    h = hybrid(ToneExtractor(), recovery="overlap")
+    h = hybrid(ToneExtractor())
     out = h.extract(x, regs)
     assert len(out) == len(x)
     assert si_sdr(out[:8 * SR], ref[:8 * SR]) > 25
@@ -75,7 +75,7 @@ def test_hybrid_passthrough_mute_extract_and_length():
 def test_no_overlap_means_extractor_not_called():
     ex = ToneExtractor()
     x = scene([("A", 0, 4), ("B", 4, 8)], 8)
-    out = hybrid(ex, recovery="overlap").extract(x, [R(0, 4, TARGET), R(4, 8, OTHER)])
+    out = hybrid(ex).extract(x, [R(0, 4, TARGET), R(4, 8, OTHER)])
     assert ex.batches == [] and np.abs(out[4 * SR + 400:]).max() < 1e-6
 
 
@@ -89,7 +89,7 @@ def test_uncertain_output_is_muted(kw, reason):
     assert h.last_report["pieces"][0]["reason"] == reason and h.last_report["uncertain_muted_seconds"] == 4
 
 
-def test_too_short_region_is_muted_when_window_verification_is_off():
+def test_too_short_region_is_muted():
     x = scene([("A", 0, 4), ("B", 1, 1.3)], 4)
     h = hybrid(ToneExtractor())
     out = h.extract(x, [R(1, 1.3, UNCERTAIN, "overlap")])

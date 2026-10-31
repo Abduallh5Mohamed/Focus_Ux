@@ -1,11 +1,7 @@
 # Per-process cache/temp paths. Never changes machine/user PATH or global config.
 $focusProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..\..')).Path
-# Optional: set FOCUS_REQUIRED_DRIVE (for example D:) to refuse to run from any other drive.
-if ($env:FOCUS_REQUIRED_DRIVE) {
-    $focusWantedRoot = $env:FOCUS_REQUIRED_DRIVE.TrimEnd('\', ':') + ':\'
-    if ([System.IO.Path]::GetPathRoot($focusProjectRoot) -ne $focusWantedRoot) {
-        throw "FOCUS_REQUIRED_DRIVE is $($env:FOCUS_REQUIRED_DRIVE): the project and its caches must be on that drive."
-    }
+if ([System.IO.Path]::GetPathRoot($focusProjectRoot) -ne 'D:\') {
+    throw 'This local setup requires the project and all download caches on D:.'
 }
 $focusLocalRuntime = Join-Path $focusProjectRoot 'runtime\local-session'
 $env:UV_CACHE_DIR = Join-Path $focusLocalRuntime 'cache\uv'
@@ -15,13 +11,12 @@ $env:TEMP = Join-Path $focusLocalRuntime 'temp'
 $env:TMP = $env:TEMP
 $env:TMPDIR = $env:TEMP
 $env:XDG_CACHE_HOME = Join-Path $focusLocalRuntime 'cache'
-# Model folders default to the project; FOCUS_MODEL_SOURCE / FOCUS_MODEL_CACHE / TORCH_HOME set before this win.
-if (-not $env:FOCUS_MODEL_CACHE) { $env:FOCUS_MODEL_CACHE = Join-Path $focusProjectRoot 'model-assets\cache\hf' }
-$env:HF_HOME = $env:FOCUS_MODEL_CACHE
-if (-not $env:FOCUS_MODEL_SOURCE) { $env:FOCUS_MODEL_SOURCE = Join-Path $focusProjectRoot 'model-assets\Dolphin-runtime' }
+$env:HF_HOME = Join-Path $focusProjectRoot 'model-assets\cache\hf'
+$env:FOCUS_MODEL_SOURCE = Join-Path $focusProjectRoot 'model-assets\Dolphin-runtime'
+$env:FOCUS_MODEL_CACHE = $env:HF_HOME
 $env:HF_HUB_CACHE = Join-Path $env:HF_HOME 'hub'
 $env:HF_ASSETS_CACHE = Join-Path $env:HF_HOME 'assets'
-if (-not $env:TORCH_HOME) { $env:TORCH_HOME = Join-Path $focusProjectRoot 'model-assets\cache\torch' }
+$env:TORCH_HOME = Join-Path $focusProjectRoot 'model-assets\cache\torch'
 $env:KERAS_HOME = Join-Path $focusProjectRoot 'model-assets\cache\keras'
 $env:DEEPFACE_HOME = Join-Path $focusProjectRoot 'model-assets\cache\deepface'
 $env:DEEPFACE_BACKEND_ENGINE = 'pytorch'

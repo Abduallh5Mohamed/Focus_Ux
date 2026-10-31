@@ -11,7 +11,6 @@ import logging
 import os
 import secrets
 import time
-import json
 import uuid
 from pathlib import Path
 from typing import BinaryIO, Optional
@@ -318,14 +317,7 @@ class ApiService:
                 result["engine"] = engine
             if job.audio_warnings:
                 result["warnings"] = [w for w in job.audio_warnings
-                                      if not w.startswith(("engine: ", "routing: "))]
-            routing = next((w[len("routing: "):] for w in job.audio_warnings
-                            if w.startswith("routing: ")), None)
-            if routing:
-                try:
-                    result["routing"] = json.loads(routing)
-                except ValueError:
-                    pass
+                                      if not w.startswith("engine: ")]
             if job.enrollment_id:
                 result["follow_periods"] = [dict(p) for p in job.follow_periods]
         return {

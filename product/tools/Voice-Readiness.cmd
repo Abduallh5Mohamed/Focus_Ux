@@ -1,10 +1,5 @@
 @echo off
-cd /d "%~dp0..\.."
-call "%~dp0focus_env.cmd"
-if errorlevel 1 (
-  pause
-  exit /b 1
-)
+cd /d "%~dp0\..\.."
 set PYTHONPATH=%CD%\product;%CD%\product\packages\ml
-"%FOCUS_PY%" -m focus_ml.voice.cli readiness %*
+"A:\focus\.venv\Scripts\python.exe" -m focus_ml.voice.cli readiness %*
 pause
