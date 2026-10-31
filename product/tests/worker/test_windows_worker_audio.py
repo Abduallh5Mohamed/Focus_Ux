@@ -24,6 +24,9 @@ from focus_ml.voice.engine import AudioOnlyEngine  # noqa: E402
 TURNS = [("A", 0.0, 6.0), ("B", 6.0, 12.0)]
 
 
+from focus_ml.code_version import ISOLATE_CONTRACT as CONTRACT  # noqa: E402
+
+
 @pytest.fixture
 def module():
     spec = importlib.util.spec_from_file_location("windows_worker", PRODUCT / "tools" / "windows_worker.py")
@@ -82,7 +85,7 @@ def test_isolate_sends_regions_then_audio_from_enrollment_and_diarization_only(m
     analysis = engine.analyze_audio(str(audio))
     vp = next(s for s in analysis["speakers"] if s["speaker"] == "A")["voiceprint"]
     task = {"kind": "isolate", "face_id": None,
-            "payload": {"voiceprint": vp, "diarization": analysis["diarization"]}}
+            "payload": {"voiceprint": vp, "diarization": analysis["diarization"], "contract": CONTRACT}}
     rec.client.handle(task, engine, audio, str(tmp), "/p")
     assert [s[0] for s in rec.sent] == ["/p/regions", "/p/audio"]
     assert any(r["label"] == "target" for r in rec.sent[0][1]["regions"])
@@ -98,7 +101,7 @@ def test_isolate_rejects_output_outside_its_directory(module, setup):
     rec = Recorder(module)
     analysis = engine.analyze_audio(str(audio))
     vp = analysis["speakers"][0]["voiceprint"]
-    task = {"kind": "isolate", "payload": {"voiceprint": vp, "diarization": analysis["diarization"]}}
+    task = {"kind": "isolate", "payload": {"voiceprint": vp, "diarization": analysis["diarization"], "contract": CONTRACT}}
     with pytest.raises(ValueError):
         stray = SimpleNamespace(isolate_audio=lambda *a, **k: SimpleNamespace(
             wav_path=str(tmp / "x.wav"), source_offset_ms=0, details={"regions": []}))
@@ -132,7 +135,7 @@ def test_isolate_posts_routing_summary_and_passes_reference_audio(module, setup)
         w.setparams((1, 2, 16000, 0, "NONE", "not compressed"))
         w.writeframes(b"\x00\x01" * 16000)
     task = {"kind": "isolate", "payload": {
-        "voiceprint": vp, "diarization": analysis["diarization"],
+        "voiceprint": vp, "diarization": analysis["diarization"], "contract": CONTRACT,
         "reference_wav_b64": base64.b64encode(buf.getvalue()).decode()}}
     rec.client.handle(task, engine, audio, str(tmp), "/p")
     assert len(seen["reference_audio"]) == 16000

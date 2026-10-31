@@ -53,6 +53,7 @@ class RemoteTask:
     payload: dict | None = None
     task_id: str = field(default_factory=lambda: uuid.uuid4().hex)
     claimed: bool = False
+    last_contact: float = 0.0   # monotonic time of the worker's last request about this task
     finished: bool = False
     result: object = None
     error: ProviderError | None = None
@@ -61,10 +62,12 @@ class RemoteTask:
 
 
 class RemoteBridge:
-    def __init__(self, token: str, repo, *, timeout_s=900.0, max_audio_s=15.0):
+    def __init__(self, token: str, repo, *, timeout_s=900.0, max_audio_s=15.0,
+                 offline_after_s=60.0, silent_after_s=None):
         if len(token) < 32:
             raise ValueError("FOCUS_WORKER_TOKEN must contain at least 32 characters")
         self._token = token
+        self.offline_after_s, self.silent_after_s = offline_after_s, silent_after_s
         self.repo = repo
         self.timeout_s = timeout_s
         self._condition = threading.Condition()
@@ -129,6 +132,17 @@ class RemoteBridge:
                             "the inference computer disconnected or timed out; no result was accepted",
                             code="TIMEOUT" if kind in ("transcribe", "analyze", "isolate") else "PROCESSING_FAILED",
                         )
+                    now = time.monotonic()
+                    if (self.silent_after_s and task.claimed
+                            and now - task.last_contact > self.silent_after_s):
+                        raise ProviderError(
+                            "the inference computer stopped responding while working on this clip "
+                            "(worker disconnected); no result was accepted",
+                            code="TIMEOUT" if kind in ("transcribe", "analyze", "isolate") else "PROCESSING_FAILED")
+                    if not task.claimed and now - self._last_poll > self.offline_after_s:
+                        raise ProviderError(
+                            "the inference computer went offline before taking this task; start the "
+                            "Windows worker and try again", retryable=True)
                     self._condition.wait(min(remaining, 0.5))
                 if task.error:
                     raise task.error
@@ -148,6 +162,7 @@ class RemoteBridge:
             or not task.claimed or task.finished or (kinds and task.kind not in kinds)
         ):
             raise not_found("inference task expired or unavailable")
+        task.last_contact = time.monotonic()
         video = self.repo.get_video(task.video_id)
         if video is None or video.deleted:
             raise not_found("inference media is unavailable")
@@ -169,6 +184,7 @@ class RemoteBridge:
             # Computed from the actual canonical bytes, not a client filename.
             digest = hashlib.sha256(Path(task.path).read_bytes()).hexdigest()
             task.claimed = True
+            task.last_contact = time.monotonic()
             body = {
                 "task_id": task.task_id, "kind": task.kind,
                 "video_id": task.video_id, "face_id": task.face_id,
@@ -461,7 +477,10 @@ def validate_regions(body, expected_ms: int) -> list[dict]:
     return out
 
 
-_ROUTE_NUMS = ("overlap_seconds", "muted_seconds", "fallback_seconds")
+_ROUTE_NUMS = ("overlap_seconds", "muted_seconds", "fallback_seconds", "recovery_seconds", "unconfirmed_seconds")
+_ROUTE_LABELS = ("genuine_extraction", "gated_baseline", "strict_muting", "continuity_fallback",
+                 "extraction_skipped", "extraction_failed")
+_ROUTE_SECONDS = ("target_passthrough", "genuine_extraction", "strict_muted_unconfirmed", "continuity_fallback")
 _ROUTE_INTS = ("windows", "pieces_extracted", "pieces_muted")
 _ROUTE_STATES = ("disabled", "ran", "skipped", "failed")
 
@@ -478,6 +497,15 @@ def validate_routing(body, expected_ms: int) -> dict:
         raise ValueError("bad routing")
     if claim == "strict_isolation" and body["fallback_used"]:
         raise ValueError("a fallback cannot be reported as isolation")
+    if body.get("mode", "strict") not in ("strict", "continuity"):
+        raise ValueError("bad routing mode")
+    labels = body.get("route_labels") or []
+    if not isinstance(labels, list) or any(label not in _ROUTE_LABELS for label in labels):
+        raise ValueError("bad routing labels")
+    if "continuity_fallback" in labels and claim == "strict_isolation":
+        raise ValueError("a continuity fallback cannot be reported as isolation")
+    if "genuine_extraction" in labels and state != "ran":
+        raise ValueError("extraction cannot be reported as genuine when it did not run")
     out = {
         "extractor_requested": (None if body.get("extractor_requested") is None
                                 else _text(body["extractor_requested"], 80)),
@@ -485,6 +513,11 @@ def validate_routing(body, expected_ms: int) -> dict:
         "reason": None if body.get("reason") is None else _text(body["reason"], 400),
         "mode": _text(body.get("mode", "strict"), 20),
         "fallback_used": body["fallback_used"], "isolation_claim": claim,
+        "route_labels": list(labels),
+        "notices": [_text(t, 400) for t in (body.get("notices") or [])][:6],
+        "engine_path": "extractor" if body.get("engine_path") == "extractor" else "gated_baseline",
+        "target_may_be_lost": bool(body.get("target_may_be_lost")),
+        "route_seconds": {k: _num((body.get("route_seconds") or {}).get(k, 0), 0, 1e6) for k in _ROUTE_SECONDS},
     }
     for key in _ROUTE_NUMS:
         out[key] = _num(body.get(key, 0), 0, 1e6)
@@ -515,12 +548,18 @@ def validate_regions_body(body, expected_ms: int) -> dict:
     return checked
 
 
+def server_code_info() -> dict:
+    """What the running backend is: the worker refuses to run when its own copy differs."""
+    from focus_ml.code_version import ISOLATE_CONTRACT, code_version
+    return {"code_version": code_version(), "isolate_contract": ISOLATE_CONTRACT}
+
+
 def add_remote_routes(app, bridge: RemoteBridge):
     """No CORS additions; token is only for the operator's native worker."""
     @app.get("/worker/check")
     def check(request: Request):
         bridge.authorize(request)
-        return {"worker_protocol": 1}
+        return {"worker_protocol": 1, **server_code_info()}
 
     @app.post("/worker/poll")
     def poll(request: Request):

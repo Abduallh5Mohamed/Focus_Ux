@@ -62,9 +62,21 @@ an acceptance test, and the extractor stays resident in VRAM after first use.
 | Region | Strict (default) | Continuity (opt-in) |
 |---|---|---|
 | target alone | original audio | original audio |
-| other alone | muted | original mix at reduced volume |
+| other alone (confident) | muted | muted (never replayed) |
 | overlap | real extractor if enabled, verified; else muted | extractor if enabled; unverified parts at reduced volume |
-| uncertain / unmatched | muted | reduced volume |
+| uncertain / unmatched / OTHER-labelled but recovered | extractor may try (recovery); unconfirmed parts muted and reported as possible target loss | extractor may try; unconfirmed uncertain parts at reduced volume |
+
+Recovery (`HybridConfig.recovery`, default `"all"`): uncertain and OTHER regions are also given to the
+extractor, because a quiet selected speaker can be missed by diarization or the voiceprint match. Nothing is
+kept unless the extracted audio passes the identity check (best cosine over the voiceprint and, for 8 kHz
+models, a band-limited copy of the enrollment) and the quality checks (not silent, not residue, never louder
+than the mixture). Identity score and quality are reported separately per piece. `recovery="overlap"` restores
+the old behaviour. The false-accept rate of recovering OTHER regions with real weights is UNMEASURED.
+
+Per-job `route_labels` say what actually ran: `genuine_extraction`, `gated_baseline`, `strict_muting`,
+`continuity_fallback`, `extraction_skipped`, `extraction_failed`. Fallback audio is never `genuine_extraction`.
+`target_may_be_lost` is true in strict mode when unconfirmed uncertain speech was muted. A missing or failed
+checkpoint is checked up front (even with no overlap) and produces a "FAILED" notice.
 
 * The extractor is the existing `overlap.HybridExtractor` (reused, not rewritten): short overlaps get one full
   window centred on the region with real neighbouring audio as context; long ones get overlapping windows with

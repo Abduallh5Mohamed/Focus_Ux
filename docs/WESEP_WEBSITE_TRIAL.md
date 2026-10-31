@@ -32,7 +32,9 @@ Do not use the downloadable ZIP for this trial. It is only valid when it says it
 website refuses to build it and tells you to use the checkout.
 
 ## Step 3. Check the connection (loads no models)
-Double-click `product\tools\Check-Connection.cmd`. It must report the server reachable and the key accepted.
+Double-click `product\tools\Check-Connection.cmd`. It must report the server reachable and the key accepted,
+and that the worker code matches the website. A "does not match the website" refusal means the laptop code and
+the running backend differ: run `git pull --ff-only` (or download the worker ZIP again) and retry.
 Use the main app URL, not a task preview.
 
 ## Step 4. Run the validation (existing tool)

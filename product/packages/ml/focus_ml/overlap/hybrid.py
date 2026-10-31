@@ -23,11 +23,13 @@ import numpy as np
 from ..isolation_engines import fit_samples
 from ..voice.gpu import release_gpu
 from ..voice.match import MatchConfig, cosine
-from ..voice.types import SAMPLE_RATE, TARGET, UNCERTAIN, LabelledRegion, Voiceprint
+from ..voice.types import OTHER, SAMPLE_RATE, TARGET, UNCERTAIN, LabelledRegion, Voiceprint
 from ..windows import merge_windows, plan_windows
-from .base import SILENT_RMS, BlockedError, OverlapExtractor, is_oom, rms, vram_peak_mib, vram_reset
+from .base import (SILENT_RMS, BlockedError, OverlapExtractor, is_oom, resample, rms, trim_enrollment,
+                   vram_peak_mib, vram_reset)
 
 OVERLAP_REASON = "overlap"
+RECOVERY_SCOPES = ("overlap", "uncertain", "all")
 
 
 @dataclass
@@ -41,6 +43,19 @@ class HybridConfig:
     accept_threshold: float | None = None   # cosine; None = the embedder's target threshold
     vram_budget_mib: float = 3500.0  # a 4 GB RTX 3050 minus headroom
     batch_size: int | None = None    # None = derived from the extractor's VRAM model
+    # Which regions the extractor may try to recover (the voiceprint check still decides what is kept):
+    #   "overlap"   only diarized overlap (the old behaviour)
+    #   "uncertain" overlap + uncertain regions (weak match, too short)
+    #   "all"       also regions labelled OTHER: a quiet target missed by diarization or by the
+    #               matcher is otherwise lost without any attempt to find it
+    recovery: str = "all"
+    max_gain_vs_mixture_db: float = 1.0   # extracted audio may never be louder than the mix it came from
+    min_gain_vs_mixture_db: float = -45.0  # output this far below the mixture is residue, not speech
+    band_match_reference: bool = True     # compare band-limited (8 kHz) output with a band-limited reference
+
+    def __post_init__(self):
+        if self.recovery not in RECOVERY_SCOPES:
+            raise ValueError(f"recovery must be one of {RECOVERY_SCOPES}")
 
 
 # ------------------------------------------------------------------ planning
@@ -62,6 +77,28 @@ def overlap_spans(regions, n: int, sr: int = SAMPLE_RATE) -> list[tuple[int, int
     tgt = merge_spans([(max(0, int(round(r.start * sr))), min(n, int(round(r.end * sr))))
                        for r in regions if r.label == TARGET])
     return subtract_spans(ov, tgt)
+
+
+def recovery_spans(regions, n: int, sr: int = SAMPLE_RATE, scope: str = "all") -> list[tuple[int, int]]:
+    """Sample spans the extractor may try to recover, besides real overlap: uncertain regions (weak
+    voiceprint match, too short) and, with scope "all", regions labelled OTHER. Spans already passed
+    through as target are excluded. Nothing here is kept unless the extracted audio passes the check."""
+    if scope == "overlap":
+        return []
+    labels = (UNCERTAIN,) if scope == "uncertain" else (UNCERTAIN, OTHER)
+    rec = merge_spans([(max(0, int(round(r.start * sr))), min(n, int(round(r.end * sr))))
+                       for r in regions if r.label in labels and r.reason != OVERLAP_REASON])
+    tgt = merge_spans([(max(0, int(round(r.start * sr))), min(n, int(round(r.end * sr))))
+                       for r in regions if r.label == TARGET])
+    return subtract_spans(rec, tgt)
+
+
+def _kind_of(a: int, b: int, ov, unc) -> str:
+    """Why this piece was sent to the extractor: overlap, uncertain, or other (recovery of a label)."""
+    mid = (a + b) // 2
+    if any(x <= mid < y for x, y in ov):
+        return "overlap"
+    return "uncertain" if any(x <= mid < y for x, y in unc) else "other"
 
 
 def subtract_spans(spans, cuts):
@@ -211,23 +248,45 @@ class HybridExtractor:
             pos += len(idx)
         return outs, per_batch, {"batch_size": batch, "oom_backoffs": backoffs, "details": details}
 
+    def _reference_vectors(self) -> tuple[list, bool]:
+        """Voiceprints the extracted audio is compared with. A model that works at 8 kHz returns
+        band-limited speech, which an embedder scores lower against a full-band voiceprint even for
+        the right speaker; the enrollment passed through the same band limit is a second, equally
+        valid reference. The best of the references counts. Wrong speakers are still rejected."""
+        refs = [self.voiceprint.vector]
+        rate = self.extractor.info.model_rate
+        if self.config.band_match_reference and rate < SAMPLE_RATE and self.enrollment is not None:
+            e = trim_enrollment(self.enrollment)
+            refs.append(self.embedder.embed(resample(resample(e, SAMPLE_RATE, rate), rate, SAMPLE_RATE)))
+        return refs, len(refs) > 1
+
+    def _identity(self, piece, refs) -> float:
+        v = self.embedder.embed(piece)
+        return max(cosine(r, v) for r in refs)
+
     def extract(self, samples, regions: list[LabelledRegion]) -> np.ndarray:
         cfg = self.config
         x = np.asarray(samples, dtype=np.float32).reshape(-1)
         n, sr = len(x), SAMPLE_RATE
         ov = overlap_spans(regions, n, sr)
+        unc = subtract_spans(merge_spans([
+            (max(0, int(round(r.start * sr))), min(n, int(round(r.end * sr))))
+            for r in regions if r.label == UNCERTAIN]), ov)
+        rec = recovery_spans(regions, n, sr, cfg.recovery)
+        todo = sorted(ov + rec)     # separate regions keep separate windows (no window spans two kinds)
         window = int(round(cfg.window_s * sr))
-        plans = [plan_region_windows(a, b, n, window, cfg.window_overlap) for a, b in ov]
+        plans = [plan_region_windows(a, b, n, window, cfg.window_overlap) for a, b in todo]
         flat = [w for p in plans for w in p]
         t0 = time.perf_counter()
         outs, per_batch, meta = ([], [], {"batch_size": None, "oom_backoffs": 0, "details": []}) \
             if not flat else self._run_windows(x, flat)
         extract_s = time.perf_counter() - t0
+        refs, band_matched = self._reference_vectors() if flat else ([self.voiceprint.vector], False)
         # per-region estimate over [a, b), crossfading the windows of long regions
         ext_audio = np.zeros(n, dtype=np.float32)
         cursor, ext_spans, region_log = 0, [], []
         min_check = int(round(cfg.min_check_s * sr))
-        for (a, b), wins in zip(ov, plans):
+        for (a, b), wins in zip(todo, plans):
             ests = outs[cursor:cursor + len(wins)]
             cursor += len(wins)
             if len(wins) == 1 and wins[0][1] - wins[0][0] >= b - a:
@@ -236,9 +295,13 @@ class HybridExtractor:
                 est = merge_windows(ests, [(s - a, e - a) for s, e in wins], b - a)
             ext_audio[a:b] = est
             for ca, cb in split_check_chunks(a, b, int(cfg.check_chunk_s * sr), min_check):
-                rec = self._check_piece(ext_audio, ca, cb, min_check)
-                region_log.append(rec)
-                if rec["status"] == "extracted":
+                clamp_db = self._limit_to_mixture(ext_audio, x, ca, cb)
+                rec_ = self._check_piece(ext_audio, x, ca, cb, min_check, refs)
+                rec_["source"] = _kind_of(ca, cb, ov, unc)
+                if clamp_db:
+                    rec_["quality"]["gain_clamped_db"] = round(clamp_db, 2)
+                region_log.append(rec_)
+                if rec_["status"] == "extracted":
                     ext_spans.append((ca, cb))
         tgt = merge_spans([(max(0, int(round(r.start * sr))), min(n, int(round(r.end * sr))))
                            for r in regions if r.label == TARGET])
@@ -246,32 +309,64 @@ class HybridExtractor:
                       int(cfg.fade_ms * sr / 1000), int(cfg.adjacent_ms * sr / 1000))
         peaks = [b["peak_vram_mib"] for b in per_batch if b["peak_vram_mib"] is not None]
         ov_s = sum(b - a for a, b in ov) / sr
+        rec_s = sum(b - a for a, b in rec) / sr
+        # A confident OTHER region whose recovery was rejected is expected, not lost target speech.
+        lost = [r for r in region_log if r["status"] != "extracted" and r["source"] != "other"]
         self.last_report = {
             "extractor": self.extractor.info.name, "mechanism": self.extractor.info.mechanism,
             "accept_threshold": round(self.threshold, 4), "fp16": self.extractor.use_fp16,
-            "fp16_fallbacks": self.extractor.fp16_fallbacks,
+            "fp16_fallbacks": self.extractor.fp16_fallbacks, "recovery_scope": cfg.recovery,
+            "band_matched_reference": band_matched,
             "windows": len(flat), "overlap_regions": len(ov), "overlap_seconds": round(ov_s, 3),
+            "recovery_seconds": round(rec_s, 3),
             "extract_seconds": round(extract_s, 4),
             "seconds_per_window": round(extract_s / len(flat), 4) if flat else None,
-            "rtf_overlap": round(extract_s / ov_s, 4) if ov_s else None,
+            "rtf_overlap": round(extract_s / (ov_s + rec_s), 4) if (ov_s + rec_s) else None,
             "peak_vram_mib": max(peaks) if peaks else None,
             "batches": per_batch, "batch_size": meta["batch_size"], "oom_backoffs": meta["oom_backoffs"],
             "window_details": meta["details"], "pieces": region_log,
-            "uncertain_muted_seconds": round(sum(
-                (r["end"] - r["start"]) for r in region_log if r["status"] != "extracted"), 3),
+            "uncertain_muted_seconds": round(sum((r["end"] - r["start"]) for r in lost), 3),
+            "recovery_rejected_seconds": round(sum(
+                (r["end"] - r["start"]) for r in region_log
+                if r["status"] != "extracted" and r["source"] == "other"), 3),
         }
         return out
 
-    def _check_piece(self, ext_audio, a, b, min_check) -> dict:
+    def _limit_to_mixture(self, ext_audio, x, a, b) -> float:
+        """Extracted speech is part of the mixture, so it cannot be louder than it. If it is (beyond the
+        allowed tolerance) the piece is scaled DOWN to the mixture's level; never amplified."""
+        m, e = rms(x[a:b]), rms(ext_audio[a:b])
+        cap = m * 10 ** (self.config.max_gain_vs_mixture_db / 20)
+        if e > cap > 0:
+            ext_audio[a:b] *= cap / e
+            return 20 * float(np.log10(e / cap))
+        return 0.0
+
+    @staticmethod
+    def _db(v: float) -> float | None:
+        return round(20 * float(np.log10(v)), 2) if v > 0 else None
+
+    def _check_piece(self, ext_audio, x, a, b, min_check, refs=None) -> dict:
+        """Two separate judgements. IDENTITY: does the extracted audio sound like the selected voice
+        (cosine, best of the references)? QUALITY: is there usable, non-amplified output? Only the
+        identity score is compared with a speaker threshold; quality problems are reported as such."""
         sr = SAMPLE_RATE
-        rec = {"start": round(a / sr, 3), "end": round(b / sr, 3), "label": UNCERTAIN, "score": None}
+        refs = refs or [self.voiceprint.vector]
         piece = ext_audio[a:b]
-        if b - a < min_check:
-            return {**rec, "status": "muted", "reason": "too_short_to_verify"}
-        if rms(piece) < SILENT_RMS:
+        m = rms(x[a:b])
+        quality = {"rms_db": self._db(rms(piece)), "mixture_rms_db": self._db(m),
+                   "silent": rms(piece) < SILENT_RMS,
+                   "negligible": rms(piece) < m * 10 ** (self.config.min_gain_vs_mixture_db / 20)}
+        rec = {"start": round(a / sr, 3), "end": round(b / sr, 3), "label": UNCERTAIN, "score": None,
+               "identity_score": None, "verification": "piece", "quality": quality}
+        if quality["silent"]:
             return {**rec, "status": "muted", "reason": "silent_output"}
-        score = cosine(self.voiceprint.vector, self.embedder.embed(piece))
-        rec["score"] = round(score, 4)
+        if quality["negligible"]:
+            return {**rec, "status": "muted", "reason": "output_negligible"}
+        if b - a < min_check:        # identity cannot be judged inside the piece itself: never authorised by its context
+            return {**rec, "status": "muted", "reason": "too_short_to_verify"}
+        score = self._identity(piece, refs)
+        rec.update(score=round(score, 4), identity_score=round(score, 4))
         if score < self.threshold:
             return {**rec, "status": "muted", "reason": "below_voiceprint_threshold"}
         return {**rec, "label": TARGET, "status": "extracted", "reason": "voiceprint_match"}

@@ -55,6 +55,23 @@ class NoRedirect(HTTPRedirectHandler):
         )
 
 
+def check_code_version(handshake: dict) -> None:
+    """Refuse a worker whose source differs from the running backend (stale ZIP or checkout)."""
+    try:
+        from focus_ml.code_version import ISOLATE_CONTRACT, code_version
+    except ImportError:
+        raise ConnectionSetupError(
+            "This worker copy has no focus_ml package; extract the full worker ZIP or use the repo checkout."
+        ) from None
+    theirs, ours = handshake.get("code_version"), code_version()
+    if theirs != ours or handshake.get("isolate_contract") != ISOLATE_CONTRACT:
+        raise ConnectionSetupError(
+            "The worker code does not match the website (website %s, this worker %s). Download the "
+            "worker ZIP again from the website, or run git pull --ff-only in the checkout, then restart. "
+            "Nothing was loaded." % (theirs or "unknown", ours)
+        )
+
+
 class WorkerClient:
     def __init__(self, url, token, preview_token=None, *, local_api=False):
         parts = urlsplit(url)
@@ -109,6 +126,7 @@ class WorkerClient:
                 result = json.loads(raw)
                 if not isinstance(result, dict) or result.get("worker_protocol") != 1:
                     raise ConnectionSetupError("The address is not a compatible FOCUS worker API.")
+                check_code_version(result)
         except HTTPError as exc:
             if exc.code in (401, 403):
                 raise ConnectionSetupError(
@@ -242,7 +260,11 @@ class WorkerClient:
         elif kind == "isolate":
             # The request carries the enrollment and the cached diarization. No
             # video, frame, face or lip data exists on this path.
+            from focus_ml.code_version import ISOLATE_CONTRACT
             from focus_ml.voice.engine import regions_to_wire
+            if payload.get("contract") != ISOLATE_CONTRACT or not {"voiceprint", "diarization"} <= payload.keys():
+                raise ValueError("isolate request does not match this worker (contract %r, expected %r)"
+                                 % (payload.get("contract"), ISOLATE_CONTRACT))
             extra = {}
             if payload.get("reference_wav_b64"):
                 # Clean enrollment audio only (an uploaded voice file); same task payload cap.
